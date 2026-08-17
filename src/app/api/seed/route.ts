@@ -1,0 +1,54 @@
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { SEED_PRODUCTS, SEED_USER, generateSeedSales } from "@/lib/mock-data";
+
+export const dynamic = "force-dynamic";
+
+export async function POST() {
+  try {
+    await db.sale.deleteMany();
+    await db.recommendation.deleteMany();
+    await db.product.deleteMany();
+    await db.user.deleteMany();
+
+    const user = await db.user.create({
+      data: {
+        email: SEED_USER.email,
+        name: SEED_USER.name,
+        businessName: SEED_USER.businessName,
+      },
+    });
+
+    for (const p of SEED_PRODUCTS) {
+      await db.product.create({
+        data: {
+          id: p.id,
+          userId: user.id,
+          name: p.name,
+          category: p.category,
+          sku: p.sku,
+          stockQuantity: p.stockQuantity,
+          sellingPrice: p.sellingPrice,
+          costPrice: p.costPrice,
+          reorderPoint: p.reorderPoint,
+          unit: p.unit,
+        },
+      });
+    }
+
+    const sales = generateSeedSales(45);
+    for (const s of sales) {
+      await db.sale.create({
+        data: { productId: s.productId, quantity: s.quantity, date: s.date },
+      });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      message: `Re-seeded ${SEED_PRODUCTS.length} products and ${sales.length} sales records.`,
+    });
+  } catch (err) {
+    console.error("[/api/seed] error", err);
+    return NextResponse.json({ error: "Failed to re-seed database" }, { status: 500 });
+  }
+}

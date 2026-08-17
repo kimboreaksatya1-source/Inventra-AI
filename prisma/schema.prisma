@@ -1,0 +1,77 @@
+// Inventra AI — Prisma schema
+// AI-powered inventory copilot for Cambodian SMEs
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// A business owner / shop account
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  businessName String
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    Product[]
+}
+
+/// A product / SKU in the store catalog
+model Product {
+  id             String           @id @default(cuid())
+  userId         String
+  name           String
+  category       String
+  sku            String?
+  stockQuantity  Int
+  sellingPrice   Float
+  costPrice      Float
+  reorderPoint   Int              @default(10)
+  unit           String           @default("unit")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sales          Sale[]
+  recommendations Recommendation[]
+}
+
+/// A sales transaction line (one product, a quantity sold on a given day)
+model Sale {
+  id        String   @id @default(cuid())
+  productId String
+  quantity  Int
+  date      DateTime
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, date])
+}
+
+/// AI-generated recommendation for a product
+model Recommendation {
+  id                     String   @id @default(cuid())
+  productId              String
+  revenueAtRisk          Float
+  suggestedOrderQuantity Int
+  confidenceScore        Float
+  priority               String   // CRITICAL | HIGH | MEDIUM | LOW
+  reason                 String
+  generatedAt            DateTime @default(now())
+  product                Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+/// Persisted AI advisor chat conversations
+model ChatMessage {
+  id        String   @id @default(cuid())
+  role      String   // user | assistant
+  content   String
+  createdAt DateTime @default(now())
+}

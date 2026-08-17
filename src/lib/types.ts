@@ -1,0 +1,176 @@
+// Inventra AI — Core domain types
+
+export type SectionId =
+  | "dashboard"
+  | "ai-advisor"
+  | "revenue-protection"
+  | "inventory-health"
+  | "forecast"
+  | "insights"
+  | "alerts"
+  | "settings";
+
+export type Priority = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+
+export interface ProductWithMetrics {
+  id: string;
+  name: string;
+  category: string;
+  sku: string | null;
+  stockQuantity: number;
+  sellingPrice: number;
+  costPrice: number;
+  reorderPoint: number;
+  unit: string;
+  // computed
+  averageDailySales: number;
+  daysRemaining: number;
+  revenueAtRisk: number;
+  inventoryValue: number;
+  weeklyRevenue: number;
+  weeklyGrowth: number; // % vs previous week
+  stockoutProbability: number; // 0-100
+  status: "healthy" | "warning" | "critical" | "overstock";
+}
+
+export interface Recommendation {
+  id: string;
+  productId: string;
+  productName: string;
+  category: string;
+  revenueAtRisk: number;
+  suggestedOrderQuantity: number;
+  confidenceScore: number;
+  priority: Priority;
+  reason: string;
+  generatedAt: string;
+}
+
+export interface DashboardMetrics {
+  revenueAtRisk: number;
+  potentialStockouts: number;
+  inventoryHealthScore: number;
+  recommendedActions: number;
+  totalInventoryValue: number;
+  totalProducts: number;
+  weeklyRevenue: number;
+  weeklyRevenueGrowth: number;
+  topRecommendation: {
+    title: string;
+    revenueProtected: number;
+    confidenceScore: number;
+    productIds: string[];
+  };
+  kpiTrend: TrendPoint[];
+  categoryDistribution: { name: string; value: number; color: string }[];
+}
+
+export interface TrendPoint {
+  label: string;
+  revenue: number;
+  orders: number;
+}
+
+export interface OpportunityFeedItem {
+  id: string;
+  type: "opportunity" | "risk" | "warning";
+  title: string;
+  description: string;
+  impact: string;
+  impactValue: number;
+  action: string;
+  product?: string;
+}
+
+export interface AlertItem {
+  id: string;
+  productId: string;
+  productName: string;
+  priority: Priority;
+  problem: string;
+  financialImpact: number;
+  recommendedAction: string;
+  confidenceScore: number;
+  daysRemaining: number;
+}
+
+export interface ForecastPoint {
+  label: string;
+  demand: number;
+  lower: number;
+  upper: number;
+  stock: number;
+  stockoutProbability: number;
+}
+
+export interface ProductForecast {
+  productId: string;
+  productName: string;
+  category: string;
+  points: ForecastPoint[];
+  avgDailyDemand: number;
+  totalForecastDemand: number;
+  peakDay: string;
+  confidence: number;
+  stockoutProbability: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+  // structured payload the assistant may return
+  insight?: AdvisorInsight;
+}
+
+export interface AdvisorInsight {
+  summary: string;
+  items: AdvisorInsightItem[];
+  overallConfidence: number;
+}
+
+export interface AdvisorInsightItem {
+  productName: string;
+  stockRemaining: number;
+  predictedStockout: string;
+  suggestedOrder: number;
+  confidence: number;
+  revenueProtection: number;
+  reasoning: string;
+}
+
+export interface InventoryHealth {
+  score: number;
+  label: string;
+  explanation: string;
+  strengths: string[];
+  risks: string[];
+  categoryBreakdown: {
+    category: string;
+    products: number;
+    healthScore: number;
+    revenueAtRisk: number;
+  }[];
+}
+
+export interface BusinessInsight {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  impact: string;
+  impactValue: number;
+  recommendation: string;
+  metric?: string;
+}
+
+export interface BusinessInsightsReport {
+  generatedAt: string;
+  summary: string;
+  topRevenueDrivers: BusinessInsight[];
+  fastestGrowing: BusinessInsight[];
+  hiddenOpportunities: BusinessInsight[];
+  deadInventory: BusinessInsight[];
+  cashFlowActions: BusinessInsight[];
+}
