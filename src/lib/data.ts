@@ -1,6 +1,7 @@
 // Inventra AI — server-side data access helpers
 import { db } from "./db";
 import type { RawProduct, RawSale } from "./inventory";
+import type { AnalysisInput } from "./analysis";
 
 export interface LoadedData {
   user: { id: string; name: string; businessName: string; email: string };
@@ -33,6 +34,7 @@ export async function loadData(): Promise<LoadedData> {
     category: p.category,
     sku: p.sku,
     stockQuantity: p.stockQuantity,
+    dailySales: p.dailySales,
     sellingPrice: p.sellingPrice,
     costPrice: p.costPrice,
     reorderPoint: p.reorderPoint,
@@ -55,4 +57,24 @@ export async function loadData(): Promise<LoadedData> {
 export async function isSeeded(): Promise<boolean> {
   const count = await db.product.count();
   return count > 0;
+}
+
+/** Products shaped for the analysis engine (analysis.ts). */
+export async function loadAnalysisInputs(): Promise<{
+  business: string;
+  products: AnalysisInput[];
+}> {
+  const { user, products } = await loadData();
+  return {
+    business: user.businessName || "Your Business",
+    products: products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      stock: p.stockQuantity,
+      dailySales: p.dailySales,
+      sellingPrice: p.sellingPrice,
+      costPrice: p.costPrice,
+    })),
+  };
 }

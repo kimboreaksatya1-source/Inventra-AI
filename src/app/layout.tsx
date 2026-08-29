@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { Providers } from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Inventra AI — AI Inventory Copilot for Cambodian SMEs",
+  title: "Inventra AI — AI Operating Copilot for SMEs",
   description:
-    "Inventra AI is an AI-powered business copilot that helps Cambodian SMEs prevent stockouts, protect revenue, and optimize cash flow with predictive inventory intelligence.",
+    "Inventra AI turns your business data into decisions: what to do next, which products are at risk, and where you are losing revenue.",
   keywords: [
     "Inventra AI",
     "inventory management",
@@ -28,7 +29,8 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Inventra AI" }],
   icons: {
-    icon: "/logo.svg",
+    icon: "/inventra-logo.png",
+    apple: "/inventra-logo.png",
   },
   openGraph: {
     title: "Inventra AI — Stop Guessing. Start Reordering Smarter.",
@@ -54,7 +56,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {children}
+        <Providers>{children}</Providers>
         <Toaster />
         <SonnerToaster richColors position="bottom-right" />
       </body>

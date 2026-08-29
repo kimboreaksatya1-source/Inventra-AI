@@ -1,0 +1,606 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #FFFFFF; }
+    .doc { width: 816px; margin: 0 auto; background: #FFFFFF; color: #0F172A;
+      font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif; font-size: 13.5px; line-height: 1.62; }
+    .pad { padding-left: 72px; padding-right: 72px; }
+    h1, h2, h3, h4 { font-family: 'Space Grotesk', 'Segoe UI', sans-serif; letter-spacing: -0.02em; color: #0F172A; margin: 0; }
+    a { color: #047857; } a:hover { color: #10B981; }
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 0 0 12px; padding-left: 20px; }
+    li { margin: 5px 0; }
+    strong { color: #0F172A; font-weight: 700; }
+
+    .section { padding-top: 30px; padding-bottom: 8px; margin-top: 18px; border-top: 2px solid #EEF2FF; }
+    .rh { display: flex; justify-content: space-between; align-items: center;
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #94A3B8; padding-bottom: 9px; border-bottom: 1px solid #E2E8F0; margin-bottom: 22px; }
+    .kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #10B981; }
+    .title { font-size: 25px; line-height: 1.16; margin: 10px 0 8px; }
+    .sub { font-size: 14.5px; line-height: 1.5; color: #64748B; font-weight: 500; margin: 0 0 18px; }
+    h3 { font-size: 15.5px; margin: 20px 0 6px; }
+    h4 { font-size: 12.5px; margin: 16px 0 4px; text-transform: uppercase; letter-spacing: 0.08em; color: #312E81; font-family: 'Manrope', sans-serif; font-weight: 700; }
+
+    table { width: 100%; border-collapse: collapse; margin: 14px 0 6px; font-size: 11px; break-inside: avoid; }
+    thead th { background: #312E81; color: #F8FAFC; text-align: left; padding: 9px 11px; font-weight: 700; font-family: 'Manrope', sans-serif; }
+    td { padding: 8px 11px; border-bottom: 1px solid #E2E8F0; vertical-align: top; line-height: 1.5; }
+    tbody tr:nth-child(even) td { background: #F8FAFC; }
+    td.k { font-weight: 700; color: #0F172A; }
+    .em { color: #047857; font-weight: 700; }
+
+    .fig { margin: 14px 0 4px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; break-inside: avoid; }
+    .fig-cap { font-size: 10.5px; color: #64748B; margin: 7px 0 14px; font-weight: 600; }
+
+    .box { border-radius: 12px; padding: 15px 17px; margin: 14px 0; break-inside: avoid; }
+    .box-ind { background: #EEF2FF; }
+    .box-em { background: #ECFDF5; }
+    .box-dk { background: #0F172A; color: #E2E8F0; }
+    .box-dk strong { color: #FFFFFF; }
+    .box-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; }
+    .box-ind .box-label { color: #4338CA; }
+    .box-em .box-label { color: #047857; }
+    .box-dk .box-label { color: #34D399; }
+
+    .pull { margin: 18px 0; break-inside: avoid; }
+    .pull .rule { width: 42px; height: 3px; background: #10B981; border-radius: 2px; margin-bottom: 12px; }
+    .pull p { font-family: 'Space Grotesk', sans-serif; font-size: 17.5px; line-height: 1.42; color: #312E81; font-weight: 600; margin: 0; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 14px 15px; break-inside: avoid; }
+    .card h4 { margin-top: 0; }
+    .muted { color: #64748B; font-size: 12px; }
+    .divider { height: 1px; background: #E2E8F0; margin: 22px 0; }
+    svg { display: block; max-width: 100%; }
+    .toc-row { display: flex; align-items: baseline; gap: 12px; padding: 7px 0; border-bottom: 1px dotted #CBD5E1; font-size: 13px; }
+    .toc-row .n { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #10B981; width: 26px; flex: none; }
+    .toc-row .t { font-weight: 600; color: #0F172A; }
+    .toc-row .d { color: #94A3B8; font-size: 11.5px; }
+  </style>
+</helmet>
+
+<div class="doc">
+
+  <!-- ===================================================== COVER -->
+  <section style="height:1056px;position:relative;overflow:hidden;background:#0F172A;color:#F8FAFC;">
+    <svg width="816" height="1056" viewBox="0 0 816 1056" style="position:absolute;inset:0;">
+      <defs><pattern id="gr" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#1E293B" stroke-width="1"/></pattern>
+      <radialGradient id="gl" cx="30%" cy="26%" r="55%"><stop offset="0%" stop-color="#312E81" stop-opacity="0.55"/><stop offset="100%" stop-color="#312E81" stop-opacity="0"/></radialGradient></defs>
+      <rect width="816" height="1056" fill="url(#gr)" opacity="0.55"/>
+      <rect width="816" height="1056" fill="url(#gl)"/>
+    </svg>
+    <div class="pad" style="position:relative;z-index:1;padding-top:96px;">
+      <div style="display:flex;align-items:center;gap:13px;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#312E81"/><circle cx="8" cy="15.5" r="2.1" fill="#10B981"/><circle cx="16" cy="8.5" r="2.1" fill="#F8FAFC"/><circle cx="16.5" cy="16" r="1.6" fill="#818CF8"/><path d="M8 15.5L16 8.5M16 8.5L16.5 16" stroke="#10B981" stroke-width="1.4"/></svg>
+        <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;">Inventra AI</span>
+      </div>
+
+      <div style="margin-top:150px;font-size:12px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#34D399;">MVP Experience Blueprint</div>
+      <h1 style="font-size:54px;line-height:1.02;margin:18px 0 0;letter-spacing:-0.03em;color:#F8FAFC;">The 30-Second<br>Wow Moment</h1>
+      <div style="font-size:20px;font-weight:600;color:#CBD5E1;font-family:'Space Grotesk',sans-serif;margin-top:18px;">Designing the first AI Operating Copilot for SMEs</div>
+
+      <div style="margin-top:34px;max-width:560px;">
+        <div style="width:42px;height:3px;background:#10B981;border-radius:2px;margin-bottom:12px;"></div>
+        <div style="font-size:15px;color:#94A3B8;font-weight:500;line-height:1.5;">A product blueprint for the AIM Competition MVP &mdash; built to make a judge understand, in half a minute, that this is not another inventory system.</div>
+      </div>
+    </div>
+
+    <div style="position:absolute;z-index:1;left:72px;right:72px;bottom:64px;display:flex;justify-content:space-between;border-top:1px solid #1E293B;padding-top:16px;font-size:11px;color:#64748B;font-weight:600;">
+      <span>For the AIM Competition</span><span>Build Week MVP</span><span>Blueprint v1.0 &middot; August 2026</span>
+    </div>
+  </section>
+
+  <!-- ===================================================== CONTENTS -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; MVP Blueprint</span><span>Contents</span></div>
+    <div class="kicker">Contents</div>
+    <h1 class="title">What this blueprint covers</h1>
+    <p class="sub">Eight parts, from the demo a judge sees to the operating system it becomes.</p>
+    <div class="toc-row"><span class="n">1</span><span><span class="t">The Design Thesis</span> &nbsp;<span class="d">Why a decision beats a dashboard &mdash; and how we win the room</span></span></div>
+    <div class="toc-row"><span class="n">2</span><span><span class="t">Hero Demo Scenario</span> &nbsp;<span class="d">Screen by screen, second by second</span></span></div>
+    <div class="toc-row"><span class="n">3</span><span><span class="t">The AI Business Brief</span> &nbsp;<span class="d">The core artifact &mdash; anatomy and a full worked example</span></span></div>
+    <div class="toc-row"><span class="n">4</span><span><span class="t">AI Risk Detection</span> &nbsp;<span class="d">The risks an owner cannot see because they are spread across the business</span></span></div>
+    <div class="toc-row"><span class="n">5</span><span><span class="t">AI Opportunity Detection</span> &nbsp;<span class="d">The upside hiding in the same data</span></span></div>
+    <div class="toc-row"><span class="n">6</span><span><span class="t">AI Action Plan</span> &nbsp;<span class="d">Every insight ends in a costed action</span></span></div>
+    <div class="toc-row"><span class="n">7</span><span><span class="t">Differentiation</span> &nbsp;<span class="d">&ldquo;I already have a POS &mdash; why Inventra?&rdquo;</span></span></div>
+    <div class="toc-row"><span class="n">8</span><span><span class="t">Future Vision</span> &nbsp;<span class="d">Inventory Intelligence &rarr; Business Intelligence &rarr; Operating Copilot &rarr; Autopilot</span></span></div>
+    <div class="toc-row"><span class="n">&mdash;</span><span><span class="t">Appendix</span> &nbsp;<span class="d">How the wow actually works, and the build-week scope</span></span></div>
+  </section>
+
+  <!-- ===================================================== 1. DESIGN THESIS -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; MVP Blueprint</span><span>Part 1</span></div>
+    <div class="kicker">Part 1</div>
+    <h1 class="title">The Design Thesis &mdash; Win the Room in 30 Seconds</h1>
+    <p class="sub">The judge starts the demo with a mental model: &ldquo;another inventory tool.&rdquo; Our entire job in the first 30 seconds is to break it.</p>
+
+    <p>Every POS vendor demo opens the same way: a product list, a stock count, a sales chart. If we open like that, we have already lost &mdash; we look like a cheaper version of something the judge has seen ten times. So we do the opposite. <strong>We do not show data. We show a decision.</strong></p>
+    <p>The user drops a messy spreadsheet onto the screen, and a few seconds later Inventra AI hands back a one-page briefing written like a consultant&rsquo;s memo: a plain-language verdict, the three things that need attention this week, and a ranked action plan &mdash; each action carrying a dollar figure. Then a chat box: <em>&ldquo;Ask me anything about your business.&rdquo;</em></p>
+
+    <h4>The three things a judge must feel</h4>
+    <div class="grid3">
+      <div class="card"><div class="muted"><strong style="color:#312E81;">1 &middot; It read our real file.</strong><br>Not a clean template &mdash; our actual export, with blank cells and mixed Khmer/English names.</div></div>
+      <div class="card"><div class="muted"><strong style="color:#312E81;">2 &middot; It has an opinion.</strong><br>Not charts to interpret &mdash; a written verdict and a recommendation.</div></div>
+      <div class="card"><div class="muted"><strong style="color:#312E81;">3 &middot; It counted the money.</strong><br>Every risk and opportunity is quantified: dollars at stake, dollars to gain.</div></div>
+    </div>
+
+    <h4>What we deliberately do not show first</h4>
+    <p>Stock levels. Product tables. Reports. Reorder points. These are table stakes &mdash; necessary in the product, fatal as the opening move. They can appear later, once the judge has re-categorised us.</p>
+
+    <div class="box box-dk">
+      <div class="box-label">The 30-second test</div>
+      <p style="margin:0;font-size:12.5px;">If, after the demo, a judge cannot turn to the person next to them and say <strong>&ldquo;it read their data and told them what to do &mdash; and what it was worth&rdquo;</strong>, the demo failed. Every screen below is engineered to produce exactly that sentence.</p>
+    </div>
+  </section>
+
+  <!-- ===================================================== 2. HERO DEMO SCENARIO -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; MVP Blueprint</span><span>Part 2</span></div>
+    <div class="kicker">Part 2</div>
+    <h1 class="title">Hero Demo Scenario</h1>
+    <p class="sub">One file. Thirty seconds. A deliberate, rehearsed sequence &mdash; and it also runs live on a judge&rsquo;s own data.</p>
+
+    <p><strong>The file.</strong> <code>shop_march.xlsx</code> &mdash; one sheet, 3,412 rows, 92 days of sales, product names in mixed Khmer and English, a scatter of blank cells, no tidy header formatting. Chosen to look exactly like what a real mini-mart owner would export and email to themselves.</p>
+
+    <div class="fig">
+      <svg width="672" height="132" viewBox="0 0 672 132" fill="none" font-family="Manrope, sans-serif">
+        <line x1="26" y1="72" x2="646" y2="72" stroke="#CBD5E1" stroke-width="2"/>
+        <g text-anchor="middle">
+          <circle cx="26" cy="72" r="6" fill="#312E81"/>
+          <text x="30" y="44" font-size="10" font-weight="700" fill="#0F172A">Drop file</text>
+          <text x="30" y="93" font-size="9" font-weight="700" fill="#10B981">0:00</text>
+          <text x="30" y="108" font-size="8" fill="#94A3B8">a bare screen</text>
+
+          <circle cx="130" cy="72" r="6" fill="#312E81"/>
+          <text x="130" y="44" font-size="10" font-weight="700" fill="#0F172A">Auto-read</text>
+          <text x="130" y="93" font-size="9" font-weight="700" fill="#10B981">0:03</text>
+          <text x="130" y="108" font-size="8" fill="#94A3B8">columns mapped</text>
+
+          <circle cx="252" cy="72" r="7" fill="#10B981"/>
+          <text x="252" y="44" font-size="10" font-weight="700" fill="#047857">The Brief</text>
+          <text x="252" y="93" font-size="9" font-weight="700" fill="#10B981">0:08</text>
+          <text x="252" y="108" font-size="8" fill="#94A3B8">verdict + health score</text>
+
+          <circle cx="360" cy="72" r="6" fill="#312E81"/>
+          <text x="360" y="44" font-size="10" font-weight="700" fill="#0F172A">Risks</text>
+          <text x="360" y="93" font-size="9" font-weight="700" fill="#10B981">0:12</text>
+          <text x="360" y="108" font-size="8" fill="#94A3B8">ranked, quantified</text>
+
+          <circle cx="460" cy="72" r="6" fill="#312E81"/>
+          <text x="460" y="44" font-size="10" font-weight="700" fill="#0F172A">Opportunities</text>
+          <text x="460" y="93" font-size="9" font-weight="700" fill="#10B981">0:16</text>
+          <text x="460" y="108" font-size="8" fill="#94A3B8">upside in dollars</text>
+
+          <circle cx="556" cy="72" r="6" fill="#312E81"/>
+          <text x="556" y="44" font-size="10" font-weight="700" fill="#0F172A">Action plan</text>
+          <text x="556" y="93" font-size="9" font-weight="700" fill="#10B981">0:20</text>
+          <text x="556" y="108" font-size="8" fill="#94A3B8">+ chat</text>
+
+          <circle cx="646" cy="72" r="7" fill="#10B981"/>
+          <text x="636" y="44" font-size="10" font-weight="700" fill="#047857" text-anchor="end">Reframe</text>
+          <text x="636" y="93" font-size="9" font-weight="700" fill="#10B981" text-anchor="end">0:30</text>
+          <text x="636" y="108" font-size="8" fill="#94A3B8" text-anchor="end">&ldquo;not inventory&rdquo;</text>
+        </g>
+      </svg>
+      <div class="fig-cap">Figure 2.1 &mdash; The 30-second sequence. Deterministic, rehearsed, and repeatable on any real export. Full detail in the table below.</div>
+    </div>
+
+    <table>
+      <thead><tr><th style="width:12%">Time</th><th style="width:44%">On screen</th><th style="width:44%">What the judge thinks</th></tr></thead>
+      <tbody>
+        <tr><td class="k">0:00</td><td>Presenter drags <code>shop_march.xlsx</code> onto a near-empty screen. One line of copy: &ldquo;Drop your sales export.&rdquo;</td><td>&ldquo;Okay, an import screen. Standard.&rdquo;</td></tr>
+        <tr><td class="k">0:03</td><td>&ldquo;Reading your business&hellip;&rdquo; Counters animate: <strong>3,412 rows &middot; 287 products &middot; 92 days &middot; 6 categories</strong>. Column mapping appears &mdash; Product, Qty, Unit price, Date &mdash; each with a &check; and a confidence score.</td><td>&ldquo;It figured out my messy columns by itself. It didn&rsquo;t make me map anything.&rdquo;</td></tr>
+        <tr><td class="k">0:08</td><td>The screen dissolves into <strong>The Business Brief</strong>. A headline verdict in plain language. Health score <strong>72/100 (&#9650;4)</strong>. Subline: &ldquo;3 things need you this week.&rdquo;</td><td>&ldquo;Wait &mdash; this is a written briefing. Not a dashboard.&rdquo;</td></tr>
+        <tr><td class="k">0:12</td><td><strong>Risks</strong> card animates in: &#128308; Coca-Cola 1.25L stocks out in ~4 days (delivery takes 2). &#128992; $430 frozen in 6 products with no sale since January. &#128992; 68% of revenue rides on one supplier.</td><td>&ldquo;It&rsquo;s telling me what&rsquo;s about to go wrong &mdash; before it does.&rdquo;</td></tr>
+        <tr><td class="k">0:16</td><td><strong>Opportunities</strong> card: &#128994; Iced coffee +34% month-on-month and under-stocked. &#128994; Water + instant noodles bought together 61% of the time &mdash; not bundled. &#128994; Fridays do 2.1&times; a weekday; you sell out by 3pm.</td><td>&ldquo;It found money I didn&rsquo;t know was there.&rdquo;</td></tr>
+        <tr><td class="k">0:20</td><td><strong>Action Plan</strong>: a ranked list. Each row = action + projected impact + <strong>[Do this]</strong>. &ldquo;Reorder Coke today &mdash; saves ~$70.&rdquo; &ldquo;Clear 6 dead SKUs &mdash; frees $430 in ~10 days.&rdquo; &ldquo;Bundle water + noodles &mdash; +$30/wk.&rdquo; Footer: <strong>Projected upside this week: +$180 revenue &middot; $430 cash freed.</strong></td><td>&ldquo;It did the thinking and put a number on every move.&rdquo;</td></tr>
+        <tr><td class="k">0:25</td><td>Presenter types into the chat: <em>&ldquo;What should I buy with $500 this week?&rdquo;</em> &rarr; 2 seconds &rarr; a costed list with reasoning: Coke $180, noodles $150, water $90, iced coffee $80 &mdash; snacks skipped (18 days of cover).</td><td>&ldquo;I can just&hellip; ask it. Like a colleague.&rdquo;</td></tr>
+        <tr><td class="k">0:30</td><td>Presenter: <strong>&ldquo;We never opened an inventory screen. This isn&rsquo;t an inventory app &mdash; it&rsquo;s the analyst that reads one.&rdquo;</strong> Then: &ldquo;Hand us your file &mdash; we&rsquo;ll run it live.&rdquo;</td><td>The re-categorisation is complete.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="box box-em"><div class="box-label">The live variant</div><p style="margin:0;font-size:12.5px;">The scripted run builds confidence; the <strong>live run on a judge&rsquo;s own spreadsheet</strong> wins it. Same pipeline, same 8 seconds. Offer it every time &mdash; the willingness to run unseen data is itself the proof.</p></div>
+  </section>
+
+  <!-- ===================================================== 3. THE AI BUSINESS BRIEF -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; MVP Blueprint</span><span>Part 3</span></div>
+    <div class="kicker">Part 3</div>
+    <h1 class="title">The AI Business Brief</h1>
+    <p class="sub">The core artifact. A one-page briefing that reads like a sharp analyst wrote it overnight &mdash; not a dashboard, a <em>document</em>.</p>
+
+    <p>The Brief is what makes Inventra feel like a person rather than a panel of charts. It is generated on upload and refreshed every morning. It is scannable in 60 seconds and it always ends in three actions or fewer.</p>
+
+    <div class="fig">
+      <svg width="672" height="470" viewBox="0 0 672 470" fill="none" font-family="Manrope, sans-serif">
+        <rect x="150" y="8" width="372" height="454" rx="14" fill="#FFFFFF" stroke="#E2E8F0"/>
+        <rect x="150" y="8" width="372" height="6" rx="3" fill="#10B981"/>
+        <text x="170" y="36" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="1">MONDAY 3 MARCH &middot; DAILY BRIEF</text>
+
+        <rect x="170" y="48" width="332" height="66" rx="9" fill="#F8FAFC"/>
+        <text x="182" y="66" font-size="9" font-weight="700" fill="#312E81">THE VERDICT</text>
+        <text x="182" y="82" font-size="8.5" fill="#334155">Good week &mdash; revenue +6%. But you&rsquo;re one late</text>
+        <text x="182" y="94" font-size="8.5" fill="#334155">delivery from losing your top seller, and $430 is</text>
+        <text x="182" y="106" font-size="8.5" fill="#334155">stuck in products that haven&rsquo;t moved since January.</text>
+
+        <rect x="170" y="122" width="160" height="40" rx="8" fill="#EEF2FF"/>
+        <text x="182" y="139" font-size="9" font-weight="700" fill="#312E81">HEALTH 72/100 &#9650;4</text>
+        <text x="182" y="153" font-size="8" fill="#4338CA">held back by supplier concentration</text>
+        <rect x="342" y="122" width="160" height="40" rx="8" fill="#ECFDF5"/>
+        <text x="354" y="139" font-size="9" font-weight="700" fill="#047857">REVENUE $2,140 &#9650;6%</text>
+        <text x="354" y="153" font-size="8" fill="#065F46">best day Fri $410 &middot; margin 23.1%</text>
+
+        <text x="182" y="182" font-size="9" font-weight="700" fill="#0F172A">MONEY MAP</text>
+        <rect x="182" y="188" width="308" height="16" rx="4" fill="#E2E8F0"/>
+        <rect x="182" y="188" width="188" height="16" rx="4" fill="#10B981"/>
+        <rect x="370" y="188" width="43" height="16" fill="#F59E0B"/>
+        <text x="186" y="200" font-size="7.5" font-weight="700" fill="#FFFFFF">On shelf 61%</text>
+        <text x="374" y="200" font-size="7.5" font-weight="700" fill="#FFFFFF">Dead 14%</text>
+        <text x="452" y="200" font-size="7.5" font-weight="700" fill="#64748B">Bank 25%</text>
+
+        <rect x="170" y="214" width="332" height="74" rx="9" fill="#FFF7ED"/>
+        <text x="182" y="230" font-size="9" font-weight="700" fill="#9A3412">RISKS &mdash; RANKED</text>
+        <text x="182" y="245" font-size="8" fill="#7C2D12">&#128308; Coca-Cola 1.25L &mdash; 4 days to stockout &middot; act today</text>
+        <text x="182" y="258" font-size="8" fill="#7C2D12">&#128992; Dead stock &mdash; 6 SKUs, $430, 47&ndash;91 days idle</text>
+        <text x="182" y="271" font-size="8" fill="#7C2D12">&#128992; Supplier concentration &mdash; 68% of revenue, Distributor A</text>
+        <text x="182" y="284" font-size="8" fill="#C2410C">&#128993; Margin dip on snacks &mdash; watch</text>
+
+        <rect x="170" y="296" width="332" height="66" rx="9" fill="#EEF2FF"/>
+        <text x="182" y="312" font-size="9" font-weight="700" fill="#3730A3">OPPORTUNITIES &mdash; RANKED</text>
+        <text x="182" y="327" font-size="8" fill="#4338CA">&#128994; Iced coffee +34% MoM, 5 days cover &mdash; raise order 40% (+$40/wk)</text>
+        <text x="182" y="340" font-size="8" fill="#4338CA">&#128994; Water + noodles attach 61% &mdash; bundle at $1.90 (+$30/wk)</text>
+        <text x="182" y="353" font-size="8" fill="#4338CA">&#128994; Friday sellout 3pm &mdash; split delivery (~$110/wk unmet)</text>
+
+        <rect x="170" y="370" width="332" height="52" rx="9" fill="#0F172A"/>
+        <text x="182" y="386" font-size="9" font-weight="700" fill="#34D399">TODAY&rsquo;S ACTIONS &mdash; 3 MAX</text>
+        <text x="182" y="400" font-size="8" fill="#E2E8F0">1&nbsp; Reorder Coke 24u &nbsp; 2&nbsp; Start markdown on 6 dead SKUs</text>
+        <text x="182" y="413" font-size="8" fill="#E2E8F0">3&nbsp; Add water + noodles bundle &nbsp;&mdash;&nbsp; projected +$180/wk</text>
+
+        <rect x="170" y="430" width="332" height="22" rx="7" fill="#F1F5F9"/>
+        <text x="182" y="445" font-size="8" fill="#64748B">&#128172;&nbsp; Ask Inventra &mdash; &ldquo;what should I buy with $500?&rdquo;</text>
+
+        <g font-size="8" fill="#94A3B8">
+          <text x="8" y="60">generated on upload,</text><text x="8" y="72">refreshed every morning</text>
+          <line x1="8" y1="80" x2="150" y2="80" stroke="#E2E8F0"/>
+          <text x="8" y="186">where every dollar sits</text>
+          <text x="8" y="252">ranked by time-to-impact</text>
+          <text x="8" y="330">ranked by upside</text>
+          <text x="8" y="392">never more than three</text>
+          <text x="534" y="60">plain language,</text><text x="534" y="72">2&ndash;3 sentences</text>
+          <text x="534" y="140">one composite score,</text><text x="534" y="152">plus the driver</text>
+          <text x="534" y="405">grounded chat &mdash;</text><text x="534" y="417">same numbers</text>
+        </g>
+      </svg>
+      <div class="fig-cap">Figure 3.1 &mdash; Anatomy of the Brief. Verdict first; actions last; never more than one screen.</div>
+    </div>
+
+    <h3>3.1 The eight blocks</h3>
+    <table>
+      <thead><tr><th style="width:22%">Block</th><th>What it contains</th></tr></thead>
+      <tbody>
+        <tr><td class="k">The Verdict</td><td>2&ndash;3 sentences in plain language. The single most important paragraph &mdash; what&rsquo;s going well, what&rsquo;s at risk, what to do about it.</td></tr>
+        <tr><td class="k">Health Score</td><td>A 0&ndash;100 composite of revenue trend, margin, inventory efficiency, cash position, and concentration &mdash; shown with its weekly delta and the one factor moving it most.</td></tr>
+        <tr><td class="k">Business Health</td><td>Four tiles &mdash; Revenue, Margin, Inventory efficiency, Cash position &mdash; each with direction and a one-line &ldquo;why.&rdquo;</td></tr>
+        <tr><td class="k">The Money Map</td><td>A single bar showing where cash is right now: healthy stock on the shelf, capital trapped in dead stock, cash available in the bank.</td></tr>
+        <tr><td class="k">Risks</td><td>Ranked, five max, each with a severity (&#128308;&nbsp;today / &#128992;&nbsp;this week / &#128993;&nbsp;watch) and a time-to-impact.</td></tr>
+        <tr><td class="k">Opportunities</td><td>Ranked, five max, each with an upside estimate in dollars per week.</td></tr>
+        <tr><td class="k">Today&rsquo;s Actions</td><td>Three max, one-tap, each carrying its projected impact. This is the part the owner acts on.</td></tr>
+        <tr><td class="k">Ask Inventra</td><td>A chat box grounded in the same computed numbers &mdash; no new figures invented in conversation.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>3.2 Worked example &mdash; Sophea&rsquo;s Brief, Monday 3 March</h3>
+    <div class="box box-ind">
+      <div class="box-label">The Verdict</div>
+      <p style="margin:0 0 10px;font-size:12.5px;">&ldquo;Good week &mdash; revenue up 6% to $2,140, mostly from beverages. But you&rsquo;re one late delivery from losing your top seller, and $430 is sitting in products that haven&rsquo;t moved since January. Fix those two and next week is your best month yet.&rdquo;</p>
+      <table style="margin:0;">
+        <tbody>
+          <tr><td class="k" style="width:26%">Health</td><td>72 / 100 &nbsp;(&#9650;4) &mdash; up on margin recovery; capped by supplier concentration</td></tr>
+          <tr><td class="k">Revenue</td><td>$2,140 this week (&#9650;6% vs 4-week average) &middot; best day Friday $410 &middot; slowest Tuesday $190</td></tr>
+          <tr><td class="k">Margin</td><td>23.1% (&#9650;0.4 pt) &mdash; less snack discounting than last week</td></tr>
+          <tr><td class="k">Inventory efficiency</td><td>14 days average cover (healthy band 10&ndash;21) &middot; 6 SKUs above 45 days</td></tr>
+          <tr><td class="k">Cash</td><td>$1,180 available &middot; $430 trapped in dead stock &middot; this week&rsquo;s reorder plan needs $610</td></tr>
+          <tr><td class="k">Risks</td><td>&#128308; Coca-Cola 1.25L &mdash; 4 days to stockout, lead time 2 &nbsp;|&nbsp; &#128992; Dead stock $430 / 6 SKUs &nbsp;|&nbsp; &#128992; 68% revenue from Distributor A</td></tr>
+          <tr><td class="k">Opportunities</td><td>&#128994; Iced coffee +34% MoM, 5 days cover &nbsp;|&nbsp; &#128994; Water + noodles attach 61% &nbsp;|&nbsp; &#128994; Friday demand exceeds capacity, ~$110/wk unmet</td></tr>
+          <tr><td class="k">Today&rsquo;s actions</td><td>Reorder Coke 24u &middot; Start markdown on 6 dead SKUs &middot; Launch water + noodles bundle &nbsp;&mdash;&nbsp; <span class="em">projected +$180/wk revenue, $430 cash freed</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================================================== 4. AI RISK DETECTION -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; MVP Blueprint</span><span>Part 4</span></div>
+    <div class="kicker">Part 4</div>
+    <h1 class="title">AI Risk Detection</h1>
+    <p class="sub">Detect the risks a busy owner cannot see &mdash; because they are spread across time, categories, and systems that never talk to each other.</p>
+
+    <p>An owner standing behind the till sees today. They do not see a category that has declined for three weeks straight, a supplier whose lead time has quietly crept from two days to five, or the fact that next week&rsquo;s reorder plan is larger than the cash in the drawer. Inventra reads across all of it and ranks what matters.</p>
+
+    <h4>Inventory risk</h4>
+    <table>
+      <thead><tr><th style="width:26%">Risk</th><th>Signal Inventra reads</th><th style="width:30%">Example alert</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Imminent stockout on an A-item</td><td>Velocity &times; days-of-cover falls below lead time + safety buffer</td><td>&ldquo;Coca-Cola 1.25L &mdash; 4 days left, delivery takes 2. Reorder today.&rdquo;</td></tr>
+        <tr><td class="k">Silent stockout</td><td>On-hand at 0 for &gt;72h while the SKU is still &ldquo;active&rdquo; and had steady sales</td><td>&ldquo;Nescafé 3-in-1 has been out for 5 days &mdash; you&rsquo;re losing ~$12/day and may not have noticed.&rdquo;</td></tr>
+        <tr><td class="k">Expiry-bound overstock</td><td>Cover &gt; shelf-life remaining, for perishables</td><td>&ldquo;You have 60 days of yogurt cover and it expires in 21. Promote or return 40 units.&rdquo;</td></tr>
+        <tr><td class="k">Dead stock</td><td>Zero sales for 45+ days with capital &gt; threshold</td><td>&ldquo;6 SKUs, $430, no sale since January. Clear them.&rdquo;</td></tr>
+        <tr><td class="k">Feast-or-famine SKU on a fixed reorder point</td><td>High demand variance managed by a static rule</td><td>&ldquo;Ice cream swings 5&times; week to week &mdash; your fixed reorder causes both stockouts and spoilage.&rdquo;</td></tr>
+        <tr><td class="k">Shrinkage signal</td><td>Units sold consistently &lt; units depleted from stock</td><td>&ldquo;Cigarettes: 18 units left the shelf, 14 were rung up, 4 weeks running. Investigate.&rdquo;</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Revenue risk</h4>
+    <table>
+      <thead><tr><th style="width:26%">Risk</th><th>Signal</th><th style="width:30%">Example alert</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Revenue concentration</td><td>Top 5 SKUs or top 2 days &gt; ~60% of revenue</td><td>&ldquo;68% of your revenue is 5 products. If one supplier fails, most of your income does too.&rdquo;</td></tr>
+        <tr><td class="k">Shrinking basket</td><td>Average items-per-transaction trending down 3+ weeks</td><td>&ldquo;Baskets dropped from 3.1 to 2.6 items. Customers are buying less per visit &mdash; check placement and bundles.&rdquo;</td></tr>
+        <tr><td class="k">Quietly declining category</td><td>Category revenue down each week for 3 weeks, masked by growth elsewhere</td><td>&ldquo;Household goods have fallen 4 weeks running &mdash; hidden because beverages grew.&rdquo;</td></tr>
+        <tr><td class="k">Underpriced fast-mover</td><td>Very high velocity + margin below category norm</td><td>&ldquo;Iced coffee sells out daily at 23% margin vs 31% category. You&rsquo;re leaving ~$25/wk on the table.&rdquo;</td></tr>
+        <tr><td class="k">Recurring day-part sellout</td><td>Same SKUs hit 0 at the same time each day/week</td><td>&ldquo;You run out of bread every Friday by 2pm &mdash; ~$40 of demand walks out unserved.&rdquo;</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Supplier risk</h4>
+    <table>
+      <thead><tr><th style="width:26%">Risk</th><th>Signal</th><th style="width:30%">Example alert</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Single-supplier dependency</td><td>One supplier &gt; 50% of purchase value or of revenue-linked SKUs</td><td>&ldquo;Distributor A supplies 68% of your revenue. Add a second source for beverages.&rdquo;</td></tr>
+        <tr><td class="k">Creeping lead time</td><td>Order-to-delivery gap increasing order over order</td><td>&ldquo;Distributor A now takes 5 days, not 2. Your safety stock is set for 2 &mdash; raise it or switch.&rdquo;</td></tr>
+        <tr><td class="k">Price drift</td><td>One supplier&rsquo;s unit costs rising faster than others for comparable goods</td><td>&ldquo;Your snack supplier&rsquo;s prices are up 9% in 2 months; the market is up 3%.&rdquo;</td></tr>
+        <tr><td class="k">Falling fill rate</td><td>Delivered quantity &lt; ordered quantity, trend</td><td>&ldquo;Last 4 orders arrived 12% short. You&rsquo;re planning around stock you never receive.&rdquo;</td></tr>
+        <tr><td class="k">MOQ-forced overstock</td><td>Minimum order quantity &gt; sensible cover for the SKU</td><td>&ldquo;The 48-unit case gives you 70 days of cover on a slow item &mdash; split the order or drop the SKU.&rdquo;</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Cash flow risk</h4>
+    <table>
+      <thead><tr><th style="width:26%">Risk</th><th>Signal</th><th style="width:30%">Example alert</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Rising trapped-capital ratio</td><td>Share of stock value in slow/non-moving SKUs increasing</td><td>&ldquo;22% of your stock value is now slow-moving, up from 14%. Cash is freezing on the shelves.&rdquo;</td></tr>
+        <tr><td class="k">Reorder exceeds cash</td><td>Recommended purchase plan &gt; cash on hand</td><td>&ldquo;This week&rsquo;s ideal reorder is $780; you have $610. Here&rsquo;s the $610 version that protects your top sellers.&rdquo;</td></tr>
+        <tr><td class="k">Predicted shortfall on a date</td><td>Projected outflows &gt; inflows on a known day</td><td>&ldquo;You&rsquo;ll be about $180 short on the 15th when the supplier invoice is due. Delay the snack reorder to bridge it.&rdquo;</td></tr>
+        <tr><td class="k">Margin compression trend</td><td>Blended margin declining while revenue flat/up</td><td>&ldquo;You&rsquo;re selling more but keeping less &mdash; margin down 1.4 pts over a month, mostly discounting.&rdquo;</td></tr>
+        <tr><td class="k">Seasonal cash crunch ahead</td><td>Historical pattern of a demand spike needing stock 3 weeks out</td><td>&ldquo;Khmer New Year needs ~$900 of extra stock in 3 weeks. Start setting aside $300/wk now.&rdquo;</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================================================== 5. AI OPPORTUNITY DETECTION -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; MVP Blueprint</span><span>Part 5</span></div>
+    <div class="kicker">Part 5</div>
+    <h1 class="title">AI Opportunity Detection</h1>
+    <p class="sub">The same data that shows what&rsquo;s wrong also shows what&rsquo;s possible. Inventra ranks the upside by dollars-per-week and effort.</p>
+
+    <table>
+      <thead><tr><th style="width:22%">Opportunity</th><th>Pattern Inventra reads</th><th style="width:28%">Example &amp; estimated upside</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Accelerating product</td><td>Velocity rising and the rate of rise is increasing, while stock cover is thin</td><td>&ldquo;Iced coffee +34% MoM, 5 days cover &mdash; raise the order 40%.&rdquo; &nbsp;<span class="em">+$40/wk</span></td></tr>
+        <tr><td class="k">Emerging category</td><td>New or minor SKUs steadily taking basket share</td><td>&ldquo;Ready-meals went from 2% to 7% of baskets in 6 weeks &mdash; widen the range.&rdquo; &nbsp;<span class="em">+$60/wk</span></td></tr>
+        <tr><td class="k">Early seasonal ramp</td><td>Current demand curve leading the same period in prior years</td><td>&ldquo;Cold drinks are ramping 10 days earlier than last year &mdash; pre-stock before the heat.&rdquo; &nbsp;<span class="em">avoids ~$120 lost sales</span></td></tr>
+        <tr><td class="k">Frequently bought together</td><td>Two SKUs co-occur in a high share of transactions, not merchandised together</td><td>&ldquo;Water + instant noodles: 61% attach. Bundle at $1.90 or shelve them together.&rdquo; &nbsp;<span class="em">+$30/wk</span></td></tr>
+        <tr><td class="k">Trade-up gap</td><td>Most buyers take the small size; the large earns more margin per sale</td><td>&ldquo;82% buy the 400ml water. Push the 1.5L at the counter &mdash; +$0.15 margin each.&rdquo; &nbsp;<span class="em">+$18/wk</span></td></tr>
+        <tr><td class="k">Price headroom</td><td>High velocity, no volume drop across past price moves</td><td>&ldquo;Iced coffee held volume through the last price rise &mdash; test +$0.10.&rdquo; &nbsp;<span class="em">+$22/wk</span></td></tr>
+        <tr><td class="k">Range gap</td><td>Repeated stockouts + substitutions + &ldquo;do you have X?&rdquo; patterns point to a missing SKU</td><td>&ldquo;You lose ~6 sales/week to not stocking large eggs &mdash; add the SKU.&rdquo; &nbsp;<span class="em">+$25/wk</span></td></tr>
+        <tr><td class="k">Day-part / day-of-week expansion</td><td>Demand consistently exceeds capacity in a specific window</td><td>&ldquo;Fridays sell out by 3pm &mdash; split the delivery Wed + Fri.&rdquo; &nbsp;<span class="em">+$110/wk</span></td></tr>
+        <tr><td class="k">Dead-stock-to-cash</td><td>Trapped capital that could be redeployed into faster movers</td><td>&ldquo;Clear the $430 of dead stock, put it into your top 3 SKUs turning 3&times; faster.&rdquo; &nbsp;<span class="em">+$35/wk on redeployed cash</span></td></tr>
+        <tr><td class="k">Supplier consolidation</td><td>Volume split across suppliers that one could serve at a better rate</td><td>&ldquo;Combine beverage orders with one distributor for a ~4% volume discount.&rdquo; &nbsp;<span class="em">+$28/wk</span></td></tr>
+        <tr><td class="k">Loyalty pattern</td><td>Identifiable repeat buyers concentrated on a few SKUs</td><td>&ldquo;~20 regulars buy coffee daily &mdash; a simple &lsquo;10th free&rsquo; card locks the habit.&rdquo; &nbsp;<span class="em">retention</span></td></tr>
+        <tr><td class="k">Event / calendar demand</td><td>Paydays, holidays, local events, weather &mdash; historically move specific SKUs</td><td>&ldquo;Payday is the 25th &mdash; premium items sell 1.6&times;. Stock up on the 23rd.&rdquo; &nbsp;<span class="em">+$70 that week</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================================================== 6. AI ACTION PLAN -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; MVP Blueprint</span><span>Part 6</span></div>
+    <div class="kicker">Part 6</div>
+    <h1 class="title">AI Action Plan</h1>
+    <p class="sub">Reporting is not the product. Every insight resolves into a specific, costed action the owner can take this week.</p>
+
+    <p>A risk without an action is an anxiety. An opportunity without an action is a regret. Inventra never leaves an insight hanging &mdash; each one carries a recommended move, the reasoning, a projected dollar impact, and an effort tag.</p>
+
+    <table>
+      <thead><tr><th style="width:24%">Situation</th><th style="width:32%">Recommended action</th><th>Rationale &amp; projected impact</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Snacks over-stocked, beverages turning fast</td><td>&ldquo;Reduce snack purchases by 20% and move that ~$60/wk into beverages.&rdquo;</td><td>Beverages turn 3&times; faster; snacks carry 18 days of cover. <span class="em">+$45/wk margin, shelf freed.</span></td></tr>
+        <tr><td class="k">Top seller 4 days from stockout</td><td>&ldquo;Reorder Coca-Cola 1.25L today &mdash; 24 units &mdash; not Thursday.&rdquo;</td><td>Delivery takes 2 days; stockout in 4. <span class="em">Avoids ~$70 of lost sales.</span></td></tr>
+        <tr><td class="k">$430 in six products, no sale since January</td><td>&ldquo;Mark those 6 SKUs down 30% this week; stop restocking them.&rdquo;</td><td>47&ndash;91 days idle. <span class="em">Recovers ~$300 cash in ~10 days; permanent shelf back.</span></td></tr>
+        <tr><td class="k">Iced coffee: high velocity, low elasticity</td><td>&ldquo;Raise iced-coffee price by $0.10.&rdquo;</td><td>Volume held through the last two price moves. <span class="em">+$22/wk margin.</span></td></tr>
+        <tr><td class="k">Water + noodles: 61% attach, not merchandised</td><td>&ldquo;Create a water + instant-noodle bundle at $1.90; shelve them together.&rdquo;</td><td>Already bought together most of the time. <span class="em">+8% attach, ~+$30/wk.</span></td></tr>
+        <tr><td class="k">Friday demand exceeds one delivery</td><td>&ldquo;Split the weekly delivery into Wednesday + Friday.&rdquo;</td><td>You sell out Friday afternoons. <span class="em">Captures ~$110/wk of unmet demand.</span></td></tr>
+        <tr><td class="k">68% of revenue from one supplier</td><td>&ldquo;Onboard a second beverage supplier for your top 5 SKUs.&rdquo;</td><td>Removes a single point of failure. <span class="em">~5% price leverage + resilience.</span></td></tr>
+        <tr><td class="k">Product X: 90 days, zero sales, $70 tied up</td><td>&ldquo;Stop restocking Product X. Clear the last units at cost.&rdquo;</td><td>No demand signal for a full quarter. <span class="em">$70 cash + shelf recovered permanently.</span></td></tr>
+        <tr><td class="k">Khmer New Year in 3 weeks</td><td>&ldquo;Pre-stock the 12 festival SKUs now; set aside $300/wk for 3 weeks.&rdquo;</td><td>Demand historically 2.2&times; for 10 days. <span class="em">Avoids stockout, captures the peak (~$400).</span></td></tr>
+        <tr><td class="k">Top 5 SKUs sit on a low shelf</td><td>&ldquo;Move your five fastest movers to eye level.&rdquo;</td><td>Velocity vs shelf-position mismatch. <span class="em">+3&ndash;5% on those lines.</span></td></tr>
+        <tr><td class="k">Reorder plan ($780) exceeds cash ($610)</td><td>&ldquo;Use this $610 plan &mdash; it fully covers your top 8 sellers and defers 3 slow SKUs.&rdquo;</td><td>Protects revenue while staying solvent. <span class="em">Zero stockout risk on A-items.</span></td></tr>
+        <tr><td class="k">Nescafé silently out for 5 days</td><td>&ldquo;Add Nescafé 3-in-1 to today&rsquo;s order; set a low-stock alert at 6 units.&rdquo;</td><td>Steady seller, nobody noticed. <span class="em">Stops ~$12/day bleed.</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="fig">
+      <svg width="672" height="170" viewBox="0 0 672 170" fill="none" font-family="Manrope, sans-serif">
+        <g font-size="10" font-weight="700">
+          <rect x="8" y="44" width="150" height="42" rx="10" fill="#EEF2FF"/><text x="83" y="70" text-anchor="middle" fill="#312E81">Suggested</text>
+          <rect x="230" y="44" width="150" height="42" rx="10" fill="#E0E7FF"/><text x="305" y="70" text-anchor="middle" fill="#3730A3">Approved</text>
+          <rect x="452" y="44" width="150" height="42" rx="10" fill="#10B981"/><text x="527" y="70" text-anchor="middle" fill="#0F172A">Done</text>
+        </g>
+        <g stroke="#94A3B8" stroke-width="1.6" fill="none" marker-end="url(#aa)">
+          <path d="M160 65 H226"/><path d="M382 65 H448"/>
+        </g>
+        <defs><marker id="aa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0l10 5-10 5z" fill="#94A3B8"/></marker></defs>
+        <text x="193" y="58" font-size="8" fill="#64748B" text-anchor="middle">owner taps</text>
+        <text x="415" y="58" font-size="8" fill="#64748B" text-anchor="middle">next data confirms</text>
+        <path d="M527 90 C527 130, 83 130, 83 92" stroke="#10B981" stroke-width="1.5" fill="none" stroke-dasharray="3 4" marker-end="url(#aa)"/>
+        <text x="336" y="150" font-size="9" fill="#047857" font-weight="700" text-anchor="middle">Weekly: &ldquo;You completed 4 of 6 actions &mdash; they added about $150.&rdquo;</text>
+      </svg>
+      <div class="fig-cap">Figure 6.1 &mdash; The action lifecycle. The weekly feedback loop &mdash; showing what the actions were worth &mdash; is the retention engine.</div>
+    </div>
+  </section>
+
+  <!-- ===================================================== 7. DIFFERENTIATION -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; MVP Blueprint</span><span>Part 7</span></div>
+    <div class="kicker">Part 7</div>
+    <h1 class="title">Differentiation &mdash; &ldquo;I Already Have a POS. Why Inventra?&rdquo;</h1>
+    <p class="sub">Because a POS is a system of record. Inventra is a system of decisions. They are not the same category.</p>
+
+    <div class="pull"><div class="rule"></div><p>Your POS is your business&rsquo;s memory. Inventra AI is its judgment. One records what happened. The other reads across all of it and tells you what to do next &mdash; and what it&rsquo;s worth.</p></div>
+
+    <p><strong>Inventra does not replace the POS.</strong> It sits on top of it &mdash; and on top of Excel, supplier messages, and anything else the business already produces. Keep the POS. Add a brain.</p>
+
+    <table>
+      <thead><tr><th style="width:34%">Dimension</th><th>POS / inventory system</th><th>Inventra AI</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Core job</td><td>Record transactions and stock</td><td class="em">Read across all the data and decide what to do</td></tr>
+        <tr><td class="k">Question it answers</td><td>&ldquo;What did I sell?&rdquo;</td><td class="em">&ldquo;What should I do next &mdash; and why?&rdquo;</td></tr>
+        <tr><td class="k">Output</td><td>Reports and screens you interpret</td><td class="em">A briefing written for you, plus a ranked action plan</td></tr>
+        <tr><td class="k">Time orientation</td><td>Backward &mdash; what already happened</td><td class="em">Forward &mdash; predictive and prescriptive</td></tr>
+        <tr><td class="k">Alerts</td><td>Reactive thresholds (&ldquo;low stock&rdquo;)</td><td class="em">Risk detected early, ranked by money and time-to-impact</td></tr>
+        <tr><td class="k">Scope of view</td><td>One store&rsquo;s transactions</td><td class="em">Sales + margin + cash + suppliers + seasonality, together</td></tr>
+        <tr><td class="k">Who does the analysis</td><td>You do &mdash; the POS needs an analyst to be useful</td><td class="em">Inventra is the analyst</td></tr>
+        <tr><td class="k">Interface</td><td>Menus and tables</td><td class="em">A one-page brief and a chat box</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Three reasons an owner turns Inventra on even with a perfect POS</h4>
+    <ol>
+      <li><strong>The POS never tells them what to do.</strong> It shows the numbers and stops. The owner still has to be the analyst at 10pm.</li>
+      <li><strong>The POS only sees transactions.</strong> It cannot connect a supplier&rsquo;s slipping lead time to next month&rsquo;s cash gap to the category that&rsquo;s quietly declining. Inventra holds all of that in one view.</li>
+      <li><strong>The POS makes them work for the insight.</strong> Inventra delivers the insight &mdash; and the action, and the dollar figure &mdash; before they&rsquo;ve finished their coffee.</li>
+    </ol>
+  </section>
+
+  <!-- ===================================================== 8. FUTURE VISION -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; MVP Blueprint</span><span>Part 8</span></div>
+    <div class="kicker">Part 8</div>
+    <h1 class="title">Future Vision &mdash; From Inventory Intelligence to Business Autopilot</h1>
+    <p class="sub">Four stages. At each one Inventra sees more, does more, and asks the owner for less &mdash; but the owner always sets the goals.</p>
+
+    <div class="fig">
+      <svg width="672" height="266" viewBox="0 0 672 266" fill="none" font-family="Manrope, sans-serif">
+        <line x1="8" y1="238" x2="664" y2="238" stroke="#E2E8F0" stroke-width="1.5"/>
+        <g text-anchor="middle">
+          <rect x="12" y="168" width="150" height="70" rx="9" fill="#EEF2FF"/>
+          <text x="87" y="160" font-size="9" font-weight="700" fill="#10B981">STAGE 1 &middot; NOW</text>
+          <text x="87" y="194" font-size="10" font-weight="700" fill="#312E81">AI Inventory</text><text x="87" y="207" font-size="10" font-weight="700" fill="#312E81">Intelligence</text>
+          <text x="87" y="224" font-size="7.5" fill="#4338CA">&ldquo;knows your shelves&rdquo;</text>
+
+          <rect x="180" y="138" width="150" height="100" rx="9" fill="#E0E7FF"/>
+          <text x="255" y="130" font-size="9" font-weight="700" fill="#10B981">STAGE 2 &middot; +6&ndash;12 MO</text>
+          <text x="255" y="166" font-size="10" font-weight="700" fill="#312E81">AI Business</text><text x="255" y="179" font-size="10" font-weight="700" fill="#312E81">Intelligence</text>
+          <text x="255" y="196" font-size="7.5" fill="#3730A3">&ldquo;understands your</text><text x="255" y="207" font-size="7.5" fill="#3730A3">whole business&rdquo;</text>
+
+          <rect x="348" y="104" width="150" height="134" rx="9" fill="#C7D2FE"/>
+          <text x="423" y="96" font-size="9" font-weight="700" fill="#10B981">STAGE 3 &middot; +12&ndash;24 MO</text>
+          <text x="423" y="132" font-size="10" font-weight="700" fill="#312E81">AI Operating</text><text x="423" y="145" font-size="10" font-weight="700" fill="#312E81">Copilot</text>
+          <text x="423" y="163" font-size="7.5" fill="#3730A3">&ldquo;runs the playbook</text><text x="423" y="174" font-size="7.5" fill="#3730A3">with you&rdquo;</text>
+
+          <rect x="516" y="66" width="150" height="172" rx="9" fill="#10B981"/>
+          <text x="591" y="58" font-size="9" font-weight="700" fill="#047857">STAGE 4 &middot; +24&ndash;48 MO</text>
+          <text x="591" y="98" font-size="10.5" font-weight="800" fill="#0F172A">AI Business</text><text x="591" y="112" font-size="10.5" font-weight="800" fill="#0F172A">Autopilot</text>
+          <text x="591" y="132" font-size="7.5" fill="#065F46">&ldquo;runs the routine</text><text x="591" y="143" font-size="7.5" fill="#065F46">so you run the business&rdquo;</text>
+        </g>
+        <path d="M40 252 H636" stroke="#CBD5E1" stroke-width="1.4" marker-end="url(#av)"/>
+        <defs><marker id="av" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0l10 5-10 5z" fill="#CBD5E1"/></marker></defs>
+        <text x="336" y="264" font-size="8.5" fill="#94A3B8" text-anchor="middle">sees more &middot; does more &middot; asks the owner for less</text>
+      </svg>
+      <div class="fig-cap">Figure 8.1 &mdash; The evolution ladder. Same product, widening authority.</div>
+    </div>
+
+    <table>
+      <thead><tr><th style="width:15%">Stage</th><th style="width:20%">Question it answers</th><th>What it can see</th><th>What it does</th><th style="width:17%">The owner&rsquo;s role</th></tr></thead>
+      <tbody>
+        <tr><td class="k">1 &mdash; Inventory Intelligence <span class="muted">(MVP)</span></td><td>&ldquo;What&rsquo;s happening on my shelves?&rdquo;</td><td>Sales history and stock levels</td><td>Forecasts demand, flags dead stock and stockouts, suggests reorders</td><td>Makes every buying decision</td></tr>
+        <tr><td class="k">2 &mdash; Business Intelligence</td><td>&ldquo;How is my business really doing?&rdquo;</td><td>+ margin, cash position, suppliers, seasonality</td><td>Writes the daily Brief; detects risk and opportunity across the whole business; costs every action</td><td>Decides, using the Brief</td></tr>
+        <tr><td class="k">3 &mdash; Operating Copilot</td><td>&ldquo;What should I do &mdash; and can you help me do it?&rdquo;</td><td>+ pricing, promotions, supplier catalogues, staffing</td><td>Conversational and proactive; drafts purchase orders, price changes and promotions for one-tap approval</td><td>Approves; sets strategy</td></tr>
+        <tr><td class="k">4 &mdash; Business Autopilot</td><td>&ldquo;Run the routine; flag the exceptions.&rdquo;</td><td>+ bank feed, e-commerce, multi-branch</td><td>Executes routine decisions inside owner-set budgets and guardrails &mdash; auto-reorder, dynamic pricing, supplier switching &mdash; and surfaces only exceptions</td><td>Sets goals and guardrails; handles exceptions</td></tr>
+      </tbody>
+    </table>
+
+    <div class="box box-dk">
+      <div class="box-label">The through-line</div>
+      <p style="margin:0;font-size:12.5px;">We are not building software that manages inventory. We are building the operating system that runs the business &mdash; starting with the one decision an SME owner makes every single week: <strong>what to buy.</strong></p>
+    </div>
+  </section>
+
+  <!-- ===================================================== APPENDIX -->
+  <section class="section pad" style="padding-bottom:56px;">
+    <div class="rh"><span>Inventra AI &middot; MVP Blueprint</span><span>Appendix</span></div>
+    <div class="kicker">Appendix</div>
+    <h1 class="title">How the Wow Actually Works</h1>
+    <p class="sub">The magic is a pipeline. Deterministic maths does the analysis; the language model writes the story &mdash; it never invents a number.</p>
+
+    <div class="fig">
+      <svg width="672" height="230" viewBox="0 0 672 230" fill="none" font-family="Manrope, sans-serif">
+        <g font-size="8.5">
+          <rect x="4" y="70" width="118" height="70" rx="9" fill="#FFFFFF" stroke="#E2E8F0"/>
+          <text x="63" y="92" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0F172A">Ingest &amp;</text><text x="63" y="104" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0F172A">auto-map</text>
+          <text x="63" y="122" text-anchor="middle" fill="#64748B">messy Excel/CSV</text>
+
+          <rect x="140" y="70" width="132" height="70" rx="9" fill="#EEF2FF"/>
+          <text x="206" y="90" text-anchor="middle" font-size="9.5" font-weight="700" fill="#312E81">Retail-stats engine</text>
+          <text x="206" y="106" text-anchor="middle" fill="#4338CA">velocity, cover, turnover,</text><text x="206" y="117" text-anchor="middle" fill="#4338CA">ageing, margin, concentration,</text><text x="206" y="128" text-anchor="middle" fill="#4338CA">attach rate, seasonality</text>
+
+          <rect x="290" y="70" width="132" height="70" rx="9" fill="#EEF2FF"/>
+          <text x="356" y="90" text-anchor="middle" font-size="9.5" font-weight="700" fill="#312E81">Pattern detection</text>
+          <text x="356" y="108" text-anchor="middle" fill="#4338CA">~8 risk detectors</text><text x="356" y="120" text-anchor="middle" fill="#4338CA">~6 opportunity detectors</text>
+
+          <rect x="440" y="70" width="132" height="70" rx="9" fill="#0F172A"/>
+          <text x="506" y="90" text-anchor="middle" font-size="9.5" font-weight="700" fill="#F8FAFC">LLM narration</text>
+          <text x="506" y="108" text-anchor="middle" fill="#94A3B8">writes the Brief,</text><text x="506" y="120" text-anchor="middle" fill="#94A3B8">answers chat &mdash; grounded</text>
+
+          <rect x="590" y="70" width="78" height="70" rx="9" fill="#10B981"/>
+          <text x="629" y="98" text-anchor="middle" font-size="9" font-weight="800" fill="#0F172A">Brief +</text><text x="629" y="110" text-anchor="middle" font-size="9" font-weight="800" fill="#0F172A">Actions</text><text x="629" y="122" text-anchor="middle" font-size="9" font-weight="800" fill="#0F172A">+ Chat</text>
+        </g>
+        <g stroke="#94A3B8" stroke-width="1.5" marker-end="url(#ap)">
+          <line x1="123" y1="105" x2="138" y2="105"/><line x1="273" y1="105" x2="288" y2="105"/><line x1="423" y1="105" x2="438" y2="105"/><line x1="573" y1="105" x2="588" y2="105"/>
+        </g>
+        <defs><marker id="ap" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0l10 5-10 5z" fill="#94A3B8"/></marker></defs>
+        <rect x="140" y="150" width="282" height="24" rx="6" fill="#ECFDF5"/>
+        <text x="281" y="166" text-anchor="middle" font-size="8.5" font-weight="700" fill="#047857">deterministic &middot; auditable &middot; the numbers are real</text>
+        <rect x="440" y="150" width="132" height="24" rx="6" fill="#F1F5F9"/>
+        <text x="506" y="166" text-anchor="middle" font-size="8.5" font-weight="700" fill="#334155">language only, no maths</text>
+        <text x="336" y="30" text-anchor="middle" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="1">UPLOAD TO BRIEF IN ~8 SECONDS</text>
+      </svg>
+      <div class="fig-cap">Figure A.1 &mdash; The pipeline. Judges can trust the figures because a language model never computes them.</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card"><h4>In scope for build week</h4>
+        <p class="muted" style="margin:0;">File ingest + auto-mapping &middot; retail-stats engine &middot; ~8 risk detectors &middot; ~6 opportunity detectors &middot; Brief generator &middot; grounded chat &middot; action list with projected impact &middot; the 30-second demo flow.</p></div>
+      <div class="card"><h4>Deliberately out of scope (for now)</h4>
+        <p class="muted" style="margin:0;">Live POS integration &middot; write-back (auto-drafting real POs) &middot; multi-branch consolidation &middot; bank-feed cash forecasting &middot; autonomous execution. These are Stages 3&ndash;4, not the MVP.</p></div>
+    </div>
+
+    <div class="pull" style="margin-top:22px;"><div class="rule"></div><p>Do not build another inventory system. Build the analyst that reads one &mdash; and, eventually, the operating system that runs the shop.</p></div>
+
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;align-items:center;gap:11px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#312E81"/><circle cx="8" cy="15.5" r="2.1" fill="#10B981"/><circle cx="16" cy="8.5" r="2.1" fill="#F8FAFC"/><circle cx="16.5" cy="16" r="1.6" fill="#818CF8"/><path d="M8 15.5L16 8.5M16 8.5L16.5 16" stroke="#10B981" stroke-width="1.4"/></svg>
+        <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;">Inventra AI</span>
+      </div>
+      <span style="font-size:11px;color:#94A3B8;font-weight:600;">MVP Experience Blueprint &middot; v1.0 &middot; for the AIM Competition</span>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+</body>
+</html>

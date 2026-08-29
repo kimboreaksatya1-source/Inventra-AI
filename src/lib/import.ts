@@ -1,0 +1,99 @@
+// Inventra AI — server-side import commit.
+// Persists validated product rows and synthesizes ~30 days of Sale history
+// around each product's dailySales so the trend/forecast engine keeps working.
+
+import { db } from "./db";
+import type { ImportPayload } from "./validation";
+
+const OWNER_EMAIL = "owner@inventra.local";
+const HISTORY_DAYS = 30;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/** Deterministic PRNG (mulberry32) so re-imports of the same data are stable. */
+function rng(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function hashString(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/** Build ~HISTORY_DAYS of daily Sale rows for a product, averaging ≈ dailySales. */
+function synthesizeSales(productId: string, dailySales: number) {
+  if (dailySales <= 0) return [] as { productId: string; quantity: number; date: Date }[];
+  const rand = rng(hashString(productId));
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const rows: { productId: string; quantity: number; date: Date }[] = [];
+  for (let d = HISTORY_DAYS; d >= 1; d--) {
+    const date = new Date(today.getTime() - d * MS_PER_DAY);
+    const dow = date.getDay();
+    const weekendBoost = dow === 0 || dow === 6 ? 1.2 : 1;
+    const jitter = 0.7 + rand() * 0.6; // 0.7 – 1.3
+    const qty = Math.max(0, Math.round(dailySales * jitter * weekendBoost));
+    if (qty > 0) rows.push({ productId, quantity: qty, date });
+  }
+  return rows;
+}
+
+export interface CommitResult {
+  imported: number;
+  batchId: string;
+  business: string;
+}
+
+export async function commitImport(payload: ImportPayload): Promise<CommitResult> {
+  const user = await db.user.upsert({
+    where: { email: OWNER_EMAIL },
+    update: {},
+    create: {
+      email: OWNER_EMAIL,
+      name: "Owner",
+      businessName: "My Business",
+    },
+  });
+
+  // Replace the catalog — Product cascade removes Sale + Recommendation rows.
+  await db.product.deleteMany({ where: { userId: user.id } });
+
+  const created = await db.product.createManyAndReturn({
+    data: payload.rows.map((r) => ({
+      userId: user.id,
+      name: r.name,
+      category: r.category,
+      stockQuantity: r.stock,
+      dailySales: r.dailySales,
+      sellingPrice: r.sellingPrice,
+      costPrice: r.costPrice,
+      reorderPoint: Math.max(1, Math.ceil(r.dailySales * 7)),
+      unit: "unit",
+    })),
+    select: { id: true, dailySales: true },
+  });
+
+  const sales = created.flatMap((p) => synthesizeSales(p.id, p.dailySales));
+  if (sales.length) {
+    await db.sale.createMany({ data: sales });
+  }
+
+  const batch = await db.importBatch.create({
+    data: { fileName: payload.fileName, rowCount: created.length },
+  });
+
+  return { imported: created.length, batchId: batch.id, business: user.businessName };
+}
+
+export async function latestImport() {
+  return db.importBatch.findFirst({ orderBy: { createdAt: "desc" } });
+}

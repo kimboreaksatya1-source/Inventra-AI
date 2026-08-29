@@ -1,0 +1,9 @@
+Product,Category,Stock,DailySales,SellingPrice,CostPrice
+Coca-Cola,Beverage,18,6,1.2,0.8
+Water,Beverage,20,4,0.5,0.3
+Noodles,Food,12,5,0.4,0.2
+Instant Coffee,Beverage,45,6,0.35,0.2
+Cooking Oil 1L,Staples,14,1.8,2.4,1.9
+Rice 5kg,Staples,22,1.2,6.5,5.2
+Energy Drink,Beverage,140,2,0.6,0.4
+Shampoo Sachet,Personal Care,90,1,0.15,0.08

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "@/lib/nav";
 import { useAppStore } from "@/lib/store";
 import { Sparkles, X } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -21,8 +22,14 @@ export function Sidebar({ variant, onClose }: SidebarProps) {
       {/* Logo */}
       <div className="flex h-16 items-center justify-between gap-2 px-5 border-b border-sidebar-border">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-600 shadow-lg shadow-teal-900/30">
-            <Sparkles className="size-5 text-white" />
+          <div className="flex size-9 items-center justify-center overflow-hidden rounded-xl bg-white shadow-lg shadow-teal-900/30">
+            <Image
+              src="/inventra-logo.png"
+              alt="Inventra"
+              width={36}
+              height={36}
+              className="size-9 scale-125 object-cover"
+            />
           </div>
           <div className="leading-tight">
             <p className="text-sm font-bold tracking-tight text-white">Inventra</p>

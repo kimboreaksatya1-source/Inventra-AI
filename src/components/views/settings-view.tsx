@@ -105,7 +105,6 @@ export function SettingsView() {
             >
               <option value="USD">USD ($)</option>
               <option value="KHR">KHR (៛)</option>
-              <option value="THB">THB (฿)</option>
             </select>
           </div>
         </div>

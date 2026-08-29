@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -30,6 +30,7 @@ model Product {
   category       String
   sku            String?
   stockQuantity  Int
+  dailySales     Float            @default(0) // authoritative daily unit velocity from import
   sellingPrice   Float
   costPrice      Float
   reorderPoint   Int              @default(10)
@@ -73,5 +74,13 @@ model ChatMessage {
   id        String   @id @default(cuid())
   role      String   // user | assistant
   content   String
+  createdAt DateTime @default(now())
+}
+
+/// One business-data import batch (CSV / Excel upload)
+model ImportBatch {
+  id        String   @id @default(cuid())
+  fileName  String
+  rowCount  Int
   createdAt DateTime @default(now())
 }

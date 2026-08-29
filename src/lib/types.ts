@@ -174,3 +174,123 @@ export interface BusinessInsightsReport {
   deadInventory: BusinessInsight[];
   cashFlowActions: BusinessInsight[];
 }
+
+/* ============================================================
+   Phase 1 MVP — Import → Analysis → Brief → Revenue Risk
+   ============================================================ */
+
+/** A raw parsed spreadsheet row before validation (all strings/unknowns). */
+export interface RawRow {
+  rowNumber: number;
+  name: string;
+  category: string;
+  stock: string | number | null;
+  dailySales: string | number | null;
+  sellingPrice: string | number | null;
+  costPrice: string | number | null;
+}
+
+/** A validated, import-ready product row. */
+export interface ImportRow {
+  name: string;
+  category: string;
+  stock: number;
+  dailySales: number;
+  sellingPrice: number;
+  costPrice: number;
+}
+
+/** Result of validating one parsed row. */
+export interface RowValidation {
+  rowNumber: number;
+  raw: RawRow;
+  data: ImportRow | null;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface ParsePreview {
+  fileName: string;
+  totalRows: number;
+  validRows: ImportRow[];
+  validations: RowValidation[];
+  errorCount: number;
+  warningCount: number;
+}
+
+export type RiskLevel = "Critical" | "High" | "Medium" | "Low" | "None";
+
+/** Per-product output of the analysis engine (Feature 2). */
+export interface ProductAnalysis {
+  id: string;
+  name: string;
+  category: string;
+  stock: number;
+  dailySales: number;
+  sellingPrice: number;
+  costPrice: number;
+  unitMargin: number;
+  daysRemaining: number; // Infinity when dailySales === 0
+  daysUntilStockout: number; // bounded horizon
+  riskLevel: RiskLevel;
+  estimatedRevenueAtRisk: number;
+  inventoryValue: number;
+}
+
+export interface AnalysisSummary {
+  totalProducts: number;
+  criticalCount: number;
+  highCount: number;
+  atRiskWithinWeek: number;
+  totalRevenueAtRisk: number;
+  totalInventoryValue: number;
+  healthLabel: string;
+  explanation: string;
+}
+
+export interface InventoryAnalysis {
+  generatedAt: string;
+  business: string;
+  products: ProductAnalysis[];
+  summary: AnalysisSummary;
+  healthScore: number; // 0-100
+  healthBreakdown: {
+    stockoutRisk: number;
+    inventoryBalance: number;
+    productHealth: number;
+  };
+}
+
+/** AI Business Brief (Feature 3). */
+export interface CriticalRisk {
+  product: string;
+  daysRemaining: number;
+  revenueAtRisk: number;
+  priority: Priority;
+}
+
+export interface RevenueOpportunity {
+  title: string;
+  observation: string;
+  recommendedAction: string;
+  expectedRevenueImpact: number;
+}
+
+export interface RecommendedAction {
+  priority: Priority;
+  action: string;
+  reason: string;
+  expectedImpact: string;
+}
+
+export interface BusinessBrief {
+  generatedAt: string;
+  source: "ai" | "deterministic";
+  executiveSummary: string;
+  criticalRisks: CriticalRisk[];
+  revenueOpportunities: RevenueOpportunity[];
+  recommendedActions: RecommendedAction[];
+  healthScore: number;
+  healthLabel: string;
+  healthExplanation: string;
+}

@@ -21,6 +21,7 @@ export function Header({
   onOpenNav: () => void;
 }) {
   const initials = user?.name ? user.name.slice(0, 2).toUpperCase() : "IN";
+  const setSection = useAppStore((s) => s.setSection);
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md sm:px-6">
       <Button
@@ -45,7 +46,10 @@ export function Header({
 
       <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
         {/* Revenue at risk pill */}
-        <button className="hidden md:inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60">
+        <button
+          onClick={() => setSection("revenue-protection")}
+          className="hidden md:inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60"
+        >
           <ShieldAlert className="size-3.5" />
           <span className="tabular-nums">{formatCurrency(revenueAtRisk)}</span>
           <span className="text-red-500/70 font-medium">at risk</span>
@@ -56,6 +60,7 @@ export function Header({
           size="icon"
           className="relative size-9 text-muted-foreground hover:text-foreground"
           aria-label="Notifications"
+          onClick={() => setSection("alerts")}
         >
           <Bell className="size-4" />
           {alertCount > 0 && (

@@ -22,6 +22,7 @@ export interface RawProduct {
   category: string;
   sku: string | null;
   stockQuantity: number;
+  dailySales: number;
   sellingPrice: number;
   costPrice: number;
   reorderPoint: number;

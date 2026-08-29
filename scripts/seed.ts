@@ -1,7 +1,9 @@
 // Inventra AI — database seeding script
 // Run with: bun run scripts/seed.ts
 import { db } from "../src/lib/db";
-import { SEED_PRODUCTS, SEED_USER, generateSeedSales } from "../src/lib/mock-data";
+import { SEED_USER, generateSeedSales, seedProducts } from "../src/lib/mock-data";
+
+const SEED_PRODUCTS = seedProducts();
 
 async function main() {
   console.log("🌱 Seeding Inventra AI database...");
@@ -31,6 +33,7 @@ async function main() {
         category: p.category,
         sku: p.sku,
         stockQuantity: p.stockQuantity,
+        dailySales: p.dailySales,
         sellingPrice: p.sellingPrice,
         costPrice: p.costPrice,
         reorderPoint: p.reorderPoint,

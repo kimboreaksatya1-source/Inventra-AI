@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { SEED_PRODUCTS, SEED_USER, generateSeedSales } from "@/lib/mock-data";
+import { SEED_USER, generateSeedSales, seedProducts } from "@/lib/mock-data";
+
+const SEED_PRODUCTS = seedProducts();
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +30,7 @@ export async function POST() {
           category: p.category,
           sku: p.sku,
           stockQuantity: p.stockQuantity,
+          dailySales: p.dailySales,
           sellingPrice: p.sellingPrice,
           costPrice: p.costPrice,
           reorderPoint: p.reorderPoint,

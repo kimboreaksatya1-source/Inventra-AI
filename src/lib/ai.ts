@@ -1,7 +1,7 @@
-// Inventra AI — server-side AI helper wrapping z-ai-web-dev-sdk
+// Inventra AI — server-side AI helper, calls DeepSeek (OpenAI-compatible API)
 // All AI calls happen on the server (never client-side).
 
-import ZAI from "z-ai-web-dev-sdk";
+import OpenAI from "openai";
 import type {
   AdvisorInsight,
   AdvisorInsightItem,
@@ -10,10 +10,27 @@ import type {
 import type { LoadedData } from "./data";
 import { computeProductMetrics, generateRecommendations, suggestedOrderQuantity } from "./inventory";
 
-let zaiPromise: Promise<Awaited<ReturnType<typeof ZAI.create>>> | null = null;
-async function getAI() {
-  if (!zaiPromise) zaiPromise = ZAI.create();
-  return zaiPromise;
+const DEEPSEEK_MODEL = "deepseek-chat";
+export const AI_MODEL = DEEPSEEK_MODEL;
+
+let client: OpenAI | null = null;
+function getAI(): OpenAI {
+  if (!client) {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) throw new Error("DEEPSEEK_API_KEY is not set");
+    client = new OpenAI({ apiKey, baseURL: "https://api.deepseek.com" });
+  }
+  return client;
+}
+
+/** True when an AI provider key is configured. */
+export function isAIConfigured(): boolean {
+  return Boolean(process.env.DEEPSEEK_API_KEY);
+}
+
+/** Shared client accessor for other server modules (e.g. brief.ts). */
+export function getAIClient(): OpenAI {
+  return getAI();
 }
 
 /** Build a compact inventory context string for the LLM. */
@@ -71,17 +88,17 @@ export async function askAdvisor(
 ): Promise<{ content: string; insight: AdvisorInsight | null }> {
   const context = buildInventoryContext(data);
   const messages = [
-    { role: "assistant", content: ADVISOR_SYSTEM },
-    { role: "assistant", content: `INVENTORY CONTEXT:\n${context}` },
+    { role: "system" as const, content: ADVISOR_SYSTEM },
+    { role: "system" as const, content: `INVENTORY CONTEXT:\n${context}` },
     ...history.slice(-6),
-    { role: "user", content: message },
+    { role: "user" as const, content: message },
   ];
 
   try {
-    const zai = await getAI();
-    const completion = await zai.chat.completions.create({
+    const ai = getAI();
+    const completion = await ai.chat.completions.create({
+      model: DEEPSEEK_MODEL,
       messages: messages as any,
-      thinking: { type: "disabled" },
       temperature: 0.4,
     });
     const text = completion.choices[0]?.message?.content || "";
@@ -163,18 +180,18 @@ export async function generateInsightsNarrative(
 ): Promise<string> {
   const context = buildInventoryContext(data);
   const messages = [
-    { role: "assistant", content: INSIGHTS_SYSTEM },
+    { role: "system" as const, content: INSIGHTS_SYSTEM },
     {
-      role: "assistant",
+      role: "system" as const,
       content: `INVENTORY CONTEXT:\n${context}\n\nCOMPUTED REPORT SUMMARY:\n${staticReport.summary}\nTop drivers: ${staticReport.topRevenueDrivers.map((d) => d.title).join(", ")}\nFastest growing: ${staticReport.fastestGrowing.map((d) => d.title).join(", ")}\nSlow movers: ${staticReport.deadInventory.map((d) => d.title).join(", ")}`,
     },
-    { role: "user", content: "Write the executive summary paragraph for this week's business insights report." },
+    { role: "user" as const, content: "Write the executive summary paragraph for this week's business insights report." },
   ];
   try {
-    const zai = await getAI();
-    const completion = await zai.chat.completions.create({
+    const ai = getAI();
+    const completion = await ai.chat.completions.create({
+      model: DEEPSEEK_MODEL,
       messages: messages as any,
-      thinking: { type: "disabled" },
       temperature: 0.5,
     });
     return completion.choices[0]?.message?.content?.trim() || staticReport.summary;

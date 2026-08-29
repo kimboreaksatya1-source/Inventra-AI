@@ -1,0 +1,811 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #FFFFFF; }
+    .doc {
+      width: 816px; margin: 0 auto; background: #FFFFFF; color: #0F172A;
+      font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+      font-size: 13.5px; line-height: 1.62; font-weight: 400;
+    }
+    .pad { padding-left: 72px; padding-right: 72px; }
+    h1, h2, h3, h4 { font-family: 'Space Grotesk', 'Segoe UI', sans-serif; letter-spacing: -0.02em; color: #0F172A; margin: 0; }
+    a { color: #047857; } a:hover { color: #10B981; }
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 0 0 12px; padding-left: 20px; }
+    li { margin: 5px 0; }
+    strong { color: #0F172A; font-weight: 700; }
+
+    .section { padding-top: 28px; padding-bottom: 8px; margin-top: 16px; border-top: 2px solid #EEF2FF; }
+    .rh { display: flex; justify-content: space-between; align-items: center;
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #94A3B8; padding-bottom: 9px; border-bottom: 1px solid #E2E8F0; margin-bottom: 22px; }
+    .kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #10B981; }
+    .title { font-size: 25px; line-height: 1.16; margin: 10px 0 8px; }
+    .sub { font-size: 14.5px; line-height: 1.5; color: #64748B; font-weight: 500; margin: 0 0 20px; }
+    h3 { font-size: 15.5px; margin: 18px 0 6px; }
+    h4 { font-size: 13px; margin: 16px 0 4px; text-transform: uppercase; letter-spacing: 0.08em; color: #312E81; font-family: 'Manrope', sans-serif; font-weight: 700; }
+
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 6px; font-size: 11.5px; break-inside: avoid; }
+    thead th { background: #312E81; color: #F8FAFC; text-align: left; padding: 10px 12px; font-weight: 700; font-family: 'Manrope', sans-serif; }
+    td { padding: 9px 12px; border-bottom: 1px solid #E2E8F0; vertical-align: top; line-height: 1.5; }
+    tbody tr:nth-child(even) td { background: #F8FAFC; }
+    td.k { font-weight: 700; color: #0F172A; width: 26%; }
+    .chk { color: #10B981; font-weight: 700; }
+    .no { color: #94A3B8; }
+
+    .fig { margin: 14px 0 4px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; break-inside: avoid; }
+    .fig-cap { font-size: 10.5px; color: #64748B; margin: 7px 0 14px; font-weight: 600; }
+
+    .box { border-radius: 12px; padding: 15px 17px; margin: 14px 0; break-inside: avoid; }
+    .box-ind { background: #EEF2FF; }
+    .box-em { background: #ECFDF5; }
+    .box-dk { background: #0F172A; color: #E2E8F0; }
+    .box-dk strong { color: #FFFFFF; }
+    .box-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6px; }
+    .box-ind .box-label { color: #4338CA; }
+    .box-em .box-label { color: #047857; }
+    .box-dk .box-label { color: #34D399; }
+
+    .pull { margin: 20px 0; break-inside: avoid; }
+    .pull .rule { width: 42px; height: 3px; background: #10B981; border-radius: 2px; margin-bottom: 12px; }
+    .pull p { font-family: 'Space Grotesk', sans-serif; font-size: 18px; line-height: 1.42; color: #312E81; font-weight: 600; margin: 0; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 13px; }
+    .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 15px 16px; break-inside: avoid; }
+    .card h4 { margin-top: 0; }
+    .card .big { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: #312E81; }
+    .muted { color: #64748B; font-size: 12px; }
+    .tag { display: inline-block; font-size: 10px; font-weight: 700; color: #312E81; background: #EEF2FF; border-radius: 6px; padding: 3px 8px; margin: 3px 4px 0 0; }
+    .tag-em { color: #047857; background: #ECFDF5; }
+
+    .divider { height: 1px; background: #E2E8F0; margin: 26px 0; }
+    svg { display: block; max-width: 100%; }
+    .toc-row { display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px dotted #CBD5E1; font-size: 13px; }
+    .toc-row .n { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: #10B981; width: 30px; flex: none; }
+    .toc-row .t { font-weight: 600; color: #0F172A; }
+    .toc-row .d { color: #94A3B8; font-size: 11.5px; }
+  </style>
+</helmet>
+
+<div class="doc">
+
+  <!-- ============================================================ COVER -->
+  <section style="height:1056px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,#312E81 55%,#10B981 55%);"></div>
+    <div class="pad" style="padding-top:96px;">
+      <div style="display:flex;align-items:center;gap:13px;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+          <rect width="24" height="24" rx="7" fill="#312E81"/>
+          <circle cx="8" cy="15.5" r="2.1" fill="#10B981"/><circle cx="16" cy="8.5" r="2.1" fill="#F8FAFC"/>
+          <circle cx="16.5" cy="16" r="1.6" fill="#818CF8"/><path d="M8 15.5L16 8.5M16 8.5L16.5 16" stroke="#10B981" stroke-width="1.4"/>
+        </svg>
+        <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;">Inventra AI</span>
+      </div>
+
+      <div style="margin-top:120px;font-size:12px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#10B981;">Competition Report &amp; Concept Paper</div>
+      <h1 style="font-size:58px;line-height:1.02;margin:18px 0 0;letter-spacing:-0.03em;">Inventra AI</h1>
+      <div style="font-size:23px;font-weight:600;color:#312E81;font-family:'Space Grotesk',sans-serif;margin-top:14px;">AI Decision Intelligence Platform<br>for Cambodian SMEs</div>
+
+      <div style="margin-top:36px;">
+        <div style="width:42px;height:3px;background:#10B981;border-radius:2px;margin-bottom:12px;"></div>
+        <div style="font-size:16px;font-style:italic;color:#334155;font-weight:500;">&ldquo;From Inventory Tracking to Intelligent Business Decisions&rdquo;</div>
+      </div>
+
+      <div style="margin-top:120px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;">
+        <div style="background:#EEF2FF;border-radius:10px;padding:12px;font-size:11px;font-weight:700;color:#312E81;text-align:center;">AI Business Copilot</div>
+        <div style="background:#EEF2FF;border-radius:10px;padding:12px;font-size:11px;font-weight:700;color:#312E81;text-align:center;">Decision Intelligence Platform</div>
+        <div style="background:#EEF2FF;border-radius:10px;padding:12px;font-size:11px;font-weight:700;color:#312E81;text-align:center;">SME Operating Intelligence Layer</div>
+        <div style="background:#EEF2FF;border-radius:10px;padding:12px;font-size:11px;font-weight:700;color:#312E81;text-align:center;">Business Growth Assistant</div>
+      </div>
+
+      <div style="position:absolute;left:72px;right:72px;bottom:64px;display:flex;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:16px;font-size:11px;color:#64748B;font-weight:600;">
+        <span>Prepared for the AIM Competition</span>
+        <span>Version 1.0 &nbsp;&middot;&nbsp; August 2026</span>
+        <span>Confidential</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ CONTENTS -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Contents</span></div>
+    <div class="kicker">Contents</div>
+    <h1 class="title">Document Structure</h1>
+    <p class="sub">A concept paper positioning Inventra AI as an AI decision-intelligence platform &mdash; not an inventory tracking tool &mdash; for Cambodia&rsquo;s small and medium enterprises.</p>
+
+    <div class="toc-row"><span class="n">1</span><span><span class="t">Executive Summary</span> &nbsp;<span class="d">Problem, solution, impact, vision</span></span></div>
+    <div class="toc-row"><span class="n">2</span><span><span class="t">Industry Background</span> &nbsp;<span class="d">The digital transformation challenge facing Cambodian SMEs</span></span></div>
+    <div class="toc-row"><span class="n">3</span><span><span class="t">Problem Analysis</span> &nbsp;<span class="d">Beyond inventory management &mdash; the real business problem</span></span></div>
+    <div class="toc-row"><span class="n">4</span><span><span class="t">Solution Overview</span> &nbsp;<span class="d">Inventra AI as an AI operating copilot for SMEs</span></span></div>
+    <div class="toc-row"><span class="n">5</span><span><span class="t">Core AI Capabilities</span> &nbsp;<span class="d">Forecasting, procurement, dead stock, cash flow, health, copilot</span></span></div>
+    <div class="toc-row"><span class="n">6</span><span><span class="t">System Architecture</span> &nbsp;<span class="d">Layers, models, and data flow</span></span></div>
+    <div class="toc-row"><span class="n">7</span><span><span class="t">User Experience Journey</span> &nbsp;<span class="d">From raw sales data to recommended actions</span></span></div>
+    <div class="toc-row"><span class="n">8</span><span><span class="t">Target Users &amp; Market</span> &nbsp;<span class="d">Personas and market opportunity</span></span></div>
+    <div class="toc-row"><span class="n">9</span><span><span class="t">Competitive Differentiation</span> &nbsp;<span class="d">Traditional systems vs. Inventra AI</span></span></div>
+    <div class="toc-row"><span class="n">10</span><span><span class="t">MVP Development Plan</span> &nbsp;<span class="d">AIM Competition build-week scope and roadmap</span></span></div>
+    <div class="toc-row"><span class="n">11</span><span><span class="t">Business Impact</span> &nbsp;<span class="d">Efficiency, finance, decision quality, productivity, transformation</span></span></div>
+    <div class="toc-row"><span class="n">12</span><span><span class="t">Future Roadmap</span> &nbsp;<span class="d">Five-year path to a full SME operating copilot</span></span></div>
+    <div class="toc-row"><span class="n">13</span><span><span class="t">Conclusion</span> &nbsp;<span class="d">The vision for SME decision intelligence in Cambodia</span></span></div>
+  </section>
+
+  <!-- ============================================================ 1. EXECUTIVE SUMMARY -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 1</span></div>
+    <div class="kicker">Section 1</div>
+    <h1 class="title">Executive Summary</h1>
+    <p class="sub">What Inventra AI is, why it exists, who it serves, and why it matters now.</p>
+
+    <p>Cambodia&rsquo;s small and medium enterprises generate the majority of the country&rsquo;s employment and a large share of its economic activity, yet most of them run on intuition, paper records, and disconnected spreadsheets. They collect a surprising amount of data every day &mdash; every sale, every delivery, every price change &mdash; but almost none of it is converted into a decision. Owners can tell you what is on the shelf; they cannot tell you what to buy next week, which products are draining their cash, or where their margin is leaking.</p>
+    <p><strong>Inventra AI is an AI decision-intelligence platform that closes this gap.</strong> It ingests the operational data an SME already produces and returns forecasts, procurement recommendations, risk alerts, and plain-language business insight. It is designed to function less like software and more like a business analyst that never sleeps &mdash; an AI operating copilot for the owner-operator.</p>
+
+    <h4>Problem Statement</h4>
+    <p>SMEs do not have an inventory problem. They have a <strong>decision problem</strong> caused by the absence of affordable business intelligence. Stockouts, overstocking, dead stock, and trapped cash are the visible symptoms; the root cause is that operational data is never analysed, so purchasing and pricing decisions are guesses.</p>
+
+    <h4>Solution Overview</h4>
+    <p>Inventra AI adds an intelligence layer on top of day-to-day operations. Six capabilities work together: demand forecasting, smart procurement, dead-stock detection, cash-flow optimisation, business-health monitoring, and a conversational AI copilot that answers questions in natural language. The owner asks &ldquo;what should I reorder?&rdquo; and receives a costed, prioritised answer.</p>
+
+    <div class="grid2">
+      <div class="box box-em"><div class="box-label">Expected Impact</div><p style="margin:0;font-size:12.5px;">Fewer stockouts and lost sales, less capital locked in slow-moving stock, faster and more confident purchasing decisions, and a measurable step toward digital operations for businesses that have never used a BI tool.</p></div>
+      <div class="box box-ind"><div class="box-label">Future Vision</div><p style="margin:0;font-size:12.5px;">Inventra AI grows from inventory intelligence into a full SME operating copilot &mdash; supplier intelligence, financial forecasting, and a Khmer-language AI advisor &mdash; making enterprise-grade decision support normal for every Cambodian SME.</p></div>
+    </div>
+
+    <div class="pull"><div class="rule"></div><p>Traditional systems tell business owners what happened. Inventra AI tells them what to do next.</p></div>
+  </section>
+
+  <!-- ============================================================ 2. INDUSTRY BACKGROUND -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 2</span></div>
+    <div class="kicker">Section 2</div>
+    <h1 class="title">The Digital Transformation Challenge Facing Cambodian SMEs</h1>
+    <p class="sub">A large, essential, and under-served segment of the economy is being left behind by the tools of modern management.</p>
+
+    <p><strong>SMEs are the backbone of Cambodia&rsquo;s economy.</strong> They dominate retail, distribution, and light manufacturing, and they employ the majority of the non-agricultural workforce. Their health is, in aggregate, the health of the domestic economy &mdash; and their productivity ceiling is set by how well they are run day to day.</p>
+    <p><strong>Operational management is where they struggle.</strong> A typical mini-mart or convenience store carries hundreds of SKUs with different suppliers, lead times, shelf lives, and margins. Keeping the right amount of each product in stock is a genuinely hard optimisation problem &mdash; and it is being solved with memory and habit.</p>
+    <p><strong>The tooling gap is stark.</strong> Larger firms run ERP and BI platforms; SMEs run spreadsheets, notebooks, and supplier chat threads. Business intelligence software is priced, designed, and sold for enterprises. As a result, decisions that should be informed by data &mdash; how much to order, what to promote, what to stop stocking &mdash; are made on intuition.</p>
+
+    <div class="fig">
+      <svg width="672" height="180" viewBox="0 0 672 180" fill="none" font-family="Manrope, sans-serif">
+        <defs><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0l10 5-10 5z" fill="#94A3B8"/></marker></defs>
+        <g>
+          <rect x="0" y="58" width="150" height="64" rx="11" fill="#EEF2FF"/>
+          <text x="75" y="86" text-anchor="middle" font-size="12" font-weight="700" fill="#312E81">Business data</text>
+          <text x="75" y="103" text-anchor="middle" font-size="9.5" fill="#4338CA">sales · stock · prices</text>
+        </g>
+        <line x1="152" y1="90" x2="170" y2="90" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#ah2)"/>
+        <g>
+          <rect x="174" y="58" width="150" height="64" rx="11" fill="#FFFFFF" stroke="#E2E8F0"/>
+          <text x="249" y="86" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">Manual decisions</text>
+          <text x="249" y="103" text-anchor="middle" font-size="9.5" fill="#64748B">memory &amp; habit</text>
+        </g>
+        <line x1="326" y1="90" x2="344" y2="90" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#ah2)"/>
+        <g>
+          <rect x="348" y="58" width="150" height="64" rx="11" fill="#FFFFFF" stroke="#E2E8F0"/>
+          <text x="423" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">Operational</text>
+          <text x="423" y="99" text-anchor="middle" font-size="12" font-weight="700" fill="#0F172A">inefficiencies</text>
+        </g>
+        <line x1="500" y1="90" x2="518" y2="90" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#ah2)"/>
+        <g>
+          <rect x="522" y="58" width="150" height="64" rx="11" fill="#0F172A"/>
+          <text x="597" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#F8FAFC">Growth</text>
+          <text x="597" y="99" text-anchor="middle" font-size="12" font-weight="700" fill="#F8FAFC">limitations</text>
+        </g>
+        <text x="336" y="18" text-anchor="middle" font-size="10.5" font-weight="700" fill="#94A3B8" letter-spacing="1">THE VALUE THAT IS LOST BETWEEN DATA AND DECISION</text>
+        <path d="M20 150 H652" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="3 4"/>
+        <text x="336" y="168" text-anchor="middle" font-size="9.5" fill="#64748B">Data is captured but never analysed &mdash; so every downstream step compounds the loss.</text>
+      </svg>
+      <div class="fig-cap">Figure 2.1 &mdash; How captured data fails to reach the decision, and the compounding cost.</div>
+    </div>
+
+    <p>The opportunity is not to digitise inventory records &mdash; many SMEs already have a basic point-of-sale system. The opportunity is to put an <strong>analytical layer</strong> on top of that data so the business can act on it.</p>
+  </section>
+
+  <!-- ============================================================ 3. PROBLEM ANALYSIS -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 3</span></div>
+    <div class="kicker">Section 3</div>
+    <h1 class="title">Beyond Inventory Management: The Real Business Problem</h1>
+    <p class="sub">The problem is not inventory. It is poor decision-making caused by the absence of business intelligence.</p>
+
+    <p>It is tempting to frame the SME challenge as an inventory-accuracy problem and solve it with a better tracking system. That is a misdiagnosis. Businesses with perfectly accurate stock counts still run out of best-sellers, still tie up cash in products that will not sell, and still cannot say which lines make them money. Accurate records are necessary but not sufficient &mdash; the missing ingredient is <strong>analysis that produces a recommendation</strong>.</p>
+
+    <h3>3.1 Inventory problems</h3>
+    <ul>
+      <li><strong>Stockouts</strong> &mdash; fast-moving products run dry between deliveries, sending customers to competitors and eroding loyalty.</li>
+      <li><strong>Overstocking</strong> &mdash; over-ordering &ldquo;to be safe&rdquo; consumes shelf space, cash, and shelf life.</li>
+      <li><strong>Dead stock</strong> &mdash; products that were bought once and never sold sit as frozen capital and clutter.</li>
+    </ul>
+
+    <h3>3.2 Financial problems</h3>
+    <ul>
+      <li><strong>Cash trapped in inventory</strong> &mdash; working capital that could fund growth is sitting on shelves as unsold goods.</li>
+      <li><strong>Poor purchasing decisions</strong> &mdash; buying is driven by supplier promotions and gut feel rather than demand and margin.</li>
+      <li><strong>Invisible margin leakage</strong> &mdash; without product-level performance, owners cannot see which lines are unprofitable after handling and spoilage.</li>
+    </ul>
+
+    <h3>3.3 Strategic problems</h3>
+    <ul>
+      <li><strong>No forecasting</strong> &mdash; the business cannot see next week, so it cannot prepare for it.</li>
+      <li><strong>No trend detection</strong> &mdash; rising and falling products are noticed late, after the opportunity or the loss.</li>
+      <li><strong>No decision support</strong> &mdash; there is no second opinion, no analyst, no system that says &ldquo;here is what I would do.&rdquo;</li>
+    </ul>
+
+    <div class="fig">
+      <svg width="672" height="330" viewBox="0 0 672 330" fill="none" font-family="Manrope, sans-serif">
+        <rect x="196" y="8" width="280" height="52" rx="12" fill="#0F172A"/>
+        <text x="336" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#F8FAFC">Poor operational decisions</text>
+        <text x="336" y="47" text-anchor="middle" font-size="9.5" fill="#94A3B8">the effect owners actually feel</text>
+
+        <line x1="336" y1="60" x2="336" y2="86" stroke="#CBD5E1" stroke-width="1.6"/>
+        <line x1="120" y1="86" x2="552" y2="86" stroke="#CBD5E1" stroke-width="1.6"/>
+        <line x1="120" y1="86" x2="120" y2="104" stroke="#CBD5E1" stroke-width="1.6"/>
+        <line x1="336" y1="86" x2="336" y2="104" stroke="#CBD5E1" stroke-width="1.6"/>
+        <line x1="552" y1="86" x2="552" y2="104" stroke="#CBD5E1" stroke-width="1.6"/>
+        <line x1="120" y1="214" x2="120" y2="226" stroke="#CBD5E1" stroke-width="1.4"/>
+        <line x1="336" y1="214" x2="336" y2="226" stroke="#CBD5E1" stroke-width="1.4"/>
+        <line x1="552" y1="214" x2="552" y2="226" stroke="#CBD5E1" stroke-width="1.4"/>
+        <line x1="120" y1="226" x2="552" y2="226" stroke="#CBD5E1" stroke-width="1.4"/>
+
+        <g>
+          <rect x="34" y="104" width="172" height="40" rx="10" fill="#EEF2FF"/>
+          <text x="120" y="129" text-anchor="middle" font-size="11" font-weight="700" fill="#312E81">Inventory causes</text>
+          <text x="46" y="168" font-size="10" fill="#334155">&bull;&nbsp; Stockouts</text>
+          <text x="46" y="186" font-size="10" fill="#334155">&bull;&nbsp; Overstocking</text>
+          <text x="46" y="204" font-size="10" fill="#334155">&bull;&nbsp; Dead stock accumulation</text>
+        </g>
+        <g>
+          <rect x="250" y="104" width="172" height="40" rx="10" fill="#EEF2FF"/>
+          <text x="336" y="129" text-anchor="middle" font-size="11" font-weight="700" fill="#312E81">Financial causes</text>
+          <text x="262" y="168" font-size="10" fill="#334155">&bull;&nbsp; Cash trapped in stock</text>
+          <text x="262" y="186" font-size="10" fill="#334155">&bull;&nbsp; Gut-feel purchasing</text>
+          <text x="262" y="204" font-size="10" fill="#334155">&bull;&nbsp; Unseen margin leakage</text>
+        </g>
+        <g>
+          <rect x="466" y="104" width="172" height="40" rx="10" fill="#EEF2FF"/>
+          <text x="552" y="129" text-anchor="middle" font-size="11" font-weight="700" fill="#312E81">Strategic causes</text>
+          <text x="478" y="168" font-size="10" fill="#334155">&bull;&nbsp; No demand forecast</text>
+          <text x="478" y="186" font-size="10" fill="#334155">&bull;&nbsp; No trend detection</text>
+          <text x="478" y="204" font-size="10" fill="#334155">&bull;&nbsp; No decision support</text>
+        </g>
+
+        <line x1="336" y1="226" x2="336" y2="258" stroke="#10B981" stroke-width="1.8"/>
+        <rect x="176" y="258" width="320" height="56" rx="12" fill="#ECFDF5" stroke="#6EE7B7"/>
+        <text x="336" y="281" text-anchor="middle" font-size="11.5" font-weight="700" fill="#047857">Root cause</text>
+        <text x="336" y="299" text-anchor="middle" font-size="10" fill="#065F46">No affordable layer that turns operational data into a decision</text>
+      </svg>
+      <div class="fig-cap">Figure 3.1 &mdash; Root-cause analysis. The three symptom clusters share a single underlying cause.</div>
+    </div>
+
+    <div class="box box-dk"><div class="box-label">The reframe</div><p style="margin:0;font-size:12.5px;">Every item above is downstream of one gap: <strong>operational data is never analysed into a recommendation.</strong> Fix that, and the symptoms recede together.</p></div>
+  </section>
+
+  <!-- ============================================================ 4. SOLUTION OVERVIEW -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 4</span></div>
+    <div class="kicker">Section 4</div>
+    <h1 class="title">Inventra AI: An AI Operating Copilot for SMEs</h1>
+    <p class="sub">A platform that behaves like a business advisor &mdash; it reads the data, forms a view, and tells the owner what to do.</p>
+
+    <p>Inventra AI sits on top of the systems an SME already uses. It connects to point-of-sale exports, inventory lists, and supplier records, and it accepts direct questions from the owner. From those inputs it maintains a continuously updated model of the business and produces four kinds of output: <strong>recommendations</strong> (what to do), <strong>predictions</strong> (what is coming), <strong>alerts</strong> (what needs attention now), and <strong>insights</strong> (what is going on and why).</p>
+    <p>Functionally, it plays the role a financial or operations analyst would play in a larger company. It does not just surface a dashboard and leave interpretation to the user; it interprets, prioritises, and explains &mdash; in the owner&rsquo;s language, at the owner&rsquo;s scale.</p>
+
+    <div class="fig">
+      <svg width="672" height="420" viewBox="0 0 672 420" fill="none" font-family="Manrope, sans-serif">
+        <text x="336" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="1.4">INPUTS</text>
+        <g font-size="10.5" font-weight="700">
+          <rect x="8" y="26" width="156" height="40" rx="9" fill="#FFFFFF" stroke="#E2E8F0"/><text x="86" y="51" text-anchor="middle" fill="#0F172A">Business data</text>
+          <rect x="176" y="26" width="156" height="40" rx="9" fill="#FFFFFF" stroke="#E2E8F0"/><text x="254" y="51" text-anchor="middle" fill="#0F172A">Inventory data</text>
+          <rect x="344" y="26" width="156" height="40" rx="9" fill="#FFFFFF" stroke="#E2E8F0"/><text x="422" y="51" text-anchor="middle" fill="#0F172A">Sales data</text>
+          <rect x="512" y="26" width="152" height="40" rx="9" fill="#FFFFFF" stroke="#E2E8F0"/><text x="588" y="51" text-anchor="middle" fill="#0F172A">User queries</text>
+        </g>
+        <path d="M336 70 V96" stroke="#CBD5E1" stroke-width="1.6"/><path d="M330 90l6 8 6-8" fill="#CBD5E1"/>
+
+        <rect x="120" y="100" width="432" height="66" rx="13" fill="url(#g4)"/>
+        <defs><linearGradient id="g4" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#312E81"/><stop offset="1" stop-color="#4338CA"/></linearGradient></defs>
+        <text x="336" y="128" text-anchor="middle" font-size="13" font-weight="700" fill="#F8FAFC">Inventra AI Intelligence Layer</text>
+        <text x="336" y="147" text-anchor="middle" font-size="9.5" fill="#C7D2FE">cleans &middot; correlates &middot; forecasts &middot; reasons &middot; explains</text>
+
+        <path d="M336 170 V196" stroke="#CBD5E1" stroke-width="1.6"/><path d="M330 190l6 8 6-8" fill="#CBD5E1"/>
+        <text x="336" y="188" text-anchor="middle" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="1.4">OUTPUTS</text>
+        <g font-size="10.5" font-weight="700">
+          <rect x="8" y="200" width="156" height="40" rx="9" fill="#ECFDF5"/><text x="86" y="225" text-anchor="middle" fill="#047857">Recommendations</text>
+          <rect x="176" y="200" width="156" height="40" rx="9" fill="#ECFDF5"/><text x="254" y="225" text-anchor="middle" fill="#047857">Predictions</text>
+          <rect x="344" y="200" width="156" height="40" rx="9" fill="#ECFDF5"/><text x="422" y="225" text-anchor="middle" fill="#047857">Alerts</text>
+          <rect x="512" y="200" width="152" height="40" rx="9" fill="#ECFDF5"/><text x="588" y="225" text-anchor="middle" fill="#047857">Business insights</text>
+        </g>
+
+        <path d="M336 244 V270" stroke="#10B981" stroke-width="1.8"/><path d="M330 264l6 8 6-8" fill="#10B981"/>
+        <rect x="236" y="274" width="200" height="52" rx="13" fill="#10B981"/>
+        <text x="336" y="305" text-anchor="middle" font-size="13" font-weight="800" fill="#0F172A">Better decisions</text>
+
+        <path d="M336 330 V352" stroke="#CBD5E1" stroke-width="1.4" stroke-dasharray="3 4"/>
+        <text x="336" y="372" text-anchor="middle" font-size="9.5" fill="#64748B">Outcomes feed back as new data &mdash; the model improves with every cycle.</text>
+        <path d="M300 386 q36 20 72 0" stroke="#CBD5E1" stroke-width="1.4" fill="none"/>
+      </svg>
+      <div class="fig-cap">Figure 4.1 &mdash; The Inventra AI decision loop: mixed inputs, one intelligence layer, four output types, one goal.</div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 5. CORE AI CAPABILITIES -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 5</span></div>
+    <div class="kicker">Section 5</div>
+    <h1 class="title">Core AI Capabilities</h1>
+    <p class="sub">Six capabilities that together turn an SME&rsquo;s data into a running stream of decisions.</p>
+
+    <h3>5.1 Demand Forecasting Intelligence</h3>
+    <p>Predicts future demand at the product level using historical sales, recent momentum, and calendar effects.</p>
+    <div class="grid2">
+      <div class="card"><h4>Capabilities</h4><p class="muted" style="margin:0;">Trend detection &middot; seasonal and holiday forecasting &middot; per-product demand prediction with a confidence range.</p></div>
+      <div class="card"><h4>Business value</h4><p class="muted" style="margin:0;">Purchasing is planned against expected demand, not last month&rsquo;s. Fewer stockouts on rising products; less overstock on fading ones.</p></div>
+    </div>
+
+    <h3>5.2 Smart Procurement Intelligence</h3>
+    <p>Converts the forecast into a concrete buying plan: <strong>what to buy, when to buy, and how much</strong> &mdash; constrained by the cash available and current stock cover.</p>
+    <div class="box box-ind"><div class="box-label">Inputs</div><p style="margin:0;font-size:12.5px;">Demand forecast &nbsp;&bull;&nbsp; budget constraint &nbsp;&bull;&nbsp; on-hand stock and lead times &nbsp;&bull;&nbsp; supplier minimums and pack sizes</p></div>
+
+    <h3>5.3 Dead Stock Intelligence</h3>
+    <p>Flags products that consume shelf space and capital without generating a return, before they become a write-off.</p>
+    <table>
+      <thead><tr><th>Metric</th><th>What it measures</th><th>Signal</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Inventory age</td><td>Days since the stock was received without a sale</td><td>Ageing &rarr; clearance candidate</td></tr>
+        <tr><td class="k">Turnover rate</td><td>How many times the product sells through per period</td><td>Low &rarr; over-ordered or wrong product</td></tr>
+        <tr><td class="k">Capital lock-up risk</td><td>Cash value held in slow or non-moving units</td><td>High &rarr; prioritise for markdown</td></tr>
+      </tbody>
+    </table>
+
+    <h3>5.4 Cash Flow Optimisation</h3>
+    <p>Recommends inventory strategies that maximise the cash efficiency of every dollar on the shelf &mdash; prioritising high-turnover lines, staging large buys, and releasing capital from slow stock.</p>
+    <div class="box box-em"><div class="box-label">Worked example</div><p style="margin:0;font-size:12.5px;"><strong>Budget: $500 this week.</strong> Inventra AI recommends $180 Coca-Cola, $210 instant noodles, $110 bottled water &mdash; the three lines with the highest turnover per dollar and the shortest days-of-cover. It defers a $300 dried-snack reorder because 40 days of cover remain, keeping $300 in working capital.</p></div>
+
+    <h3>5.5 Business Health Intelligence</h3>
+    <p>Continuously monitors the business and surfaces what changed and why.</p>
+    <div class="grid2">
+      <div class="card"><p class="muted" style="margin:0;"><strong>Revenue trends</strong> &mdash; week-on-week direction and the products driving it.</p></div>
+      <div class="card"><p class="muted" style="margin:0;"><strong>Product performance</strong> &mdash; best and worst lines by margin contribution.</p></div>
+      <div class="card"><p class="muted" style="margin:0;"><strong>Inventory efficiency</strong> &mdash; turnover, cover, and capital utilisation.</p></div>
+      <div class="card"><p class="muted" style="margin:0;"><strong>Operational risks</strong> &mdash; concentration, spoilage exposure, and supplier dependence.</p></div>
+    </div>
+
+    <h3>5.6 Conversational AI Copilot</h3>
+    <p>A natural-language interface to everything above. The owner asks a question in Khmer or English and gets a direct, explained answer.</p>
+    <table>
+      <thead><tr><th>The owner asks</th><th>Inventra AI answers</th></tr></thead>
+      <tbody>
+        <tr><td class="k">&ldquo;What should I reorder next week?&rdquo;</td><td>A costed, prioritised reorder list with quantities, sized to the current budget and stock cover.</td></tr>
+        <tr><td class="k">&ldquo;Which products are hurting cash flow?&rdquo;</td><td>The slow-moving lines ranked by capital locked up, with a suggested markdown or stop-order action.</td></tr>
+        <tr><td class="k">&ldquo;What are my biggest business risks?&rdquo;</td><td>Upcoming stockouts on top sellers, over-reliance on one supplier, and spoilage exposure &mdash; each with a recommended step.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================ 6. SYSTEM ARCHITECTURE -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 6</span></div>
+    <div class="kicker">Section 6</div>
+    <h1 class="title">System Architecture</h1>
+    <p class="sub">A conventional web application stack with a dedicated intelligence layer between the database and the user.</p>
+
+    <p>The architecture is deliberately pragmatic: a standard front-end and API, a relational database as the system of record, and an <strong>AI intelligence layer</strong> that combines a deterministic analytics engine, forecasting models, and an LLM for reasoning and explanation. Deterministic statistics do the measurable work; the language model narrates, prioritises, and answers questions.</p>
+
+    <div class="fig">
+      <svg width="672" height="392" viewBox="0 0 672 392" fill="none" font-family="Manrope, sans-serif">
+        <!-- layers -->
+        <g>
+          <rect x="8" y="10" width="470" height="52" rx="11" fill="#EEF2FF"/>
+          <text x="24" y="33" font-size="11.5" font-weight="700" fill="#312E81">Frontend Layer</text>
+          <text x="24" y="50" font-size="9.5" fill="#4338CA">Dashboard &middot; product management &middot; forecast views &middot; copilot chat</text>
+        </g>
+        <g>
+          <rect x="8" y="74" width="470" height="52" rx="11" fill="#FFFFFF" stroke="#E2E8F0"/>
+          <text x="24" y="97" font-size="11.5" font-weight="700" fill="#0F172A">Backend Layer</text>
+          <text x="24" y="114" font-size="9.5" fill="#64748B">API routes &middot; auth &middot; data ingestion &middot; orchestration of the intelligence layer</text>
+        </g>
+        <g>
+          <rect x="8" y="138" width="470" height="52" rx="11" fill="#FFFFFF" stroke="#E2E8F0"/>
+          <text x="24" y="161" font-size="11.5" font-weight="700" fill="#0F172A">Database Layer</text>
+          <text x="24" y="178" font-size="9.5" fill="#64748B">Products &middot; sales history &middot; inventory movements &middot; suppliers &middot; insights cache</text>
+        </g>
+
+        <rect x="8" y="204" width="656" height="176" rx="13" fill="#0F172A"/>
+        <text x="24" y="228" font-size="11.5" font-weight="700" fill="#F8FAFC">AI Intelligence Layer</text>
+        <g>
+          <rect x="24" y="240" width="196" height="120" rx="10" fill="#1E293B"/>
+          <text x="122" y="264" text-anchor="middle" font-size="10.5" font-weight="700" fill="#F8FAFC">Analytics Engine</text>
+          <text x="122" y="286" text-anchor="middle" font-size="9" fill="#94A3B8">turnover, cover,</text>
+          <text x="122" y="300" text-anchor="middle" font-size="9" fill="#94A3B8">ageing, margin,</text>
+          <text x="122" y="314" text-anchor="middle" font-size="9" fill="#94A3B8">risk scoring</text>
+        </g>
+        <g>
+          <rect x="238" y="240" width="196" height="120" rx="10" fill="#1E293B"/>
+          <text x="336" y="264" text-anchor="middle" font-size="10.5" font-weight="700" fill="#F8FAFC">Forecasting Models</text>
+          <text x="336" y="286" text-anchor="middle" font-size="9" fill="#94A3B8">demand prediction,</text>
+          <text x="336" y="300" text-anchor="middle" font-size="9" fill="#94A3B8">trend &amp; seasonality,</text>
+          <text x="336" y="314" text-anchor="middle" font-size="9" fill="#94A3B8">confidence bands</text>
+        </g>
+        <g>
+          <rect x="452" y="240" width="196" height="120" rx="10" fill="#1E293B"/>
+          <text x="550" y="264" text-anchor="middle" font-size="10.5" font-weight="700" fill="#F8FAFC">LLM Integration</text>
+          <text x="550" y="286" text-anchor="middle" font-size="9" fill="#94A3B8">natural-language Q&amp;A,</text>
+          <text x="550" y="300" text-anchor="middle" font-size="9" fill="#94A3B8">explanation &amp;</text>
+          <text x="550" y="314" text-anchor="middle" font-size="9" fill="#94A3B8">prioritisation</text>
+        </g>
+
+        <!-- inter-layer flow -->
+        <g fill="#94A3B8">
+          <path d="M235 65l8 9 8-9z"/>
+          <path d="M235 129l8 9 8-9z"/>
+          <path d="M235 193l8 9 8-9z"/>
+        </g>
+        <g font-size="9" fill="#64748B">
+          <text x="500" y="40">Reads render from</text>
+          <text x="500" y="54">the insights cache &mdash;</text>
+          <text x="500" y="68">heavy compute runs</text>
+          <text x="500" y="82">ahead of time.</text>
+        </g>
+        <text x="24" y="392" font-size="9" fill="#94A3B8">Data flows down on write; insights flow up on read. The intelligence layer is called by the backend, never by the client directly.</text>
+      </svg>
+      <div class="fig-cap">Figure 6.1 &mdash; System architecture and data flow across five layers.</div>
+    </div>
+
+    <h4>How data moves through the system</h4>
+    <ol>
+      <li>The owner uploads or syncs sales and inventory data through the frontend; the backend validates and writes it to the database.</li>
+      <li>On a schedule and on demand, the backend invokes the analytics engine and forecasting models to recompute metrics and predictions.</li>
+      <li>Results are cached as structured insights; the LLM is called with those insights as context to generate explanations and answer copilot questions.</li>
+      <li>The frontend renders dashboards, alerts, and chat responses from the cached insights &mdash; fast reads, heavy computation done ahead of time.</li>
+    </ol>
+  </section>
+
+  <!-- ============================================================ 7. USER EXPERIENCE JOURNEY -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 7</span></div>
+    <div class="kicker">Section 7</div>
+    <h1 class="title">User Experience Journey</h1>
+    <p class="sub">End to end, from a spreadsheet export to a recommended action &mdash; in one sitting.</p>
+
+    <p><strong>Scenario.</strong> Sophea owns a mini-mart in Phnom Penh. She exports three months of sales from her point-of-sale system and uploads the file to Inventra AI. Within minutes she has a working picture of her business and a list of things to do.</p>
+
+    <div class="fig">
+      <svg width="672" height="300" viewBox="0 0 672 300" fill="none" font-family="Manrope, sans-serif">
+        <line x1="56" y1="60" x2="616" y2="60" stroke="#E2E8F0" stroke-width="2"/>
+        <g text-anchor="middle">
+          <circle cx="56" cy="60" r="7" fill="#312E81"/><text x="56" y="92" font-size="10" font-weight="700" fill="#0F172A">Upload</text><text x="56" y="107" font-size="8.5" fill="#64748B">sales &amp; stock</text>
+          <circle cx="196" cy="60" r="7" fill="#312E81"/><text x="196" y="92" font-size="10" font-weight="700" fill="#0F172A">Process</text><text x="196" y="107" font-size="8.5" fill="#64748B">clean &amp; structure</text>
+          <circle cx="336" cy="60" r="7" fill="#312E81"/><text x="336" y="92" font-size="10" font-weight="700" fill="#0F172A">Forecast</text><text x="336" y="107" font-size="8.5" fill="#64748B">demand by product</text>
+          <circle cx="476" cy="60" r="7" fill="#10B981"/><text x="476" y="92" font-size="10" font-weight="700" fill="#0F172A">Detect risks</text><text x="476" y="107" font-size="8.5" fill="#64748B">stockouts, dead stock</text>
+          <circle cx="616" cy="60" r="7" fill="#10B981"/><text x="616" y="92" font-size="10" font-weight="700" fill="#0F172A">Recommend</text><text x="616" y="107" font-size="8.5" fill="#64748B">costed actions</text>
+        </g>
+
+        <rect x="24" y="150" width="624" height="128" rx="13" fill="#F8FAFC" stroke="#E2E8F0"/>
+        <text x="40" y="174" font-size="10" font-weight="700" fill="#94A3B8" letter-spacing="1">WHAT SOPHEA SEES</text>
+        <text x="40" y="198" font-size="10.5" fill="#334155">1&nbsp;&nbsp;&ldquo;3,412 rows imported. 287 products, 92 days of history.&rdquo;</text>
+        <text x="40" y="218" font-size="10.5" fill="#334155">2&nbsp;&nbsp;&ldquo;Bottled water and iced coffee are trending up 18% and 11% &mdash; reorder sooner.&rdquo;</text>
+        <text x="40" y="238" font-size="10.5" fill="#334155">3&nbsp;&nbsp;&ldquo;$430 is locked in 6 non-moving lines. Suggested markdown attached.&rdquo;</text>
+        <text x="40" y="258" font-size="10.5" fill="#047857" font-weight="700">4&nbsp;&nbsp;&ldquo;This week&rsquo;s reorder, sized to your $500 budget &rarr; review &amp; approve.&rdquo;</text>
+      </svg>
+      <div class="fig-cap">Figure 7.1 &mdash; The end-to-end journey and the plain-language output at each step.</div>
+    </div>
+
+    <p>The journey is designed to deliver a &ldquo;first value&rdquo; moment on day one: the owner should finish the first session already holding a recommendation worth acting on. Every later session is shorter &mdash; a quick check of alerts and an approval of the week&rsquo;s reorder.</p>
+  </section>
+
+  <!-- ============================================================ 8. TARGET USERS AND MARKET -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 8</span></div>
+    <div class="kicker">Section 8</div>
+    <h1 class="title">Target Users and Market</h1>
+    <p class="sub">Owner-operated retail and distribution first; multi-branch and growing enterprises next.</p>
+
+    <div class="grid2">
+      <div class="card"><h4>Primary users</h4><p class="muted" style="margin:0;">Mini marts &middot; convenience stores &middot; retail SMEs &middot; small distributors &mdash; single-site, owner-run, 100&ndash;1,000 SKUs, thin margins, tight cash.</p></div>
+      <div class="card"><h4>Secondary users</h4><p class="muted" style="margin:0;">Multi-branch businesses and growing enterprises that need consistent purchasing discipline and cross-site visibility as they scale.</p></div>
+    </div>
+
+    <h3>8.1 User personas</h3>
+    <div class="grid3">
+      <div class="persona card">
+        <div class="big">Sophea</div>
+        <div class="muted" style="margin-bottom:8px;">Mini-mart owner &middot; Phnom Penh</div>
+        <p class="muted" style="margin:0;"><strong>Context:</strong> one store, 287 SKUs, runs the till herself.<br><strong>Pain:</strong> guesses reorders; regularly out of best-sellers.<br><strong>Goal:</strong> stop losing sales without over-buying.</p>
+      </div>
+      <div class="persona card">
+        <div class="big">Dara</div>
+        <div class="muted" style="margin-bottom:8px;">Convenience chain &middot; 3 branches</div>
+        <p class="muted" style="margin:0;"><strong>Context:</strong> three sites, one bookkeeper, separate stockrooms.<br><strong>Pain:</strong> no comparable view across branches.<br><strong>Goal:</strong> one purchasing standard, less leakage.</p>
+      </div>
+      <div class="persona card">
+        <div class="big">Lina</div>
+        <div class="muted" style="margin-bottom:8px;">Small distributor &middot; Siem Reap</div>
+        <p class="muted" style="margin:0;"><strong>Context:</strong> warehouse supplying ~40 shops.<br><strong>Pain:</strong> capital tied up in dead stock.<br><strong>Goal:</strong> free cash, sharpen what she carries.</p>
+      </div>
+    </div>
+
+    <h3>8.2 Market opportunity</h3>
+    <p>SMEs make up the overwhelming majority of registered businesses in Cambodia, and retail and wholesale trade is the single largest category among them. The great majority operate without any analytical tool. That is the opening: <strong>enterprise-grade decision intelligence, delivered at SME pricing.</strong></p>
+    <div class="fig">
+      <svg width="672" height="230" viewBox="0 0 672 230" fill="none" font-family="Manrope, sans-serif">
+        <rect x="150" y="14" width="372" height="60" rx="10" fill="#EEF2FF"/>
+        <text x="336" y="38" text-anchor="middle" font-size="11" font-weight="700" fill="#312E81">TAM &mdash; All Cambodian retail &amp; distribution SMEs</text>
+        <text x="336" y="56" text-anchor="middle" font-size="9" fill="#4338CA">[insert validated establishment count]</text>
+        <rect x="196" y="84" width="280" height="58" rx="10" fill="#C7D2FE"/>
+        <text x="336" y="107" text-anchor="middle" font-size="11" font-weight="700" fill="#312E81">SAM &mdash; Sites with digital POS / sales records</text>
+        <text x="336" y="125" text-anchor="middle" font-size="9" fill="#3730A3">[insert share with exportable data]</text>
+        <rect x="238" y="152" width="196" height="56" rx="10" fill="#10B981"/>
+        <text x="336" y="175" text-anchor="middle" font-size="11" font-weight="800" fill="#0F172A">SOM &mdash; Year 1&ndash;2 reachable</text>
+        <text x="336" y="193" text-anchor="middle" font-size="9" fill="#065F46">urban minimarts &amp; small chains</text>
+      </svg>
+      <div class="fig-cap">Figure 8.1 &mdash; Market sizing structure. Bracketed figures to be validated with national statistics and channel data.</div>
+    </div>
+    <div class="box box-ind"><div class="box-label">Why now</div><p style="margin:0;font-size:12.5px;">POS adoption among urban SMEs has crossed the threshold where usable data exists; LLM costs have fallen far enough to make per-SME advisory economically viable; and no incumbent serves this segment with decision intelligence.</p></div>
+  </section>
+
+  <!-- ============================================================ 9. COMPETITIVE DIFFERENTIATION -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 9</span></div>
+    <div class="kicker">Section 9</div>
+    <h1 class="title">Competitive Differentiation</h1>
+    <p class="sub">Inventory software records the past. Inventra AI acts on the future.</p>
+
+    <table>
+      <thead><tr><th>Capability</th><th>Traditional inventory systems</th><th>Inventra AI</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Inventory tracking</td><td>Yes &mdash; core function</td><td class="chk">Yes &mdash; as a foundation, not the product</td></tr>
+        <tr><td class="k">Forecasting</td><td class="no">None, or simple reorder points</td><td class="chk">Per-product demand, trend &amp; seasonality</td></tr>
+        <tr><td class="k">Business intelligence</td><td class="no">Static reports to read</td><td class="chk">Interpreted insight with the &ldquo;why&rdquo;</td></tr>
+        <tr><td class="k">Risk detection</td><td class="no">Low-stock alerts only</td><td class="chk">Stockout, dead-stock, supplier &amp; spoilage risk</td></tr>
+        <tr><td class="k">Cash-flow optimisation</td><td class="no">Not addressed</td><td class="chk">Budget-aware buying, capital release</td></tr>
+        <tr><td class="k">AI assistant</td><td class="no">None</td><td class="chk">Conversational copilot, Khmer &amp; English</td></tr>
+        <tr><td class="k">Decision support</td><td class="no">User interprets everything</td><td class="chk">Prioritised, costed recommendations</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Unique advantages</h4>
+    <ul>
+      <li><strong>Decision-first, not record-first.</strong> Every screen ends in a recommended action, not a number to interpret.</li>
+      <li><strong>Built for the segment.</strong> SME scale, SME pricing, SME language &mdash; not an enterprise product with features removed.</li>
+      <li><strong>Explains itself.</strong> Recommendations come with the reasoning, which builds the trust needed for owners to act.</li>
+      <li><strong>Compounding data moat.</strong> Every approved or rejected recommendation sharpens the model for that business and the segment.</li>
+    </ul>
+
+    <div class="pull"><div class="rule"></div><p>Traditional systems tell business owners what happened. Inventra AI tells them what to do next.</p></div>
+  </section>
+
+  <!-- ============================================================ 10. MVP DEVELOPMENT PLAN -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 10</span></div>
+    <div class="kicker">Section 10</div>
+    <h1 class="title">MVP Development Plan &mdash; AIM Competition</h1>
+    <p class="sub">A build-week MVP that demonstrates the full decision loop on real uploaded data.</p>
+
+    <div class="grid2">
+      <div>
+        <h4>What will be built</h4>
+        <ul style="margin-top:4px;">
+          <li>Inventory dashboard &mdash; live view of stock, cover, and value</li>
+          <li>Product management &mdash; catalogue, categories, cost &amp; price</li>
+          <li>Demand forecasting &mdash; per-product prediction with confidence</li>
+          <li>Dead-stock detection &mdash; ageing, turnover, locked capital</li>
+          <li>AI copilot chat &mdash; natural-language questions and answers</li>
+        </ul>
+      </div>
+      <div>
+        <h4>What will be demonstrated</h4>
+        <ul style="margin-top:4px;">
+          <li>Upload a real sales export &rarr; structured business in &lt; 2 min</li>
+          <li>Forecast flags two rising and two fading products</li>
+          <li>Dead-stock view quantifies trapped cash and proposes markdowns</li>
+          <li>Copilot answers &ldquo;what should I reorder next week?&rdquo; with a costed list</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box box-em"><div class="box-label">Why it proves the concept</div><p style="margin:0;font-size:12.5px;">The demo shows the complete path &mdash; <strong>data in, decision out</strong> &mdash; on data the judges can supply. It proves the platform is a decision tool, not a tracking tool, and that the core intelligence works end to end at MVP scale.</p></div>
+
+    <h4>Build-week roadmap</h4>
+    <div class="fig">
+      <svg width="672" height="220" viewBox="0 0 672 220" fill="none" font-family="Manrope, sans-serif">
+        <g font-size="9" fill="#94A3B8" font-weight="700">
+          <text x="150" y="14">DAY 1&ndash;2</text><text x="290" y="14">DAY 3</text><text x="400" y="14">DAY 4&ndash;5</text><text x="520" y="14">DAY 6</text><text x="610" y="14">DAY 7</text>
+        </g>
+        <line x1="140" y1="20" x2="140" y2="200" stroke="#E2E8F0"/><line x1="280" y1="20" x2="280" y2="200" stroke="#E2E8F0"/>
+        <line x1="390" y1="20" x2="390" y2="200" stroke="#E2E8F0"/><line x1="510" y1="20" x2="510" y2="200" stroke="#E2E8F0"/><line x1="600" y1="20" x2="600" y2="200" stroke="#E2E8F0"/>
+        <g font-size="10" font-weight="700" fill="#F8FAFC">
+          <rect x="20" y="28" width="250" height="26" rx="6" fill="#312E81"/><text x="32" y="45">Data model, ingestion, dashboard</text>
+          <rect x="20" y="62" width="360" height="26" rx="6" fill="#312E81"/><text x="32" y="79">Product management &amp; inventory metrics</text>
+          <rect x="150" y="96" width="240" height="26" rx="6" fill="#4338CA"/><text x="162" y="113">Forecasting models</text>
+          <rect x="230" y="130" width="280" height="26" rx="6" fill="#4338CA"/><text x="242" y="147">Dead-stock &amp; cash-flow logic</text>
+          <rect x="330" y="164" width="180" height="26" rx="6" fill="#10B981"/><text x="342" y="181" fill="#0F172A">AI copilot chat</text>
+          <rect x="520" y="164" width="130" height="26" rx="6" fill="#0F172A"/><text x="532" y="181">Polish &amp; demo</text>
+        </g>
+      </svg>
+      <div class="fig-cap">Figure 10.1 &mdash; Indicative build-week schedule. Foundations first, intelligence mid-week, copilot and demo last.</div>
+    </div>
+  </section>
+
+  <!-- ============================================================ 11. BUSINESS IMPACT -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 11</span></div>
+    <div class="kicker">Section 11</div>
+    <h1 class="title">Business Impact</h1>
+    <p class="sub">Five dimensions of impact, each with a concrete way to measure it.</p>
+
+    <div class="fig">
+      <svg width="672" height="234" viewBox="0 0 672 234" fill="none" font-family="Manrope, sans-serif">
+        <g font-size="9">
+          <!-- columns -->
+          <g>
+            <rect x="8" y="16" width="121" height="140" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <circle cx="24" cy="34" r="4" fill="#312E81"/>
+            <text x="20" y="60" font-size="9.5" font-weight="700" fill="#312E81">Operational</text>
+            <text x="20" y="73" font-size="9.5" font-weight="700" fill="#312E81">efficiency</text>
+            <line x1="20" y1="86" x2="117" y2="86" stroke="#E2E8F0"/>
+            <text x="20" y="104" fill="#64748B">Right stock, less</text>
+            <text x="20" y="116" fill="#64748B">emergency buying.</text>
+            <text x="20" y="140" font-weight="700" fill="#047857">Stockout rate &darr;</text>
+          </g>
+          <g>
+            <rect x="139" y="16" width="121" height="140" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <circle cx="155" cy="34" r="4" fill="#312E81"/>
+            <text x="151" y="60" font-size="9.5" font-weight="700" fill="#312E81">Financial</text>
+            <text x="151" y="73" font-size="9.5" font-weight="700" fill="#312E81">performance</text>
+            <line x1="151" y1="86" x2="248" y2="86" stroke="#E2E8F0"/>
+            <text x="151" y="104" fill="#64748B">Capital freed,</text>
+            <text x="151" y="116" fill="#64748B">sharper buys.</text>
+            <text x="151" y="140" font-weight="700" fill="#047857">Cash released &uarr;</text>
+          </g>
+          <g>
+            <rect x="270" y="16" width="121" height="140" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <circle cx="286" cy="34" r="4" fill="#312E81"/>
+            <text x="282" y="60" font-size="9.5" font-weight="700" fill="#312E81">Decision</text>
+            <text x="282" y="73" font-size="9.5" font-weight="700" fill="#312E81">quality</text>
+            <line x1="282" y1="86" x2="379" y2="86" stroke="#E2E8F0"/>
+            <text x="282" y="104" fill="#64748B">Forecast-led,</text>
+            <text x="282" y="116" fill="#64748B">earlier response.</text>
+            <text x="282" y="140" font-weight="700" fill="#047857">Accuracy &uarr;</text>
+          </g>
+          <g>
+            <rect x="401" y="16" width="121" height="140" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <circle cx="417" cy="34" r="4" fill="#312E81"/>
+            <text x="413" y="60" font-size="9.5" font-weight="700" fill="#312E81">SME</text>
+            <text x="413" y="73" font-size="9.5" font-weight="700" fill="#312E81">productivity</text>
+            <line x1="413" y1="86" x2="510" y2="86" stroke="#E2E8F0"/>
+            <text x="413" y="104" fill="#64748B">Less manual</text>
+            <text x="413" y="116" fill="#64748B">counting.</text>
+            <text x="413" y="140" font-weight="700" fill="#047857">Admin hours &darr;</text>
+          </g>
+          <g>
+            <rect x="532" y="16" width="132" height="140" rx="10" fill="#ECFDF5"/>
+            <circle cx="548" cy="34" r="4" fill="#10B981"/>
+            <text x="544" y="60" font-size="9.5" font-weight="700" fill="#047857">Digital</text>
+            <text x="544" y="73" font-size="9.5" font-weight="700" fill="#047857">transformation</text>
+            <line x1="544" y1="86" x2="652" y2="86" stroke="#A7F3D0"/>
+            <text x="544" y="104" fill="#065F46">A data tool where</text>
+            <text x="544" y="116" fill="#065F46">none existed.</text>
+            <text x="544" y="140" font-weight="700" fill="#047857">Adoption &uarr;</text>
+          </g>
+        </g>
+        <g fill="#CBD5E1"><path d="M64 156l6 8 6-8z"/><path d="M195 156l6 8 6-8z"/><path d="M326 156l6 8 6-8z"/><path d="M457 156l6 8 6-8z"/><path d="M594 156l6 8 6-8z"/></g>
+        <rect x="8" y="172" width="656" height="44" rx="11" fill="#312E81"/>
+        <text x="336" y="199" text-anchor="middle" font-size="12" font-weight="700" fill="#F8FAFC">One foundation &mdash; AI decision intelligence on the SME&rsquo;s own data</text>
+      </svg>
+      <div class="fig-cap">Figure 11.1 &mdash; Impact framework. One foundation lifts five measurable dimensions of business performance.</div>
+    </div>
+
+    <table>
+      <thead><tr><th>Dimension</th><th>What improves</th><th>Indicative metric</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Operational efficiency</td><td>Right stock, right time; less emergency buying</td><td>Stockout rate; days of cover variance</td></tr>
+        <tr><td class="k">Financial performance</td><td>Working capital freed from slow stock; better buys</td><td>Cash released; gross margin return on inventory</td></tr>
+        <tr><td class="k">Decision quality</td><td>Forecast-led purchasing; earlier trend response</td><td>Forecast accuracy; recommendation acceptance rate</td></tr>
+        <tr><td class="k">SME productivity</td><td>Less time on manual counting and guesswork</td><td>Owner hours per week on stock admin</td></tr>
+        <tr><td class="k">Digital transformation</td><td>Adoption of a data tool where none existed</td><td>Share of decisions informed by the platform</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================ 12. FUTURE ROADMAP -->
+  <section class="section pad">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 12</span></div>
+    <div class="kicker">Section 12</div>
+    <h1 class="title">Future Roadmap</h1>
+    <p class="sub">From inventory intelligence to a full SME operating copilot over five years.</p>
+
+    <div class="fig">
+      <svg width="672" height="252" viewBox="0 0 672 252" fill="none" font-family="Manrope, sans-serif">
+        <line x1="8" y1="224" x2="664" y2="224" stroke="#E2E8F0" stroke-width="1.5"/>
+        <g text-anchor="middle">
+          <!-- ascending steps -->
+          <rect x="12" y="158" width="120" height="66" rx="9" fill="#EEF2FF"/>
+          <text x="72" y="150" font-size="9" font-weight="700" fill="#10B981">YEAR 1</text>
+          <text x="72" y="184" font-size="10" font-weight="700" fill="#312E81">AI Inventory</text>
+          <text x="72" y="197" font-size="10" font-weight="700" fill="#312E81">Intelligence</text>
+          <text x="72" y="214" font-size="7.5" fill="#4338CA">forecast · dead stock</text>
+
+          <rect x="144" y="134" width="120" height="90" rx="9" fill="#E0E7FF"/>
+          <text x="204" y="126" font-size="9" font-weight="700" fill="#10B981">YEAR 2</text>
+          <text x="204" y="162" font-size="10" font-weight="700" fill="#312E81">Supplier</text>
+          <text x="204" y="175" font-size="10" font-weight="700" fill="#312E81">Intelligence</text>
+          <text x="204" y="192" font-size="7.5" fill="#4338CA">price · lead time</text>
+          <text x="204" y="204" font-size="7.5" fill="#4338CA">smart POs</text>
+
+          <rect x="276" y="110" width="120" height="114" rx="9" fill="#C7D2FE"/>
+          <text x="336" y="102" font-size="9" font-weight="700" fill="#10B981">YEAR 3</text>
+          <text x="336" y="140" font-size="10" font-weight="700" fill="#312E81">Financial</text>
+          <text x="336" y="153" font-size="10" font-weight="700" fill="#312E81">Forecasting</text>
+          <text x="336" y="170" font-size="7.5" fill="#3730A3">cash &amp; working-</text>
+          <text x="336" y="182" font-size="7.5" fill="#3730A3">capital planning</text>
+
+          <rect x="408" y="86" width="120" height="138" rx="9" fill="#A5B4FC"/>
+          <text x="468" y="78" font-size="9" font-weight="700" fill="#10B981">YEAR 4</text>
+          <text x="468" y="118" font-size="10" font-weight="700" fill="#1E1B4B">Khmer AI</text>
+          <text x="468" y="131" font-size="10" font-weight="700" fill="#1E1B4B">Business Advisor</text>
+          <text x="468" y="149" font-size="7.5" fill="#312E81">full Khmer NLU,</text>
+          <text x="468" y="161" font-size="7.5" fill="#312E81">voice &amp; proactive advice</text>
+
+          <rect x="540" y="58" width="124" height="166" rx="9" fill="#10B981"/>
+          <text x="602" y="50" font-size="9" font-weight="700" fill="#047857">YEAR 5</text>
+          <text x="602" y="96" font-size="10.5" font-weight="800" fill="#0F172A">Full SME</text>
+          <text x="602" y="110" font-size="10.5" font-weight="800" fill="#0F172A">Operating</text>
+          <text x="602" y="124" font-size="10.5" font-weight="800" fill="#0F172A">Copilot</text>
+          <text x="602" y="146" font-size="7.5" fill="#065F46">ops · finance</text>
+          <text x="602" y="158" font-size="7.5" fill="#065F46">&amp; strategy</text>
+        </g>
+        <path d="M40 238 H636" stroke="#CBD5E1" stroke-width="1.4" marker-end="url(#ahR)"/>
+        <defs><marker id="ahR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0l10 5-10 5z" fill="#CBD5E1"/></marker></defs>
+        <text x="336" y="250" text-anchor="middle" font-size="8.5" fill="#94A3B8">Each year adds a decision domain &mdash; the conversational copilot stays the constant interface.</text>
+      </svg>
+      <div class="fig-cap">Figure 12.1 &mdash; Five-year product roadmap: from inventory intelligence to a full operating copilot.</div>
+    </div>
+
+    <table>
+      <thead><tr><th>Horizon</th><th>Milestone</th><th>What it unlocks</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Year 1</td><td>AI Inventory Intelligence</td><td>The core loop &mdash; forecast, procurement, dead stock, copilot &mdash; in production with paying SMEs.</td></tr>
+        <tr><td class="k">Year 2</td><td>Supplier Intelligence</td><td>Buying decisions extend to <em>which supplier</em>, on price, reliability, and lead time.</td></tr>
+        <tr><td class="k">Year 3</td><td>Financial Forecasting</td><td>Cash-flow and working-capital projection; inventory planning tied to the P&amp;L.</td></tr>
+        <tr><td class="k">Year 4</td><td>Khmer AI Business Advisor</td><td>Full Khmer-language understanding and proactive, spoken advice for non-technical owners.</td></tr>
+        <tr><td class="k">Year 5</td><td>Full SME Operating Copilot</td><td>One assistant across operations, finance, and strategy for the whole business.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================ 13. CONCLUSION -->
+  <section class="section pad" style="padding-bottom:64px;">
+    <div class="rh"><span>Inventra AI &middot; Concept Paper</span><span>Section 13</span></div>
+    <div class="kicker">Section 13</div>
+    <h1 class="title">Conclusion</h1>
+    <p class="sub">A vision for what running a small business in Cambodia could feel like.</p>
+
+    <p>Cambodia&rsquo;s SMEs are not short of effort or ambition. They are short of the one thing every large company takes for granted: someone whose job is to look at the numbers and say what to do. That role &mdash; the analyst, the advisor, the second opinion &mdash; has always been priced out of reach for a business running a single store or a small warehouse.</p>
+    <p><strong>Inventra AI is not another inventory application.</strong> It is an AI decision-intelligence platform that gives the owner-operator that missing role: a copilot that forecasts demand, plans purchasing around cash, catches risk early, and explains its thinking in plain language. It turns the data a business already has into the decisions it needs to make.</p>
+    <p>The competition MVP proves the loop end to end. The roadmap extends it from inventory into supplier choice, financial planning, and a fully Khmer-language advisor &mdash; step by step, toward a single operating copilot for the whole business.</p>
+
+    <div class="pull" style="margin-top:26px;"><div class="rule"></div><p style="font-size:22px;">Every Cambodian SME deserves access to an AI business analyst.</p></div>
+
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;align-items:center;gap:11px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="7" fill="#312E81"/><circle cx="8" cy="15.5" r="2.1" fill="#10B981"/><circle cx="16" cy="8.5" r="2.1" fill="#F8FAFC"/><circle cx="16.5" cy="16" r="1.6" fill="#818CF8"/><path d="M8 15.5L16 8.5M16 8.5L16.5 16" stroke="#10B981" stroke-width="1.4"/></svg>
+        <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;">Inventra AI</span>
+      </div>
+      <span style="font-size:11px;color:#94A3B8;font-weight:600;">AI Decision Intelligence Platform for Cambodian SMEs &nbsp;&middot;&nbsp; Concept Paper v1.0</span>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+</body>
+</html>

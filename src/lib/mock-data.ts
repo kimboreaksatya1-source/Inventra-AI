@@ -6,10 +6,11 @@ import type { RawProduct, RawSale } from "./inventory";
 export type SeedProduct = RawProduct;
 
 // 15 products across categories. Prices in USD (common in Cambodia).
-export const SEED_PRODUCTS: SeedProduct[] = [
+// `dailySales` is attached from DEMAND_PROFILE by `seedProducts()` below.
+export const SEED_PRODUCTS: Omit<SeedProduct, "dailySales">[] = [
   {
     id: "p-coca-15l",
-    name: "Coca-Cola 1.5L",
+    name: "Cambodia Cola 330ml",
     category: "Beverages",
     sku: "BEV-CC-15",
     stockQuantity: 18,
@@ -20,7 +21,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     id: "p-mama-noodle",
-    name: "Instant Noodles (Mama)",
+    name: "Instant Noodles (Mi Cheat)",
     category: "Snacks",
     sku: "SNK-NDL-MM",
     stockQuantity: 12,
@@ -31,7 +32,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     id: "p-bottled-water",
-    name: "Bottled Water 1.5L",
+    name: "Pro Vida 500ml",
     category: "Beverages",
     sku: "BEV-WT-15",
     stockQuantity: 26,
@@ -64,7 +65,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     id: "p-rice-5kg",
-    name: "Jasmine Rice 5kg",
+    name: "Romdul Rice 5kg",
     category: "Staples",
     sku: "STP-RC-5K",
     stockQuantity: 22,
@@ -119,7 +120,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     id: "p-m150-energy",
-    name: "M150 Energy Drink",
+    name: "King Kong Energy Drink",
     category: "Beverages",
     sku: "BEV-EN-M150",
     stockQuantity: 8,
@@ -141,7 +142,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   },
   {
     id: "p-thai-tea",
-    name: "Thai Tea Mix",
+    name: "Cambodia Milk Tea",
     category: "Beverages",
     sku: "BEV-TT-400",
     stockQuantity: 11,
@@ -199,6 +200,14 @@ const DEMAND_PROFILE: Record<string, { base: number; trend: number; noise: numbe
   "p-instant-coffee": { base: 6, trend: 0.03, noise: 0.25 },
   "p-shampoo-sachet": { base: 1, trend: -0.05, noise: 0.6 }, // slow
 };
+
+/** Seed products with a realistic `dailySales` velocity attached. */
+export function seedProducts(): SeedProduct[] {
+  return SEED_PRODUCTS.map((p) => ({
+    ...p,
+    dailySales: DEMAND_PROFILE[p.id]?.base ?? 2,
+  }));
+}
 
 // Mulberry32 deterministic PRNG
 function rng(seed: number) {
