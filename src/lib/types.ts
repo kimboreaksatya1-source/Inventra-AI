@@ -447,3 +447,57 @@ export interface SimulationExplanation {
   explanation: string;
   source: "ai" | "deterministic";
 }
+
+/* ============================================================
+   Phase 4 — AI Action Center
+   ============================================================ */
+
+export type ActionCategory = "reorder" | "opportunity" | "cashflow" | "risk" | "scenario";
+export type ActionStatus = "open" | "saved" | "completed" | "dismissed";
+export type ActionSource = "Analysis" | "Revenue Risk" | "Business Brief" | "Simulator";
+
+export interface BusinessAction {
+  key: string; // stable identity: `${category}:${productId ?? slug(recommendation)}`
+  priority: Priority;
+  category: ActionCategory;
+  recommendation: string;
+  reason: string;
+  expectedImpact: string;
+  impactValue: number; // $ — positive = revenue protected / opportunity captured
+  confidence: number; // 0..100
+  source: ActionSource[];
+  productId?: string;
+  // hydrated from ActionState
+  status: ActionStatus;
+  note?: string | null;
+}
+
+export interface ActionCenterTotals {
+  revenueProtected: number;
+  opportunitiesCaptured: number;
+  revenueAtStake: number;
+  opportunityAvailable: number;
+  openCount: number;
+  completedCount: number;
+  dismissedCount: number;
+}
+
+export interface ResolvedAction {
+  key: string;
+  status: ActionStatus;
+  category: ActionCategory;
+  impactValue: number;
+  note?: string | null;
+  updatedAt: string;
+  recommendation?: string;
+}
+
+export interface ActionCenterPayload {
+  hasData: boolean;
+  generatedAt: string;
+  briefing: string;
+  briefingSource: "ai" | "deterministic";
+  groups: Record<Priority, BusinessAction[]>;
+  resolved: ResolvedAction[];
+  totals: ActionCenterTotals;
+}

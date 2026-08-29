@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  FileText,
+  ListChecks,
   ShieldAlert,
   Sparkles,
   Upload,
@@ -97,9 +97,9 @@ export default async function HomePage() {
             </Card>
             <div className="flex flex-wrap gap-3">
               <Button asChild>
-                <Link href="/brief">
-                  <FileText className="size-4" />
-                  View Business Brief
+                <Link href="/actions">
+                  <ListChecks className="size-4" />
+                  Open Action Center
                 </Link>
               </Button>
               <Button asChild variant="outline">

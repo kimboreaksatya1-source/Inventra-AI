@@ -115,3 +115,17 @@ model Scenario {
 
   @@index([createdAt])
 }
+
+/// Per-action status for the AI Action Center (keyed by a stable action identity)
+model ActionState {
+  id          String   @id @default(cuid())
+  actionKey   String   @unique
+  status      String   @default("open") // open | saved | completed | dismissed
+  note        String?
+  impactValue Float    @default(0)
+  category    String   @default("")
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@index([status])
+}
