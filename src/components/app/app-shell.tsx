@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import Image from "next/image";
 import { FlowNav } from "./flow-nav";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -17,9 +17,14 @@ export function AppShell({
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-teal-600 text-white">
-              <Sparkles className="size-4" />
-            </span>
+            <Image
+              src="/inventra-mark.png"
+              alt="Inventra AI"
+              width={444}
+              height={521}
+              priority
+              className="h-8 w-auto"
+            />
             <span className="text-base font-semibold tracking-tight">
               Inventra<span className="text-teal-600"> AI</span>
             </span>
