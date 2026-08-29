@@ -3,6 +3,7 @@
 // around each product's dailySales so the trend/forecast engine keeps working.
 
 import { db } from "./db";
+import { invalidateSnapshot, rebuildSnapshot } from "./snapshot";
 import type { ImportPayload } from "./validation";
 import type { ReviewProduct } from "./types";
 
@@ -93,6 +94,9 @@ export async function commitImport(payload: ImportPayload): Promise<CommitResult
     data: { fileName: payload.fileName, rowCount: created.length },
   });
 
+  await invalidateSnapshot();
+  await rebuildSnapshot();
+
   return { imported: created.length, batchId: batch.id, business: user.businessName };
 }
 
@@ -140,6 +144,9 @@ export async function commitCatalog(
   const batch = await db.importBatch.create({
     data: { fileName, rowCount: created.length },
   });
+
+  await invalidateSnapshot();
+  await rebuildSnapshot();
 
   return { imported: created.length, batchId: batch.id, business: user.businessName };
 }

@@ -1,6 +1,7 @@
 // Inventra AI — database seeding script
 // Run with: bun run scripts/seed.ts
 import { db } from "../src/lib/db";
+import { invalidateSnapshot, rebuildSnapshot, refreshSnapshotAI } from "../src/lib/snapshot";
 import { SEED_USER, generateSeedSales, seedProducts } from "../src/lib/mock-data";
 
 const SEED_PRODUCTS = seedProducts();
@@ -53,6 +54,10 @@ async function main() {
   await db.sale.createMany({
     data: sales.map((s) => ({ productId: s.productId, quantity: s.quantity, date: s.date })),
   });
+
+  await invalidateSnapshot();
+  await rebuildSnapshot({ refreshAI: false }); // pre-warm the deterministic snapshot
+  await refreshSnapshotAI().catch(() => {}); // then the AI brief/briefing, awaited so we don't race disconnect
 
   console.log(
     `✅ Seeded ${SEED_PRODUCTS.length} products and ${sales.length} sales records for ${SEED_USER.businessName}.`

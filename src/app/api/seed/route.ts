@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { invalidateSnapshot } from "@/lib/snapshot";
 import { SEED_USER, generateSeedSales, seedProducts } from "@/lib/mock-data";
 
 const SEED_PRODUCTS = seedProducts();
@@ -51,6 +52,8 @@ export async function POST() {
         data: { productId: s.productId, quantity: s.quantity, date: s.date },
       });
     }
+
+    await invalidateSnapshot();
 
     return NextResponse.json({
       ok: true,

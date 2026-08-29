@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAIConfigured } from "@/lib/ai";
-import { buildCopilotContext } from "@/lib/copilot-context";
+import { getSnapshot } from "@/lib/snapshot";
+import type { CopilotContext } from "@/lib/types";
 import {
   buildDeterministicReply,
   buildMessages,
@@ -54,7 +55,23 @@ export async function POST(req: Request) {
     data: { sessionId, role: "user", content: message, language },
   });
 
-  const { context, promptBlock } = await buildCopilotContext();
+  const snap = await getSnapshot();
+  const EMPTY_CONTEXT: CopilotContext = {
+    business: "Your Business",
+    hasData: false,
+    productCount: 0,
+    healthScore: 0,
+    healthLabel: "No Data",
+    revenueAtRisk: 0,
+    inventoryValue: 0,
+    criticalProducts: [],
+    overstockProducts: [],
+    recommendedActions: [],
+    opportunities: [],
+    topSellers: [],
+  };
+  const context: CopilotContext = snap?.copilotContext ?? EMPTY_CONTEXT;
+  const promptBlock = snap?.promptBlock ?? `BUSINESS SUMMARY\nNo product data has been imported yet.`;
   const aiMessages = buildMessages(promptBlock, history, message, language);
 
   const encoder = new TextEncoder();

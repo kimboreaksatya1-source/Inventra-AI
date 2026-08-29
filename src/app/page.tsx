@@ -9,9 +9,8 @@ import {
 import { AppShell } from "@/components/app/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { loadAnalysisInputs } from "@/lib/data";
 import { latestImport } from "@/lib/import";
-import { analyzeInventory } from "@/lib/analysis";
+import { getSnapshot } from "@/lib/snapshot";
 import { formatCurrency } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -123,14 +122,12 @@ export default async function HomePage() {
 }
 
 async function getSummary() {
-  const { business, products } = await loadAnalysisInputs();
-  const analysis = analyzeInventory(products, business);
-  const lastImport = await latestImport();
+  const [snap, lastImport] = await Promise.all([getSnapshot(), latestImport()]);
   return {
-    healthScore: analysis.healthScore,
-    totalProducts: analysis.summary.totalProducts,
-    atRiskWithinWeek: analysis.summary.atRiskWithinWeek,
-    totalRevenueAtRisk: analysis.summary.totalRevenueAtRisk,
+    healthScore: snap?.analysis.healthScore ?? 0,
+    totalProducts: snap?.analysis.summary.totalProducts ?? 0,
+    atRiskWithinWeek: snap?.analysis.summary.atRiskWithinWeek ?? 0,
+    totalRevenueAtRisk: snap?.analysis.summary.totalRevenueAtRisk ?? 0,
     lastImport,
   };
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { bustActionStates } from "@/lib/action-state";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,7 @@ export async function PATCH(
         ...(category !== undefined ? { category } : {}),
       },
     });
+    bustActionStates();
     return NextResponse.json({
       ok: true,
       state: { actionKey: row.actionKey, status: row.status, note: row.note },

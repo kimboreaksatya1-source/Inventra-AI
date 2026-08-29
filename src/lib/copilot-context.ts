@@ -2,11 +2,11 @@
 // Assembles the owner's real business data into (a) a structured object for the
 // right-hand panel and (b) a compact plaintext block injected into every AI request.
 
-import { loadAnalysisInputs } from "./data";
+import { loadProductsLite } from "./data";
 import { analyzeInventory } from "./analysis";
 import { buildDeterministicBrief } from "./brief";
 import { contextLabel, shortLabel } from "./product-label";
-import type { CopilotContext } from "./types";
+import type { BusinessBrief, CopilotContext, InventoryAnalysis } from "./types";
 
 const OVERSTOCK_DAYS = 45;
 
@@ -18,14 +18,21 @@ function days(n: number): string {
   return Number.isFinite(n) ? `${n.toFixed(1)}` : "30+";
 }
 
+/** DB-loading wrapper — kept as a fallback; hot routes use buildCopilotContextFrom + the snapshot. */
 export async function buildCopilotContext(): Promise<{
   context: CopilotContext;
   promptBlock: string;
 }> {
-  const { business, products } = await loadAnalysisInputs();
+  const { business, products } = await loadProductsLite();
+  if (products.length === 0) return emptyContext(business);
+  const analysis = analyzeInventory(products, business);
+  const brief = buildDeterministicBrief(analysis);
+  return buildCopilotContextFrom(analysis, brief, business);
+}
 
-  if (products.length === 0) {
-    const empty: CopilotContext = {
+function emptyContext(business: string): { context: CopilotContext; promptBlock: string } {
+  return {
+    context: {
       business,
       hasData: false,
       productCount: 0,
@@ -38,15 +45,18 @@ export async function buildCopilotContext(): Promise<{
       recommendedActions: [],
       opportunities: [],
       topSellers: [],
-    };
-    return {
-      context: empty,
-      promptBlock: `BUSINESS SUMMARY — ${business}\nNo product data has been imported yet.`,
-    };
-  }
+    },
+    promptBlock: `BUSINESS SUMMARY — ${business}\nNo product data has been imported yet.`,
+  };
+}
 
-  const analysis = analyzeInventory(products, business);
-  const brief = buildDeterministicBrief(analysis);
+/** Pure — assemble the context object + prompt block from already-computed analysis + brief. */
+export function buildCopilotContextFrom(
+  analysis: InventoryAnalysis,
+  brief: BusinessBrief,
+  business: string
+): { context: CopilotContext; promptBlock: string } {
+  if (analysis.products.length === 0) return emptyContext(business);
 
   const criticalProducts = analysis.products
     .filter((p) => p.riskLevel === "Critical" || p.riskLevel === "High")

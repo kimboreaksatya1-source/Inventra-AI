@@ -123,6 +123,26 @@ model Scenario {
   @@index([createdAt])
 }
 
+/// Precomputed analysis + AI outputs — one singleton row, rebuilt on data change.
+model Snapshot {
+  id              String   @id @default(cuid())
+  key             String   @unique @default("singleton")
+  dataHash        String   @default("")
+  business        String   @default("")
+  productCount    Int      @default(0)
+  analysis        Json
+  brief           Json
+  briefSource     String   @default("deterministic")
+  actionDrafts    Json
+  actionsBriefing String   @default("")
+  briefingSource  String   @default("deterministic")
+  copilotContext  Json
+  promptBlock     String   @default("")
+  aiStale         Boolean  @default(true)
+  computedAt      DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 /// Per-action status for the AI Action Center (keyed by a stable action identity)
 model ActionState {
   id          String   @id @default(cuid())

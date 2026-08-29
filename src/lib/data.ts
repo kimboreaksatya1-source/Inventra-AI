@@ -61,12 +61,15 @@ export async function isSeeded(): Promise<boolean> {
   return count > 0;
 }
 
-/** Products shaped for the analysis engine (analysis.ts). */
-export async function loadAnalysisInputs(): Promise<{
+/** Products shaped for the analysis engine — NO Sale query (hot path). */
+export async function loadProductsLite(): Promise<{
   business: string;
   products: AnalysisInput[];
 }> {
-  const { user, products } = await loadData();
+  const user = await db.user.findFirst({ orderBy: { createdAt: "asc" } });
+  if (!user) return { business: "Your Business", products: [] };
+
+  const products = await db.product.findMany({ where: { userId: user.id } });
   return {
     business: user.businessName || "Your Business",
     products: products.map((p) => ({
@@ -82,4 +85,12 @@ export async function loadAnalysisInputs(): Promise<{
       costPrice: p.costPrice,
     })),
   };
+}
+
+/** Products shaped for the analysis engine (analysis.ts). Alias of the lite loader. */
+export async function loadAnalysisInputs(): Promise<{
+  business: string;
+  products: AnalysisInput[];
+}> {
+  return loadProductsLite();
 }

@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AI_MODEL, getAIClient, isAIConfigured } from "@/lib/ai";
-import { buildCopilotContext } from "@/lib/copilot-context";
+import { getSnapshot } from "@/lib/snapshot";
 import {
   buildDeterministicExplanation,
   normalizeParams,
   simulateScenario,
   summarizeForPrompt,
 } from "@/lib/simulator";
-import { loadAnalysisInputs } from "@/lib/data";
+import type { AnalysisInput } from "@/lib/analysis";
 import type { SimulationExplanation } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -35,25 +35,35 @@ Finish with exactly two bold lines:
 **Expected Business Impact:** <the $ / operational outcome>
 Respond in GitHub-flavored Markdown. No JSON, no code fences.`;
 
+function toInputs(snap: NonNullable<Awaited<ReturnType<typeof getSnapshot>>>): AnalysisInput[] {
+  return snap.analysis.products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    canonicalName: p.canonicalName ?? null,
+    brand: p.brand ?? null,
+    sku: p.sku ?? null,
+    category: p.category,
+    stock: p.stock,
+    dailySales: p.dailySales,
+    sellingPrice: p.sellingPrice,
+    costPrice: p.costPrice,
+  }));
+}
+
 export async function POST(req: Request) {
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request" }, { status: 422 });
   }
-
   const params = normalizeParams(parsed.data.params);
 
   try {
-    const [{ products }, { promptBlock }] = await Promise.all([
-      loadAnalysisInputs(),
-      buildCopilotContext(),
-    ]);
-
-    if (products.length === 0) {
+    const snap = await getSnapshot();
+    if (!snap || snap.analysis.products.length === 0) {
       return NextResponse.json({ error: "No business data" }, { status: 409 });
     }
 
-    const result = simulateScenario(products, params);
+    const result = simulateScenario(toInputs(snap), params);
 
     if (!isAIConfigured()) {
       return NextResponse.json({
@@ -68,7 +78,7 @@ export async function POST(req: Request) {
       temperature: 0.4,
       messages: [
         { role: "system", content: SYSTEM },
-        { role: "system", content: `BUSINESS SUMMARY (real data):\n${promptBlock}` },
+        { role: "system", content: `BUSINESS SUMMARY (real data):\n${snap.promptBlock}` },
         { role: "user", content: `${summarizeForPrompt(result)}\n\nExplain this scenario for the owner.` },
       ],
     });
@@ -80,14 +90,17 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("[/api/simulator/explain] error", err);
     try {
-      const { products } = await loadAnalysisInputs();
-      const result = simulateScenario(products, params);
-      return NextResponse.json({
-        explanation: buildDeterministicExplanation(result),
-        source: "deterministic",
-      } satisfies SimulationExplanation);
+      const snap = await getSnapshot();
+      if (snap) {
+        const result = simulateScenario(toInputs(snap), params);
+        return NextResponse.json({
+          explanation: buildDeterministicExplanation(result),
+          source: "deterministic",
+        } satisfies SimulationExplanation);
+      }
     } catch {
-      return NextResponse.json({ error: "Failed to explain scenario" }, { status: 500 });
+      /* fall through */
     }
+    return NextResponse.json({ error: "Failed to explain scenario" }, { status: 500 });
   }
 }

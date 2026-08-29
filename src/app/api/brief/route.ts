@@ -1,21 +1,23 @@
 import { NextResponse } from "next/server";
-import { analyzeInventory } from "@/lib/analysis";
-import { generateBrief } from "@/lib/brief";
-import { loadAnalysisInputs } from "@/lib/data";
+import { getSnapshot, refreshSnapshotAI } from "@/lib/snapshot";
 
 export const dynamic = "force-dynamic";
-// AI call — give it room.
 export const maxDuration = 60;
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const { business, products } = await loadAnalysisInputs();
-    if (products.length === 0) {
-      return NextResponse.json({ hasData: false });
-    }
-    const analysis = analyzeInventory(products, business);
-    const brief = await generateBrief(analysis);
-    return NextResponse.json({ hasData: true, brief, analysis });
+    const refresh = new URL(req.url).searchParams.get("refresh") === "1";
+    if (refresh) await refreshSnapshotAI();
+
+    const snap = await getSnapshot();
+    if (!snap) return NextResponse.json({ hasData: false });
+
+    return NextResponse.json({
+      hasData: true,
+      brief: snap.brief,
+      analysis: snap.analysis,
+      aiStale: snap.aiStale,
+    });
   } catch (err) {
     console.error("[/api/brief] error", err);
     return NextResponse.json({ error: "Failed to generate business brief" }, { status: 500 });
