@@ -294,3 +294,84 @@ export interface BusinessBrief {
   healthLabel: string;
   healthExplanation: string;
 }
+
+/* ============================================================
+   Phase 2 — AI Business Copilot
+   ============================================================ */
+
+export type CopilotLanguage = "en" | "km";
+
+/** Structured business context injected into every Copilot AI request. */
+export interface CopilotContext {
+  business: string;
+  hasData: boolean;
+  productCount: number;
+  healthScore: number;
+  healthLabel: string;
+  revenueAtRisk: number;
+  inventoryValue: number;
+  criticalProducts: { name: string; daysRemaining: number; revenueAtRisk: number }[];
+  overstockProducts: { name: string; daysRemaining: number; inventoryValue: number }[];
+  recommendedActions: RecommendedAction[];
+  opportunities: { title: string; expectedRevenueImpact: number }[];
+  topSellers: { name: string; dailySales: number; weeklyRevenue: number }[];
+}
+
+/** The 4 insight cards rendered beneath every assistant response. */
+export interface CopilotInsightCards {
+  revenueImpact: string;
+  inventoryImpact: string;
+  riskLevel: Priority;
+  recommendedAction: string;
+}
+
+export interface CopilotReorderItem {
+  product: string;
+  reason: string;
+  suggestedQuantity: number;
+  revenueProtection: number;
+  confidence: number;
+}
+
+/** Structured payload the assistant appends as a fenced JSON block. */
+export interface CopilotStructured {
+  insightCards: CopilotInsightCards | null;
+  reorder: CopilotReorderItem[];
+}
+
+export interface CopilotMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  insightCards?: CopilotInsightCards | null;
+  reorder?: CopilotReorderItem[] | null;
+  language: CopilotLanguage;
+  createdAt: string;
+  /** client-only: assistant bubble currently receiving a stream */
+  streaming?: boolean;
+  error?: boolean;
+}
+
+export interface ChatSessionSummary {
+  id: string;
+  title: string;
+  language: CopilotLanguage;
+  updatedAt: string;
+  messageCount: number;
+}
+
+/** Trailing frame the chat stream emits after the prose. */
+export interface CopilotStreamMeta {
+  type: "meta";
+  sessionId: string;
+  messageId: string;
+  title: string;
+  content: string; // final clean markdown (JSON tail removed)
+  insightCards: CopilotInsightCards | null;
+  reorder: CopilotReorderItem[];
+}
+
+export interface CopilotStreamError {
+  type: "error";
+  message: string;
+}

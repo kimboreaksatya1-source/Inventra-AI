@@ -70,12 +70,31 @@ model Recommendation {
   @@index([productId])
 }
 
-/// Persisted AI advisor chat conversations
+/// A Copilot conversation thread
+model ChatSession {
+  id        String        @id @default(cuid())
+  title     String        @default("New conversation")
+  language  String        @default("en") // en | km
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@index([updatedAt])
+}
+
+/// A single Copilot message (user or assistant), with structured payload
 model ChatMessage {
-  id        String   @id @default(cuid())
-  role      String   // user | assistant
-  content   String
-  createdAt DateTime @default(now())
+  id           String      @id @default(cuid())
+  sessionId    String
+  role         String      // user | assistant
+  content      String      // clean markdown (structured JSON tail stripped out)
+  insightCards Json?       // CopilotInsightCards
+  reorder      Json?       // CopilotReorderItem[]
+  language     String      @default("en")
+  createdAt    DateTime    @default(now())
+  session      ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
 }
 
 /// One business-data import batch (CSV / Excel upload)

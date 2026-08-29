@@ -1,0 +1,144 @@
+// Inventra AI — tiny en/km dictionary for the Copilot UI chrome.
+// AI *responses* are generated in the selected language by the model itself;
+// this only covers static labels and the quick-action prompts.
+
+import type { CopilotLanguage } from "./types";
+
+type Dict = Record<string, string>;
+
+const EN: Dict = {
+  "copilot.title": "AI Business Copilot",
+  "copilot.subtitle":
+    "Ask about reorders, revenue risk, cash flow and growth — answered from your data.",
+  "copilot.history": "Conversations",
+  "copilot.newChat": "New conversation",
+  "copilot.context": "Business Context",
+  "copilot.emptyTitle": "What should we look at first?",
+  "copilot.emptyBody": "Ask a question or pick one of these:",
+  "copilot.placeholder": "Ask your Copilot anything about the business…",
+  "copilot.send": "Send",
+  "copilot.stop": "Stop",
+  "copilot.hintLine": "Enter to send · Shift+Enter for a new line",
+  "copilot.thinking": "Analyzing your business data…",
+  "copilot.deleteConfirmTitle": "Delete this conversation?",
+  "copilot.deleteConfirmBody": "This permanently removes the conversation and its messages.",
+  "copilot.delete": "Delete",
+  "copilot.cancel": "Cancel",
+  "copilot.noData": "No business data yet",
+  "copilot.noDataBody": "Import your products so the Copilot can answer from real numbers.",
+  "copilot.importCta": "Import data",
+  "copilot.you": "You",
+  "copilot.assistant": "Inventra AI",
+  "copilot.copy": "Copy",
+  "copilot.copied": "Copied",
+  "context.health": "Inventory Health Score",
+  "context.revenueAtRisk": "Revenue at Risk",
+  "context.criticalProducts": "Critical Products",
+  "context.recommendedActions": "Recommended Actions",
+  "context.none": "Nothing critical right now.",
+  "context.daysLeft": "d left",
+  "cards.revenueImpact": "Revenue Impact",
+  "cards.inventoryImpact": "Inventory Impact",
+  "cards.riskLevel": "Risk Level",
+  "cards.recommendedAction": "Recommended Action",
+  "reorder.title": "Reorder Recommendations",
+  "reorder.qty": "Suggested Quantity",
+  "reorder.protection": "Revenue Protection",
+  "reorder.confidence": "Confidence",
+  "qa.reorder": "Reorder Analysis",
+  "qa.risk": "Revenue Risks",
+  "qa.cashflow": "Cash Flow Advice",
+  "qa.health": "Inventory Health",
+  "qa.summary": "Business Summary",
+  "qa.growth": "Growth Opportunities",
+};
+
+const KM: Dict = {
+  "copilot.title": "ជំនួយការ AI សម្រាប់អាជីវកម្ម",
+  "copilot.subtitle":
+    "សួរអំពីការបញ្ជាទិញ ហានិភ័យចំណូល លំហូរសាច់ប្រាក់ និងកំណើន — ឆ្លើយតបតាមទិន្នន័យរបស់អ្នក។",
+  "copilot.history": "ការសន្ទនា",
+  "copilot.newChat": "ការសន្ទនាថ្មី",
+  "copilot.context": "បរិបទអាជីវកម្ម",
+  "copilot.emptyTitle": "តើយើងគួរពិនិត្យអ្វីមុនគេ?",
+  "copilot.emptyBody": "សួរសំណួរ ឬជ្រើសរើសមួយក្នុងចំណោមខាងក្រោម៖",
+  "copilot.placeholder": "សួរជំនួយការរបស់អ្នកអំពីអាជីវកម្ម…",
+  "copilot.send": "ផ្ញើ",
+  "copilot.stop": "បញ្ឈប់",
+  "copilot.hintLine": "ចុច Enter ដើម្បីផ្ញើ · Shift+Enter សម្រាប់បន្ទាត់ថ្មី",
+  "copilot.thinking": "កំពុងវិភាគទិន្នន័យអាជីវកម្មរបស់អ្នក…",
+  "copilot.deleteConfirmTitle": "លុបការសន្ទនានេះ?",
+  "copilot.deleteConfirmBody": "វានឹងលុបការសន្ទនា និងសាររបស់វាជាអចិន្ត្រៃយ៍។",
+  "copilot.delete": "លុប",
+  "copilot.cancel": "បោះបង់",
+  "copilot.noData": "មិនទាន់មានទិន្នន័យអាជីវកម្ម",
+  "copilot.noDataBody": "នាំចូលទំនិញរបស់អ្នក ដើម្បីឲ្យជំនួយការឆ្លើយតបតាមលេខពិតប្រាកដ។",
+  "copilot.importCta": "នាំចូលទិន្នន័យ",
+  "copilot.you": "អ្នក",
+  "copilot.assistant": "Inventra AI",
+  "copilot.copy": "ចម្លង",
+  "copilot.copied": "បានចម្លង",
+  "context.health": "ពិន្ទុសុខភាពស្តុក",
+  "context.revenueAtRisk": "ចំណូលដែលមានហានិភ័យ",
+  "context.criticalProducts": "ទំនិញសំខាន់ៗ",
+  "context.recommendedActions": "សកម្មភាពដែលណែនាំ",
+  "context.none": "គ្មានអ្វីធ្ងន់ធ្ងរនៅពេលនេះទេ។",
+  "context.daysLeft": "ថ្ងៃទៀត",
+  "cards.revenueImpact": "ផលប៉ះពាល់ចំណូល",
+  "cards.inventoryImpact": "ផលប៉ះពាល់ស្តុក",
+  "cards.riskLevel": "កម្រិតហានិភ័យ",
+  "cards.recommendedAction": "សកម្មភាពដែលណែនាំ",
+  "reorder.title": "ការណែនាំបញ្ជាទិញ",
+  "reorder.qty": "បរិមាណដែលណែនាំ",
+  "reorder.protection": "ការការពារចំណូល",
+  "reorder.confidence": "ភាពជឿជាក់",
+  "qa.reorder": "វិភាគការបញ្ជាទិញ",
+  "qa.risk": "ហានិភ័យចំណូល",
+  "qa.cashflow": "ដំបូន្មានលំហូរសាច់ប្រាក់",
+  "qa.health": "សុខភាពស្តុក",
+  "qa.summary": "សេចក្តីសង្ខេបអាជីវកម្ម",
+  "qa.growth": "ឱកាសរីកចម្រើន",
+};
+
+const DICTS: Record<CopilotLanguage, Dict> = { en: EN, km: KM };
+
+export function t(lang: CopilotLanguage, key: string): string {
+  return DICTS[lang]?.[key] ?? EN[key] ?? key;
+}
+
+/** Predefined quick-action prompts sent to the model (kept in English so intent
+ *  is always understood; the model replies in the chosen language). */
+export const QUICK_ACTIONS: { id: string; labelKey: string; prompt: string }[] = [
+  {
+    id: "reorder",
+    labelKey: "qa.reorder",
+    prompt:
+      "What should I reorder this week? Give me quantities and the revenue each order protects.",
+  },
+  {
+    id: "risk",
+    labelKey: "qa.risk",
+    prompt: "Where am I losing revenue right now, and which products are most at risk?",
+  },
+  {
+    id: "cashflow",
+    labelKey: "qa.cashflow",
+    prompt: "How can I improve my cash flow based on my current inventory?",
+  },
+  {
+    id: "health",
+    labelKey: "qa.health",
+    prompt: "Explain my inventory health score and what is dragging it down.",
+  },
+  {
+    id: "summary",
+    labelKey: "qa.summary",
+    prompt: "Generate a business summary of where things stand today.",
+  },
+  {
+    id: "growth",
+    labelKey: "qa.growth",
+    prompt:
+      "What are my biggest growth opportunities and what should I do to capture them?",
+  },
+];
