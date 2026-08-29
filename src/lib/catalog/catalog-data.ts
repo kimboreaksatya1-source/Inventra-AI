@@ -26,6 +26,8 @@ export async function loadCatalog(): Promise<CatalogPayload> {
     sku: p.sku ?? "",
     productCode: p.productCode,
     name: p.name,
+    canonicalName: p.canonicalName || p.name,
+    aliases: p.aliases ?? [],
     brand: p.brand,
     category: p.category || "Other",
     confidenceScore: p.confidenceScore ?? 1,

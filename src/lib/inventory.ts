@@ -19,6 +19,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export interface RawProduct {
   id: string;
   name: string;
+  canonicalName: string | null;
   category: string;
   sku: string | null;
   brand: string | null;

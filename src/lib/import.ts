@@ -114,7 +114,9 @@ export async function commitCatalog(
   const created = await db.product.createManyAndReturn({
     data: keep.map((p) => ({
       userId: user.id,
-      name: p.name,
+      name: p.originalName, // never overwrite the uploaded name
+      canonicalName: p.canonicalName || p.originalName,
+      aliases: p.aliases ?? [],
       brand: p.brand || null,
       category: p.category || "Other",
       sku: p.sku,

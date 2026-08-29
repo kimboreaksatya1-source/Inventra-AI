@@ -30,6 +30,8 @@ async function main() {
         id: p.id,
         userId: user.id,
         name: p.name,
+        canonicalName: p.canonicalName,
+        aliases: p.aliases,
         category: p.category,
         sku: p.sku,
         productCode: p.productCode,

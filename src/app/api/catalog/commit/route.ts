@@ -6,15 +6,16 @@ import type { ReviewProduct } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 const productSchema = z.object({
-  rawName: z.string(),
-  name: z.string().min(1).max(300),
+  originalName: z.string().min(1).max(300),
+  canonicalName: z.string().max(300),
   brand: z.string().max(120),
   category: z.string().max(120),
+  aliases: z.array(z.string().max(300)).max(30).default([]),
   productCode: z.string().max(120).nullable(),
   barcode: z.string().max(64).nullable(),
   confidence: z.number().min(0).max(1),
   source: z.enum(["kb", "rules", "ai", "manual"]),
-  matchedKbName: z.string().optional(),
+  mergedCount: z.number().optional(),
   sku: z.string().min(1).max(64),
   stock: z.number().min(0),
   dailySales: z.number().min(0),

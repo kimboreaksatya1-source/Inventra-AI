@@ -11,7 +11,8 @@ import type {
 
 export interface AnalysisInput {
   id: string;
-  name: string;
+  name: string; // originalName
+  canonicalName?: string | null;
   category: string;
   stock: number;
   dailySales: number;
@@ -51,6 +52,7 @@ export function analyzeProduct(p: AnalysisInput): ProductAnalysis {
   return {
     id: p.id,
     name: p.name,
+    canonicalName: p.canonicalName ?? null,
     brand: p.brand ?? null,
     sku: p.sku ?? null,
     category: p.category,

@@ -3,7 +3,7 @@
 // Runs a hypothetical scenario against the owner's real products.
 
 import type { AnalysisInput } from "./analysis";
-import { shortLabel } from "./product-label";
+import { contextLabel, shortLabel } from "./product-label";
 import type {
   ScenarioParams,
   SimProductResult,
@@ -122,6 +122,7 @@ function simulateProduct(p: AnalysisInput, params: ScenarioParams) {
   const result: SimProductResult = {
     id: p.id,
     name: p.name,
+    canonicalName: p.canonicalName ?? null,
     sku: p.sku ?? null,
     brand: p.brand ?? null,
     category: p.category,
@@ -267,7 +268,7 @@ export function summarizeForPrompt(result: SimulationResult): string {
       ? `AT-RISK PRODUCTS:\n${result.productsAtRisk
           .map(
             (r) =>
-              `- ${shortLabel(r)}: cover ${r.coverBefore}d → ${r.coverAfter}d, stockout probability ${r.stockoutProbability}%${
+              `- ${contextLabel(r)}: cover ${r.coverBefore}d → ${r.coverAfter}d, stockout probability ${r.stockoutProbability}%${
                 r.mitigatedProbability !== r.stockoutProbability ? ` (mitigated to ${r.mitigatedProbability}% with reorder)` : ""
               }`
           )

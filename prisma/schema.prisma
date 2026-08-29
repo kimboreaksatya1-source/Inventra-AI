@@ -29,6 +29,8 @@ model Product {
   userId         String
   name           String
   category       String
+  canonicalName  String           @default("") // normalised English name — internal matching / analytics only
+  aliases        String[]         @default([]) // every spelling seen for this product
   sku            String?
   productCode    String?          // original code from the source file (falls back to sku)
   brand          String?          // recognised brand

@@ -1,5 +1,6 @@
 // Inventra AI — hybrid product recognition.
 // 1) local knowledge base  2) rules engine  3) batched DeepSeek fallback (low-confidence only).
+// Preserves the user's ORIGINAL name; produces a CANONICAL name for internal matching.
 
 import { AI_MODEL, getAIClient, isAIConfigured } from "../ai";
 import type { RecognizedProduct } from "../types";
@@ -12,6 +13,7 @@ import {
 } from "./knowledge-base";
 
 const AI_THRESHOLD = 0.7;
+const KHMER = /[ក-៿]/;
 
 function norm(s: string): string {
   return String(s ?? "")
@@ -34,12 +36,27 @@ function titleCase(s: string): string {
     .join(" ");
 }
 
+function uniqAliases(list: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of list) {
+    const v = String(raw ?? "").trim();
+    if (!v) continue;
+    const key = norm(v);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(v);
+  }
+  return out;
+}
+
 /* --------------------------- knowledge base --------------------------- */
 
 interface KbMatch {
   name: string;
   brand: string;
   category: Category;
+  aliases: string[];
   confidence: number;
 }
 
@@ -47,23 +64,20 @@ function matchKb(rawName: string): KbMatch | null {
   const n = norm(rawName);
   if (!n) return null;
 
-  // exact name / alias
   for (const p of KB_PRODUCTS) {
     if (norm(p.name) === n || p.aliases?.some((a) => norm(a) === n)) {
-      return { name: p.name, brand: p.brand, category: p.category, confidence: 0.97 };
+      return { name: p.name, brand: p.brand, category: p.category, aliases: [p.name, ...(p.aliases ?? [])], confidence: 0.97 };
     }
   }
-  // alias contained in the raw string (or vice-versa)
   for (const p of KB_PRODUCTS) {
     const cands = [p.name, ...(p.aliases ?? [])].map(norm);
     if (cands.some((c) => c.length >= 5 && (n.includes(c) || c.includes(n)))) {
-      return { name: p.name, brand: p.brand, category: p.category, confidence: 0.9 };
+      return { name: p.name, brand: p.brand, category: p.category, aliases: [p.name, ...(p.aliases ?? [])], confidence: 0.9 };
     }
   }
-  // token overlap — needs 2+ distinct shared tokens (or one long, distinctive one)
   const nt = new Set(tokens(rawName));
   if (nt.size > 0) {
-    let best: { p: (typeof KB_PRODUCTS)[number]; score: number; shared: number } | null = null;
+    let best: { p: (typeof KB_PRODUCTS)[number]; score: number } | null = null;
     for (const p of KB_PRODUCTS) {
       const pt = new Set(tokens(`${p.name} ${p.brand}`));
       if (pt.size === 0) continue;
@@ -71,15 +85,14 @@ function matchKb(rawName: string): KbMatch | null {
       const strong = sharedTokens.length >= 2 || sharedTokens.some((t) => t.length >= 6);
       if (!strong) continue;
       const score = sharedTokens.length / Math.max(pt.size, nt.size);
-      if (score >= 0.5 && (!best || score > best.score)) {
-        best = { p, score, shared: sharedTokens.length };
-      }
+      if (score >= 0.5 && (!best || score > best.score)) best = { p, score };
     }
     if (best) {
       return {
         name: best.p.name,
         brand: best.p.brand,
         category: best.p.category,
+        aliases: [best.p.name, ...(best.p.aliases ?? [])],
         confidence: 0.78 + Math.min(0.14, (best.score - 0.5) * 0.3),
       };
     }
@@ -89,13 +102,10 @@ function matchKb(rawName: string): KbMatch | null {
 
 /* ------------------------------- rules -------------------------------- */
 
-/** Returns a recognised brand only when it's a known brand; "" otherwise (no guessing). */
 function extractBrand(rawName: string): string {
   const n = ` ${norm(rawName)} `;
   for (const b of KNOWN_BRANDS) {
-    if (n.includes(` ${norm(b)} `) || n.includes(`${norm(b)} `) || n.startsWith(` ${norm(b)}`)) {
-      return b;
-    }
+    if (n.includes(` ${norm(b)} `) || n.includes(`${norm(b)} `) || n.startsWith(` ${norm(b)}`)) return b;
   }
   return "";
 }
@@ -115,29 +125,31 @@ function isBarcode(code: string | null | undefined): boolean {
 /* ---------------------------- local pass ------------------------------ */
 
 export function recognizeLocally(rawName: string, rawCode?: string | null): RecognizedProduct {
+  const originalName = String(rawName ?? "").trim();
   const code = (rawCode ?? "").trim() || null;
   const base = {
-    rawName,
+    originalName,
     productCode: code,
     barcode: isBarcode(code) ? code : null,
   };
 
-  const kb = matchKb(rawName);
+  const kb = matchKb(originalName);
   if (kb) {
     return {
       ...base,
-      name: kb.name,
+      canonicalName: kb.name,
       brand: kb.brand,
       category: kb.category,
+      aliases: uniqAliases([originalName, ...kb.aliases]),
       confidence: kb.confidence,
       source: "kb",
-      matchedKbName: kb.name,
     };
   }
 
-  const brand = extractBrand(rawName); // "" unless a known brand
-  const category = inferCategory(rawName);
-  const name = titleCase(rawName);
+  const brand = extractBrand(originalName);
+  const category = inferCategory(originalName);
+  // Latin script → we can produce a tidy canonical; Khmer with no KB hit → leave to AI / fallback
+  const canonicalName = KHMER.test(originalName) ? "" : titleCase(originalName);
 
   let confidence = 0.42;
   if (brand && category) confidence = 0.72;
@@ -146,16 +158,17 @@ export function recognizeLocally(rawName: string, rawCode?: string | null): Reco
 
   return {
     ...base,
-    name,
+    canonicalName,
     brand,
     category: category ?? "Other",
+    aliases: uniqAliases([originalName, canonicalName]),
     confidence,
     source: "rules",
   };
 }
 
 export interface RecognizeItem {
-  name: string;
+  name: string; // raw uploaded string
   productCode?: string | null;
   brand?: string | null;
   category?: string | null;
@@ -167,7 +180,6 @@ export function recognizeBatchLocal(items: RecognizeItem[]): {
 } {
   const results = items.map((it) => {
     const r = recognizeLocally(it.name, it.productCode);
-    // a brand / category explicitly present in the file always wins
     if (it.brand && it.brand.trim()) {
       r.brand = it.brand.trim();
       r.confidence = Math.max(r.confidence, 0.85);
@@ -209,16 +221,18 @@ function normalizeCategory(c: string): Category {
 /* ------------------------------- AI ---------------------------------- */
 
 const AI_SYSTEM = `You classify retail products for a Cambodian minimart / convenience store.
-For each item you are given an index and a raw product string. Return ONLY a JSON array (no prose,
-no code fences) of objects: {"index": number, "name": string, "brand": string, "category": string}.
-- "name": a clean, complete product name (fix casing, expand obvious abbreviations, keep size like "330ml").
+For each item you get an index and a raw product string. The string MAY be in Khmer.
+Return ONLY a JSON array (no prose, no code fences) of objects:
+{"index": number, "canonicalName": string, "brand": string, "category": string}.
+- "canonicalName": the standard ENGLISH product name (translate/transliterate from Khmer if needed;
+  fix casing; keep size like "330ml"). e.g. "កូកាកូឡា 330ml" -> "Coca-Cola Original 330ml".
 - "brand": the manufacturer/brand, or "" if genuinely unknown.
 - "category": EXACTLY one of: Beverage, Water, Instant Noodles, Dairy, Snacks, Personal Care, Household, Other.`;
 
 export async function enrichWithAI(
   items: { index: number; rawName: string }[]
-): Promise<Map<number, { name: string; brand: string; category: Category }>> {
-  const out = new Map<number, { name: string; brand: string; category: Category }>();
+): Promise<Map<number, { canonicalName: string; brand: string; category: Category }>> {
+  const out = new Map<number, { canonicalName: string; brand: string; category: Category }>();
   if (!isAIConfigured() || items.length === 0) return out;
 
   try {
@@ -228,10 +242,7 @@ export async function enrichWithAI(
       temperature: 0.2,
       messages: [
         { role: "system", content: AI_SYSTEM },
-        {
-          role: "user",
-          content: items.map((it) => `${it.index}. ${it.rawName}`).join("\n"),
-        },
+        { role: "user", content: items.map((it) => `${it.index}. ${it.rawName}`).join("\n") },
       ],
     });
     const text = completion.choices[0]?.message?.content ?? "";
@@ -246,7 +257,7 @@ export async function enrichWithAI(
       const idx = Number(r.index);
       if (!Number.isInteger(idx)) continue;
       out.set(idx, {
-        name: String(r.name ?? "").trim() || "",
+        canonicalName: String(r.canonicalName ?? r.name ?? "").trim(),
         brand: String(r.brand ?? "").trim(),
         category: normalizeCategory(String(r.category ?? "Other")),
       });
@@ -264,20 +275,98 @@ export async function recognizeProducts(items: RecognizeItem[]): Promise<{
 }> {
   const { results, lowConfidenceIndexes } = recognizeBatchLocal(items);
 
-  if (lowConfidenceIndexes.length === 0) return { results, aiUsed: false };
-
-  const aiInput = lowConfidenceIndexes.map((i) => ({ index: i, rawName: items[i].name }));
-  const aiMap = await enrichWithAI(aiInput);
-  if (aiMap.size === 0) return { results, aiUsed: false };
-
-  for (const [idx, ai] of aiMap) {
-    const r = results[idx];
-    if (!r) continue;
-    if (ai.name) r.name = ai.name;
-    if (ai.brand) r.brand = ai.brand;
-    r.category = ai.category;
-    r.confidence = Math.max(r.confidence, 0.75);
-    r.source = "ai";
+  if (lowConfidenceIndexes.length > 0) {
+    const aiMap = await enrichWithAI(
+      lowConfidenceIndexes.map((i) => ({ index: i, rawName: items[i].name }))
+    );
+    for (const [idx, ai] of aiMap) {
+      const r = results[idx];
+      if (!r) continue;
+      if (ai.canonicalName) r.canonicalName = ai.canonicalName;
+      if (ai.brand) r.brand = ai.brand;
+      r.category = ai.category;
+      r.confidence = Math.max(r.confidence, 0.75);
+      r.source = "ai";
+      r.aliases = uniqAliases([...r.aliases, r.canonicalName]);
+    }
+    return { results: finalizeNames(results), aiUsed: aiMap.size > 0 };
   }
-  return { results, aiUsed: true };
+
+  return { results: finalizeNames(results), aiUsed: false };
+}
+
+/** Guarantee canonicalName is populated (falls back to the original). */
+function finalizeNames(list: RecognizedProduct[]): RecognizedProduct[] {
+  return list.map((r) => ({
+    ...r,
+    canonicalName: r.canonicalName || r.originalName,
+    aliases: uniqAliases([r.originalName, r.canonicalName || r.originalName, ...r.aliases]),
+  }));
+}
+
+/* --------------------------- deduplication --------------------------- */
+
+interface Mergeable {
+  originalName: string;
+  canonicalName: string;
+  aliases: string[];
+  brand: string;
+  category: string;
+  confidence: number;
+  source: RecognizedProduct["source"];
+  stock: number;
+  dailySales: number;
+  sellingPrice: number;
+  costPrice: number;
+}
+
+/**
+ * Collapse rows that resolve to the same product (same canonical name, or one's
+ * original name appearing in another's aliases). Keeps the first original name,
+ * sums stock + daily sales, stock-weights prices, unions aliases.
+ */
+export function mergeDuplicates<T extends Mergeable>(rows: T[]): T[] {
+  const groups: T[][] = [];
+  const keyOf = (r: T) => norm(r.canonicalName || r.originalName);
+
+  for (const row of rows) {
+    const k = keyOf(row);
+    const aliasKeys = new Set(row.aliases.map(norm));
+    const g = groups.find((grp) => {
+      const head = grp[0];
+      if (keyOf(head) === k && k) return true;
+      // alias cross-match
+      if (aliasKeys.has(norm(head.originalName)) || aliasKeys.has(norm(head.canonicalName))) return true;
+      if (head.aliases.some((a) => norm(a) === norm(row.originalName))) return true;
+      return false;
+    });
+    if (g) g.push(row);
+    else groups.push([row]);
+  }
+
+  return groups.map((grp) => {
+    if (grp.length === 1) return grp[0];
+    const first = grp[0];
+    const stock = grp.reduce((s, r) => s + r.stock, 0);
+    const dailySales = grp.reduce((s, r) => s + r.dailySales, 0);
+    const wsum = grp.reduce((s, r) => s + Math.max(r.stock, 1), 0);
+    const sellingPrice =
+      Math.round((grp.reduce((s, r) => s + r.sellingPrice * Math.max(r.stock, 1), 0) / wsum) * 100) / 100;
+    const costPrice =
+      Math.round((grp.reduce((s, r) => s + r.costPrice * Math.max(r.stock, 1), 0) / wsum) * 100) / 100;
+    const best = grp.reduce((a, b) => (b.confidence > a.confidence ? b : a));
+    return {
+      ...first,
+      canonicalName: best.canonicalName || first.canonicalName,
+      brand: best.brand || first.brand,
+      category: best.category || first.category,
+      confidence: best.confidence,
+      aliases: uniqAliases(grp.flatMap((r) => [r.originalName, r.canonicalName, ...r.aliases])),
+      stock,
+      dailySales,
+      sellingPrice,
+      costPrice,
+      mergedCount: grp.length,
+    } as T;
+  });
 }

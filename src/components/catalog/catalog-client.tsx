@@ -55,7 +55,12 @@ export function CatalogClient() {
     const list = data?.products ?? [];
     const q = search.trim().toLowerCase();
     return list.filter((p) => {
-      if (q && !`${p.name} ${p.brand ?? ""} ${p.sku} ${p.productCode ?? ""}`.toLowerCase().includes(q))
+      if (
+        q &&
+        !`${p.name} ${p.canonicalName} ${(p.aliases ?? []).join(" ")} ${p.brand ?? ""} ${p.sku} ${p.productCode ?? ""}`
+          .toLowerCase()
+          .includes(q)
+      )
         return false;
       if (category !== ALL && p.category !== category) return false;
       if (brand !== ALL && (p.brand ?? "") !== brand) return false;
@@ -201,6 +206,9 @@ export function CatalogClient() {
                     <span className="ml-2 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
                       auto
                     </span>
+                  )}
+                  {p.canonicalName && p.canonicalName.toLowerCase() !== p.name.toLowerCase() && (
+                    <div className="text-[11px] text-muted-foreground">{p.canonicalName}</div>
                   )}
                 </TableCell>
                 <TableCell className="text-muted-foreground">{p.brand || "—"}</TableCell>

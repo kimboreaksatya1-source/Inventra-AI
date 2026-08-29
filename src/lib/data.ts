@@ -31,6 +31,7 @@ export async function loadData(): Promise<LoadedData> {
   const rawProducts: RawProduct[] = products.map((p) => ({
     id: p.id,
     name: p.name,
+    canonicalName: p.canonicalName || null,
     category: p.category,
     sku: p.sku,
     brand: p.brand,
@@ -71,6 +72,7 @@ export async function loadAnalysisInputs(): Promise<{
     products: products.map((p) => ({
       id: p.id,
       name: p.name,
+      canonicalName: p.canonicalName,
       brand: p.brand,
       sku: p.sku,
       category: p.category,

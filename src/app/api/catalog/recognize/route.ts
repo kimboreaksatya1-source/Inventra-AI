@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { recognizeProducts } from "@/lib/catalog/recognize";
+import { mergeDuplicates, recognizeProducts } from "@/lib/catalog/recognize";
 import { assignSkus } from "@/lib/catalog/sku";
 import type { RecognizeResponse, ReviewProduct, ReviewStatus } from "@/lib/types";
 
@@ -41,25 +41,45 @@ export async function POST(req: Request) {
       }))
     );
 
-    const skus = assignSkus(
-      results.map((r) => ({ category: r.category, productCode: r.productCode }))
-    );
-
-    const products: ReviewProduct[] = results.map((r, i) => {
+    // attach numeric data, then collapse duplicates, then assign SKUs
+    const withNumbers = results.map((r, i) => {
       const row = rows[i];
-      const sellingPrice = row.sellingPrice;
       const costPrice =
         row.costPrice && row.costPrice > 0
           ? row.costPrice
-          : Math.round(sellingPrice * 0.7 * 100) / 100;
-      const status: ReviewStatus = r.confidence >= 0.9 ? "approved" : "pending";
+          : Math.round(row.sellingPrice * 0.7 * 100) / 100;
       return {
         ...r,
-        sku: skus[i],
         stock: Math.max(0, Math.round(row.stock)),
         dailySales: Math.max(0, row.dailySales ?? 0),
-        sellingPrice,
+        sellingPrice: row.sellingPrice,
         costPrice,
+      };
+    });
+
+    const merged = mergeDuplicates(withNumbers);
+    const skus = assignSkus(
+      merged.map((r) => ({ category: r.category, productCode: r.productCode }))
+    );
+
+    const products: ReviewProduct[] = merged.map((r, i) => {
+      const status: ReviewStatus = r.confidence >= 0.9 ? "approved" : "pending";
+      return {
+        originalName: r.originalName,
+        canonicalName: r.canonicalName,
+        brand: r.brand,
+        category: r.category,
+        aliases: r.aliases,
+        productCode: r.productCode,
+        barcode: r.barcode,
+        confidence: r.confidence,
+        source: r.source,
+        mergedCount: r.mergedCount,
+        sku: skus[i],
+        stock: r.stock,
+        dailySales: r.dailySales,
+        sellingPrice: r.sellingPrice,
+        costPrice: r.costPrice,
         status,
       };
     });

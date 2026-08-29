@@ -4,7 +4,7 @@
 
 import { AI_MODEL, getAIClient, isAIConfigured } from "./ai";
 import { healthLabel } from "./analysis";
-import { shortLabel } from "./product-label";
+import { contextLabel, shortLabel } from "./product-label";
 import type {
   BusinessBrief,
   CriticalRisk,
@@ -165,14 +165,15 @@ Return ONLY a strict JSON object (no markdown, no code fences) of this exact sha
   "recommendedActions": [ { "priority": "CRITICAL"|"HIGH"|"MEDIUM"|"LOW", "action": string, "reason": string, "expectedImpact": string } ]
 }
 Base every number on the data provided. Keep 1-6 items per array. Do not invent products.
-Always write a product as its full catalog name plus SKU, e.g. "Buldak Carbonara (SKU NDL-001)".`;
+Products show the owner's ORIGINAL name then a [canonical: …] English name. Reason on the canonical
+name, but write the ORIGINAL name + SKU in every field, e.g. "កូកាកូឡា 330ml (SKU BEV-001)". Never translate it.`;
 
 function buildContext(analysis: InventoryAnalysis): string {
   const lines = analysis.products
     .slice(0, 40)
     .map(
       (p) =>
-        `- ${shortLabel(p)} (${p.category}) | stock ${p.stock} | ${p.dailySales}/day | price ${usd(
+        `- ${contextLabel(p)} (${p.category}) | stock ${p.stock} | ${p.dailySales}/day | price ${usd(
           p.sellingPrice
         )} cost ${usd(p.costPrice)} | days left ${
           Number.isFinite(p.daysRemaining) ? p.daysRemaining.toFixed(1) : "30+"

@@ -5,7 +5,7 @@
 import { loadAnalysisInputs } from "./data";
 import { analyzeInventory } from "./analysis";
 import { buildDeterministicBrief } from "./brief";
-import { shortLabel } from "./product-label";
+import { contextLabel, shortLabel } from "./product-label";
 import type { CopilotContext } from "./types";
 
 const OVERSTOCK_DAYS = 45;
@@ -53,6 +53,7 @@ export async function buildCopilotContext(): Promise<{
     .slice(0, 8)
     .map((p) => ({
       name: shortLabel(p),
+      contextName: contextLabel(p),
       daysRemaining: Number.isFinite(p.daysRemaining)
         ? Math.round(p.daysRemaining * 10) / 10
         : 0,
@@ -69,6 +70,7 @@ export async function buildCopilotContext(): Promise<{
     .slice(0, 6)
     .map((p) => ({
       name: shortLabel(p),
+      contextName: contextLabel(p),
       daysRemaining: Number.isFinite(p.daysRemaining) ? Math.round(p.daysRemaining) : 999,
       inventoryValue: Math.round(p.inventoryValue),
     }));
@@ -79,6 +81,7 @@ export async function buildCopilotContext(): Promise<{
     .slice(0, 5)
     .map((p) => ({
       name: shortLabel(p),
+      contextName: contextLabel(p),
       dailySales: p.dailySales,
       weeklyRevenue: Math.round(p.dailySales * 7 * p.sellingPrice),
     }));
@@ -110,12 +113,16 @@ export async function buildCopilotContext(): Promise<{
     `Inventory Value on hand: ${usd(context.inventoryValue)}`,
     `Products tracked: ${context.productCount}`,
     ``,
+    `PRODUCT NAMING: each product shows the owner's ORIGINAL name, then in [brackets] its canonical`,
+    `English name + brand. Match and reason using the canonical name, but ALWAYS write the ORIGINAL`,
+    `name back to the owner — never translate or replace it.`,
+    ``,
     `CRITICAL / HIGH-RISK PRODUCTS (stockout risk):`,
     criticalProducts.length
       ? criticalProducts
           .map(
             (p) =>
-              `- ${p.name} — ${days(p.daysRemaining)} days of stock left, ${usd(
+              `- ${p.contextName ?? p.name} — ${days(p.daysRemaining)} days of stock left, ${usd(
                 p.revenueAtRisk
               )} at risk`
           )
@@ -127,7 +134,7 @@ export async function buildCopilotContext(): Promise<{
       ? overstockProducts
           .map(
             (p) =>
-              `- ${p.name} — ${
+              `- ${p.contextName ?? p.name} — ${
                 p.daysRemaining === 999 ? "no recent sales" : `${p.daysRemaining} days cover`
               }, ${usd(p.inventoryValue)} tied up`
           )
@@ -135,7 +142,7 @@ export async function buildCopilotContext(): Promise<{
       : "- none",
     ``,
     `TOP SELLERS: ${
-      topSellers.map((p) => `${p.name} (${usd(p.weeklyRevenue)}/wk)`).join(", ") || "n/a"
+      topSellers.map((p) => `${p.contextName ?? p.name} (${usd(p.weeklyRevenue)}/wk)`).join(", ") || "n/a"
     }`,
     ``,
     `CURRENT RECOMMENDED ACTIONS (from the analysis engine):`,

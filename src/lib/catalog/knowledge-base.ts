@@ -35,10 +35,10 @@ export interface KbProduct {
 
 export const KB_PRODUCTS: KbProduct[] = [
   // Beverages
-  { name: "Coca-Cola Original 330ml", brand: "Coca-Cola", category: "Beverage", aliases: ["coca cola 330", "coke 330", "coca-cola 330ml", "coca cola 330ml"] },
+  { name: "Coca-Cola Original 330ml", brand: "Coca-Cola", category: "Beverage", aliases: ["coca cola 330", "coke 330", "coca-cola 330ml", "coca cola 330ml", "កូកាកូឡា 330ml", "កូកា 330"] },
   { name: "Coca-Cola Original 500ml", brand: "Coca-Cola", category: "Beverage", aliases: ["coca cola 500", "coke 500", "coca-cola 500ml"] },
   { name: "Coca-Cola Zero", brand: "Coca-Cola", category: "Beverage", aliases: ["coke zero", "coca cola zero", "coca-cola zero sugar"] },
-  { name: "Pepsi 330ml", brand: "Pepsi", category: "Beverage", aliases: ["pepsi 330", "pepsi cola 330ml"] },
+  { name: "Pepsi 330ml", brand: "Pepsi", category: "Beverage", aliases: ["pepsi 330", "pepsi cola 330ml", "ប៉ិបស៊ី 330ml", "ប៉ិបស៊ី"] },
   { name: "Pepsi Black", brand: "Pepsi", category: "Beverage", aliases: ["pepsi black", "pepsi zero"] },
   { name: "Sprite 330ml", brand: "Sprite", category: "Beverage", aliases: ["sprite", "sprite can"] },
   { name: "Fanta Orange 330ml", brand: "Fanta", category: "Beverage", aliases: ["fanta orange", "fanta"] },
@@ -49,17 +49,17 @@ export const KB_PRODUCTS: KbProduct[] = [
   { name: "Sting Gold", brand: "Sting", category: "Beverage", aliases: ["sting gold energy", "sting yellow"] },
 
   // Water
-  { name: "Vital Water 500ml", brand: "Vital", category: "Water", aliases: ["vital 500", "vital 500ml", "vital water 500"] },
+  { name: "Vital Water 500ml", brand: "Vital", category: "Water", aliases: ["vital 500", "vital 500ml", "vital water 500", "ទឹកសុទ្ធ vital 500ml", "ទឹក vital 500"] },
   { name: "Vital Water 1500ml", brand: "Vital", category: "Water", aliases: ["vital 1500", "vital 1.5l", "vital water 1.5"] },
   { name: "Dasani Water 500ml", brand: "Dasani", category: "Water", aliases: ["dasani", "dasani 500ml", "dasani water"] },
 
   // Instant Noodles
   { name: "Buldak Carbonara", brand: "Samyang", category: "Instant Noodles", aliases: ["buldak carbonara", "samyang carbonara", "carbonara buldak"] },
   { name: "Buldak Original", brand: "Samyang", category: "Instant Noodles", aliases: ["buldak", "buldak original", "samyang hot chicken", "buldak hot chicken"] },
-  { name: "Mama Shrimp", brand: "Mama", category: "Instant Noodles", aliases: ["mama shrimp", "mama tom yum shrimp", "mama prawn"] },
+  { name: "Mama Shrimp", brand: "Mama", category: "Instant Noodles", aliases: ["mama shrimp", "mama tom yum shrimp", "mama prawn", "មីម៉ាម៉ា បង្គា", "ម៉ាម៉ា បង្គា"] },
   { name: "Mama Pork", brand: "Mama", category: "Instant Noodles", aliases: ["mama pork", "mama minced pork"] },
-  { name: "Mi Chiet Beef", brand: "Mi Chiet", category: "Instant Noodles", aliases: ["mi chiet beef", "mee chiet beef", "michiet beef"] },
-  { name: "Mi Chiet Chicken", brand: "Mi Chiet", category: "Instant Noodles", aliases: ["mi chiet chicken", "mee chiet chicken", "michiet chicken"] },
+  { name: "Mi Chiet Beef", brand: "Mi Chiet", category: "Instant Noodles", aliases: ["mi chiet beef", "mee chiet beef", "michiet beef", "មីជាតិ សាច់គោ", "មីជាតិសាច់គោ"] },
+  { name: "Mi Chiet Chicken", brand: "Mi Chiet", category: "Instant Noodles", aliases: ["mi chiet chicken", "mee chiet chicken", "michiet chicken", "មីជាតិ សាច់មាន់", "មីជាតិសាច់មាន់"] },
   { name: "Indomie Mi Goreng", brand: "Indomie", category: "Instant Noodles", aliases: ["indomie mi goreng", "indomie goreng", "mi goreng"] },
   { name: "ABC Chicken", brand: "ABC", category: "Instant Noodles", aliases: ["abc chicken", "abc mie chicken"] },
   { name: "Koka Chicken", brand: "Koka", category: "Instant Noodles", aliases: ["koka chicken", "koka noodles chicken"] },

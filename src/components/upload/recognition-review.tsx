@@ -139,12 +139,13 @@ function ProductRow({
         </span>
 
         <div className="min-w-0 flex-1">
+          <p className="truncate font-medium">{product.originalName}</p>
           {editing ? (
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <Input
-                value={product.name}
-                onChange={(e) => onPatch({ name: e.target.value })}
-                placeholder="Product name"
+                value={product.canonicalName}
+                onChange={(e) => onPatch({ canonicalName: e.target.value })}
+                placeholder="Canonical (English) name"
               />
               <Input
                 value={product.brand}
@@ -163,17 +164,22 @@ function ProductRow({
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground sm:col-span-2">
+                Your uploaded name stays as “{product.originalName}”. The canonical name is only used
+                internally for matching.
+              </p>
             </div>
           ) : (
-            <>
-              <p className="truncate font-medium">{product.name}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {product.sku} · {product.brand || "no brand"} · {product.category}
-                {product.rawName !== product.name && (
-                  <span className="text-muted-foreground/70"> · from “{product.rawName}”</span>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {product.sku} · {product.brand || "no brand"} · {product.category}
+              {product.canonicalName &&
+                product.canonicalName.toLowerCase() !== product.originalName.toLowerCase() && (
+                  <span className="text-muted-foreground/70"> · canonical: {product.canonicalName}</span>
                 )}
-              </p>
-            </>
+              {product.mergedCount && product.mergedCount > 1 && (
+                <span className="text-teal-600 dark:text-teal-400"> · merged {product.mergedCount} rows</span>
+              )}
+            </p>
           )}
           <div className="mt-2 flex items-center gap-3">
             <div className="w-32">

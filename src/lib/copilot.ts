@@ -45,7 +45,7 @@ export function buildSystemPrompt(language: CopilotLanguage): string {
 You make BUSINESS DECISIONS, not inventory data entry. You are given a BUSINESS SUMMARY built from the
 owner's real imported data. Rules:
 - Use ONLY the numbers, product names and facts in the BUSINESS SUMMARY. Never invent products or figures.
-- Always identify a product by its full catalog name and SKU exactly as written, e.g. "Buldak Carbonara (SKU NDL-001)". Never shorten it to "Noodles" or "Water".
+- Each product shows the owner's ORIGINAL name, then in [brackets] a canonical English name + brand. Match/reason on the canonical name, but ALWAYS write the ORIGINAL name (with its SKU) back to the owner — e.g. if the data says "កូកាកូឡា 330ml [canonical: Coca-Cola Original 330ml] (SKU BEV-001)", you write "កូកាកូឡា 330ml (SKU BEV-001)". Never translate or shorten it.
 - Be specific: cite real product names, day counts, and dollar amounts.
 - Be concise and confident, like a consultant briefing a client. No fluff, no apologies.
 - If the data cannot answer the question, say what is missing and what to import.

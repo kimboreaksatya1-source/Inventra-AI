@@ -223,7 +223,8 @@ export type RiskLevel = "Critical" | "High" | "Medium" | "Low" | "None";
 /** Per-product output of the analysis engine (Feature 2). */
 export interface ProductAnalysis {
   id: string;
-  name: string;
+  name: string; // originalName — used for all user-facing display
+  canonicalName?: string | null; // internal reasoning / matching
   brand?: string | null;
   sku?: string | null;
   category: string;
@@ -312,11 +313,11 @@ export interface CopilotContext {
   healthLabel: string;
   revenueAtRisk: number;
   inventoryValue: number;
-  criticalProducts: { name: string; daysRemaining: number; revenueAtRisk: number }[];
-  overstockProducts: { name: string; daysRemaining: number; inventoryValue: number }[];
+  criticalProducts: { name: string; contextName?: string; daysRemaining: number; revenueAtRisk: number }[];
+  overstockProducts: { name: string; contextName?: string; daysRemaining: number; inventoryValue: number }[];
   recommendedActions: RecommendedAction[];
   opportunities: { title: string; expectedRevenueImpact: number }[];
-  topSellers: { name: string; dailySales: number; weeklyRevenue: number }[];
+  topSellers: { name: string; contextName?: string; dailySales: number; weeklyRevenue: number }[];
 }
 
 /** The 4 insight cards rendered beneath every assistant response. */
@@ -393,6 +394,7 @@ export interface ScenarioParams {
 export interface SimProductResult {
   id: string;
   name: string;
+  canonicalName?: string | null;
   sku?: string | null;
   brand?: string | null;
   category: string;
@@ -532,15 +534,17 @@ export type RecognitionSource = "kb" | "rules" | "ai" | "manual";
 
 /** One product after recognition, before the user reviews it. */
 export interface RecognizedProduct {
-  rawName: string;
-  name: string;
+  originalName: string; // exactly what the user uploaded — never overwritten
+  canonicalName: string; // normalised English name (KB / AI); falls back to originalName
   brand: string;
   category: string;
+  aliases: string[]; // normalised spellings seen for this product
   productCode: string | null;
   barcode: string | null;
   confidence: number; // 0..1
   source: RecognitionSource;
-  matchedKbName?: string;
+  /** merged numeric totals when this row absorbed duplicates during dedup */
+  mergedCount?: number;
 }
 
 export type ReviewStatus = "approved" | "pending" | "ignored";
@@ -566,7 +570,9 @@ export interface CatalogProduct {
   id: string;
   sku: string;
   productCode: string | null;
-  name: string;
+  name: string; // originalName — the uploaded name
+  canonicalName: string;
+  aliases: string[];
   brand: string | null;
   category: string;
   confidenceScore: number;
