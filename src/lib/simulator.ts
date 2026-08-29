@@ -3,6 +3,7 @@
 // Runs a hypothetical scenario against the owner's real products.
 
 import type { AnalysisInput } from "./analysis";
+import { shortLabel } from "./product-label";
 import type {
   ScenarioParams,
   SimProductResult,
@@ -121,6 +122,8 @@ function simulateProduct(p: AnalysisInput, params: ScenarioParams) {
   const result: SimProductResult = {
     id: p.id,
     name: p.name,
+    sku: p.sku ?? null,
+    brand: p.brand ?? null,
     category: p.category,
     effectiveDailySales: round(effDaily, 2),
     coverBefore: round(coverBefore, 1),
@@ -264,7 +267,7 @@ export function summarizeForPrompt(result: SimulationResult): string {
       ? `AT-RISK PRODUCTS:\n${result.productsAtRisk
           .map(
             (r) =>
-              `- ${r.name}: cover ${r.coverBefore}d → ${r.coverAfter}d, stockout probability ${r.stockoutProbability}%${
+              `- ${shortLabel(r)}: cover ${r.coverBefore}d → ${r.coverAfter}d, stockout probability ${r.stockoutProbability}%${
                 r.mitigatedProbability !== r.stockoutProbability ? ` (mitigated to ${r.mitigatedProbability}% with reorder)` : ""
               }`
           )
@@ -297,7 +300,7 @@ export function buildDeterministicExplanation(result: SimulationResult): string 
     lines.push(
       `Stockout risk rises: average probability goes from ${result.before.avgStockoutProbability}% to ${result.after.avgStockoutProbability}%, with **${result.productsAtRisk
         .slice(0, 3)
-        .map((r) => r.name)
+        .map((r) => shortLabel(r))
         .join(", ")}** most exposed${
         result.params.reorderQuantity > 0
           ? `. Your ${result.params.reorderQuantity}-unit reorder pulls those back down to roughly ${Math.round(

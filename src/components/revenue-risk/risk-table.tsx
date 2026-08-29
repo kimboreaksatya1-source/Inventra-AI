@@ -64,7 +64,10 @@ export function RiskTable() {
     if (q) {
       list = list.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+          p.name.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          (p.brand ?? "").toLowerCase().includes(q) ||
+          (p.sku ?? "").toLowerCase().includes(q)
       );
     }
     if (filter !== "all") list = list.filter((p) => p.riskLevel === filter);
@@ -205,7 +208,10 @@ export function RiskTable() {
                 >
                   <TableCell>
                     <div className="font-medium">{p.name}</div>
-                    <div className="text-xs text-muted-foreground">{p.category}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {p.sku ? `${p.sku} · ` : ""}
+                      {p.category}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{p.stock}</TableCell>
                   <TableCell className="text-right tabular-nums">{p.dailySales}</TableCell>

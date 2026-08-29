@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, FileText, FlaskConical, ListChecks, ShieldAlert, Upload } from "lucide-react";
+import { Bot, Boxes, FileText, FlaskConical, ListChecks, ShieldAlert, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
   { href: "/actions", label: "Actions", icon: ListChecks },
   { href: "/upload", label: "Upload", icon: Upload },
+  { href: "/catalog", label: "Catalog", icon: Boxes },
   { href: "/brief", label: "Brief", icon: FileText },
   { href: "/revenue-risk", label: "Revenue Risk", icon: ShieldAlert },
   { href: "/simulator", label: "Simulator", icon: FlaskConical },

@@ -5,6 +5,7 @@
 import { loadAnalysisInputs } from "./data";
 import { analyzeInventory } from "./analysis";
 import { buildDeterministicBrief } from "./brief";
+import { shortLabel } from "./product-label";
 import type { CopilotContext } from "./types";
 
 const OVERSTOCK_DAYS = 45;
@@ -51,7 +52,7 @@ export async function buildCopilotContext(): Promise<{
     .filter((p) => p.riskLevel === "Critical" || p.riskLevel === "High")
     .slice(0, 8)
     .map((p) => ({
-      name: p.name,
+      name: shortLabel(p),
       daysRemaining: Number.isFinite(p.daysRemaining)
         ? Math.round(p.daysRemaining * 10) / 10
         : 0,
@@ -67,7 +68,7 @@ export async function buildCopilotContext(): Promise<{
     .sort((a, b) => b.inventoryValue - a.inventoryValue)
     .slice(0, 6)
     .map((p) => ({
-      name: p.name,
+      name: shortLabel(p),
       daysRemaining: Number.isFinite(p.daysRemaining) ? Math.round(p.daysRemaining) : 999,
       inventoryValue: Math.round(p.inventoryValue),
     }));
@@ -77,7 +78,7 @@ export async function buildCopilotContext(): Promise<{
     .sort((a, b) => b.dailySales * b.sellingPrice - a.dailySales * a.sellingPrice)
     .slice(0, 5)
     .map((p) => ({
-      name: p.name,
+      name: shortLabel(p),
       dailySales: p.dailySales,
       weeklyRevenue: Math.round(p.dailySales * 7 * p.sellingPrice),
     }));

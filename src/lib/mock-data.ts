@@ -1,178 +1,43 @@
-// Inventra AI — Seed data: realistic Cambodian SME minimart catalog
-// Deterministic pseudo-random sales history so dashboards are stable.
+// Inventra AI — seed data: a realistic Cambodian minimart catalog built from the
+// product knowledge base, with deterministic sales history so demos are stable.
 
 import type { RawProduct, RawSale } from "./inventory";
 
-export type SeedProduct = RawProduct;
+export type SeedProduct = RawProduct & { productCode: string };
 
-// 15 products across categories. Prices in USD (common in Cambodia).
-// `dailySales` is attached from DEMAND_PROFILE by `seedProducts()` below.
-export const SEED_PRODUCTS: Omit<SeedProduct, "dailySales">[] = [
-  {
-    id: "p-coca-15l",
-    name: "Cambodia Cola 330ml",
-    category: "Beverages",
-    sku: "BEV-CC-15",
-    stockQuantity: 18,
-    sellingPrice: 1.2,
-    costPrice: 0.85,
-    reorderPoint: 24,
-    unit: "bottle",
-  },
-  {
-    id: "p-mama-noodle",
-    name: "Instant Noodles (Mi Cheat)",
-    category: "Snacks",
-    sku: "SNK-NDL-MM",
-    stockQuantity: 12,
-    sellingPrice: 0.4,
-    costPrice: 0.25,
-    reorderPoint: 40,
-    unit: "pack",
-  },
-  {
-    id: "p-bottled-water",
-    name: "Pro Vida 500ml",
-    category: "Beverages",
-    sku: "BEV-WT-15",
-    stockQuantity: 26,
-    sellingPrice: 0.5,
-    costPrice: 0.28,
-    reorderPoint: 30,
-    unit: "bottle",
-  },
-  {
-    id: "p-sting-energy",
-    name: "Energy Drink (Sting)",
-    category: "Beverages",
-    sku: "BEV-EN-ST",
-    stockQuantity: 140,
-    sellingPrice: 0.6,
-    costPrice: 0.4,
-    reorderPoint: 24,
-    unit: "bottle",
-  },
-  {
-    id: "p-anchor-beer",
-    name: "Anchor Beer 330ml",
-    category: "Beverages",
-    sku: "BEV-BR-AN",
-    stockQuantity: 48,
-    sellingPrice: 1.0,
-    costPrice: 0.7,
-    reorderPoint: 24,
-    unit: "can",
-  },
-  {
-    id: "p-rice-5kg",
-    name: "Romdul Rice 5kg",
-    category: "Staples",
-    sku: "STP-RC-5K",
-    stockQuantity: 22,
-    sellingPrice: 6.5,
-    costPrice: 5.2,
-    reorderPoint: 8,
-    unit: "bag",
-  },
-  {
-    id: "p-soy-sauce",
-    name: "Soy Sauce 500ml",
-    category: "Condiments",
-    sku: "CON-SS-50",
-    stockQuantity: 16,
-    sellingPrice: 1.1,
-    costPrice: 0.75,
-    reorderPoint: 10,
-    unit: "bottle",
-  },
-  {
-    id: "p-cooking-oil",
-    name: "Cooking Oil 1L",
-    category: "Staples",
-    sku: "STP-OIL-1L",
-    stockQuantity: 14,
-    sellingPrice: 2.4,
-    costPrice: 1.9,
-    reorderPoint: 12,
-    unit: "bottle",
-  },
-  {
-    id: "p-condensed-milk",
-    name: "Condensed Milk",
-    category: "Dairy",
-    sku: "DRY-CM-397",
-    stockQuantity: 30,
-    sellingPrice: 1.3,
-    costPrice: 0.95,
-    reorderPoint: 12,
-    unit: "can",
-  },
-  {
-    id: "p-lays-chips",
-    name: "Lay's Chips",
-    category: "Snacks",
-    sku: "SNK-CH-LS",
-    stockQuantity: 38,
-    sellingPrice: 0.8,
-    costPrice: 0.5,
-    reorderPoint: 20,
-    unit: "pack",
-  },
-  {
-    id: "p-m150-energy",
-    name: "King Kong Energy Drink",
-    category: "Beverages",
-    sku: "BEV-EN-M150",
-    stockQuantity: 8,
-    sellingPrice: 0.65,
-    costPrice: 0.45,
-    reorderPoint: 24,
-    unit: "bottle",
-  },
-  {
-    id: "p-singha-water",
-    name: "Singha Water 600ml",
-    category: "Beverages",
-    sku: "BEV-WT-SG",
-    stockQuantity: 60,
-    sellingPrice: 0.4,
-    costPrice: 0.22,
-    reorderPoint: 30,
-    unit: "bottle",
-  },
-  {
-    id: "p-thai-tea",
-    name: "Cambodia Milk Tea",
-    category: "Beverages",
-    sku: "BEV-TT-400",
-    stockQuantity: 11,
-    sellingPrice: 2.0,
-    costPrice: 1.5,
-    reorderPoint: 8,
-    unit: "pack",
-  },
-  {
-    id: "p-instant-coffee",
-    name: "Instant Coffee 3-in-1",
-    category: "Beverages",
-    sku: "BEV-CF-3N1",
-    stockQuantity: 45,
-    sellingPrice: 0.35,
-    costPrice: 0.2,
-    reorderPoint: 30,
-    unit: "sachet",
-  },
-  {
-    id: "p-shampoo-sachet",
-    name: "Shampoo Sachet",
-    category: "Personal Care",
-    sku: "PCR-SH-SCH",
-    stockQuantity: 90,
-    sellingPrice: 0.15,
-    costPrice: 0.08,
-    reorderPoint: 40,
-    unit: "sachet",
-  },
+interface SeedSpec {
+  id: string;
+  name: string;
+  brand: string;
+  category: string;
+  sku: string;
+  stockQuantity: number;
+  sellingPrice: number;
+  costPrice: number;
+  base: number; // avg daily units
+  trend: number; // weekly growth fraction
+  noise: number;
+}
+
+const SPECS: SeedSpec[] = [
+  { id: "p-coke-330", name: "Coca-Cola Original 330ml", brand: "Coca-Cola", category: "Beverage", sku: "BEV-001", stockQuantity: 18, sellingPrice: 1.2, costPrice: 0.85, base: 8, trend: 0.04, noise: 0.25 },
+  { id: "p-coke-zero", name: "Coca-Cola Zero", brand: "Coca-Cola", category: "Beverage", sku: "BEV-002", stockQuantity: 40, sellingPrice: 1.2, costPrice: 0.85, base: 3, trend: 0.03, noise: 0.35 },
+  { id: "p-sprite-330", name: "Sprite 330ml", brand: "Sprite", category: "Beverage", sku: "BEV-003", stockQuantity: 34, sellingPrice: 1.1, costPrice: 0.78, base: 4, trend: 0.02, noise: 0.3 },
+  { id: "p-sting-red", name: "Sting Strawberry", brand: "Sting", category: "Beverage", sku: "BEV-004", stockQuantity: 140, sellingPrice: 0.6, costPrice: 0.4, base: 2, trend: -0.1, noise: 0.5 },
+  { id: "p-redbull", name: "Red Bull", brand: "Red Bull", category: "Beverage", sku: "BEV-005", stockQuantity: 22, sellingPrice: 1.0, costPrice: 0.72, base: 4, trend: 0.05, noise: 0.3 },
+  { id: "p-vital-500", name: "Vital Water 500ml", brand: "Vital", category: "Water", sku: "WTR-001", stockQuantity: 26, sellingPrice: 0.5, costPrice: 0.28, base: 6, trend: 0.18, noise: 0.3 },
+  { id: "p-vital-1500", name: "Vital Water 1500ml", brand: "Vital", category: "Water", sku: "WTR-002", stockQuantity: 60, sellingPrice: 0.8, costPrice: 0.45, base: 3.5, trend: 0.04, noise: 0.35 },
+  { id: "p-buldak-carb", name: "Buldak Carbonara", brand: "Samyang", category: "Instant Noodles", sku: "NDL-001", stockQuantity: 12, sellingPrice: 1.1, costPrice: 0.8, base: 5, trend: 0.09, noise: 0.3 },
+  { id: "p-mama-shrimp", name: "Mama Shrimp", brand: "Mama", category: "Instant Noodles", sku: "NDL-002", stockQuantity: 30, sellingPrice: 0.4, costPrice: 0.25, base: 14, trend: 0.05, noise: 0.2 },
+  { id: "p-indomie-goreng", name: "Indomie Mi Goreng", brand: "Indomie", category: "Instant Noodles", sku: "NDL-003", stockQuantity: 22, sellingPrice: 0.45, costPrice: 0.3, base: 6, trend: 0.06, noise: 0.3 },
+  { id: "p-anchor-milk", name: "Anchor Milk 1L", brand: "Anchor", category: "Dairy", sku: "DRY-001", stockQuantity: 16, sellingPrice: 2.4, costPrice: 1.9, base: 2.2, trend: 0.02, noise: 0.25 },
+  { id: "p-bearbrand", name: "Bear Brand", brand: "Bear Brand", category: "Dairy", sku: "DRY-002", stockQuantity: 28, sellingPrice: 0.9, costPrice: 0.62, base: 3, trend: 0.03, noise: 0.3 },
+  { id: "p-lays-bbq", name: "Lay's BBQ", brand: "Lay's", category: "Snacks", sku: "SNK-001", stockQuantity: 38, sellingPrice: 0.8, costPrice: 0.5, base: 3, trend: 0.07, noise: 0.4 },
+  { id: "p-pringles-og", name: "Pringles Original", brand: "Pringles", category: "Snacks", sku: "SNK-002", stockQuantity: 11, sellingPrice: 2.0, costPrice: 1.5, base: 1.6, trend: 0.09, noise: 0.35 },
+  { id: "p-colgate-total", name: "Colgate Total", brand: "Colgate", category: "Personal Care", sku: "PCR-001", stockQuantity: 14, sellingPrice: 1.6, costPrice: 1.1, base: 1.8, trend: 0.04, noise: 0.3 },
+  { id: "p-headshoulders", name: "Head & Shoulders", brand: "Head & Shoulders", category: "Personal Care", sku: "PCR-002", stockQuantity: 90, sellingPrice: 0.15, costPrice: 0.08, base: 1, trend: -0.05, noise: 0.6 },
+  { id: "p-tide", name: "Tide Detergent", brand: "Tide", category: "Household", sku: "HHD-001", stockQuantity: 22, sellingPrice: 3.2, costPrice: 2.5, base: 1.2, trend: 0.03, noise: 0.4 },
+  { id: "p-sunlight", name: "Sunlight Dishwashing Liquid", brand: "Sunlight", category: "Household", sku: "HHD-002", stockQuantity: 18, sellingPrice: 1.1, costPrice: 0.75, base: 1.5, trend: 0.01, noise: 0.35 },
 ];
 
 export const SEED_USER = {
@@ -181,31 +46,21 @@ export const SEED_USER = {
   businessName: "Sokchea Mini Mart",
 };
 
-// Demand profile per product to craft realistic stories:
-// base = avg daily units, trend = weekly growth fraction, noise = variability
-const DEMAND_PROFILE: Record<string, { base: number; trend: number; noise: number }> = {
-  "p-coca-15l": { base: 8, trend: 0.04, noise: 0.25 },
-  "p-mama-noodle": { base: 14, trend: 0.05, noise: 0.2 },
-  "p-bottled-water": { base: 6, trend: 0.18, noise: 0.3 }, // rising fast
-  "p-sting-energy": { base: 2, trend: -0.1, noise: 0.5 }, // overstocked / slow
-  "p-anchor-beer": { base: 5, trend: 0.02, noise: 0.3 },
-  "p-rice-5kg": { base: 1.2, trend: 0.03, noise: 0.4 },
-  "p-soy-sauce": { base: 1.5, trend: 0.01, noise: 0.35 },
-  "p-cooking-oil": { base: 1.8, trend: 0.06, noise: 0.3 },
-  "p-condensed-milk": { base: 2.2, trend: 0.02, noise: 0.25 },
-  "p-lays-chips": { base: 3, trend: 0.07, noise: 0.4 },
-  "p-m150-energy": { base: 4, trend: 0.05, noise: 0.3 },
-  "p-singha-water": { base: 3.5, trend: 0.01, noise: 0.35 },
-  "p-thai-tea": { base: 1.6, trend: 0.09, noise: 0.35 },
-  "p-instant-coffee": { base: 6, trend: 0.03, noise: 0.25 },
-  "p-shampoo-sachet": { base: 1, trend: -0.05, noise: 0.6 }, // slow
-};
-
-/** Seed products with a realistic `dailySales` velocity attached. */
+/** Seed products in Prisma-ready shape, with a realistic `dailySales` velocity. */
 export function seedProducts(): SeedProduct[] {
-  return SEED_PRODUCTS.map((p) => ({
-    ...p,
-    dailySales: DEMAND_PROFILE[p.id]?.base ?? 2,
+  return SPECS.map((s) => ({
+    id: s.id,
+    name: s.name,
+    brand: s.brand,
+    category: s.category,
+    sku: s.sku,
+    productCode: s.sku,
+    stockQuantity: s.stockQuantity,
+    dailySales: s.base,
+    sellingPrice: s.sellingPrice,
+    costPrice: s.costPrice,
+    reorderPoint: Math.max(1, Math.ceil(s.base * 7)),
+    unit: "unit",
   }));
 }
 
@@ -221,34 +76,22 @@ function rng(seed: number) {
   };
 }
 
-/** Generate 45 days of deterministic sales for all seed products. */
+/** Generate deterministic sales for all seed products. */
 export function generateSeedSales(days = 45): RawSale[] {
   const sales: RawSale[] = [];
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let counter = 0;
-  for (const p of SEED_PRODUCTS) {
-    const profile = DEMAND_PROFILE[p.id] ?? { base: 2, trend: 0, noise: 0.3 };
-    const rand = rng(p.id.length * 97 + p.name.length * 13 + 7);
+  for (const s of SPECS) {
+    const rand = rng(s.id.length * 97 + s.name.length * 13 + 7);
     for (let d = days; d >= 1; d--) {
       const date = new Date(today.getTime() - d * 24 * 60 * 60 * 1000);
-      // growth factor: older days have less demand
       const ageFraction = d / days;
-      const growth = 1 - profile.trend * (ageFraction * 4);
-      // weekend boost for beverages/snacks
+      const growth = 1 - s.trend * (ageFraction * 4);
       const dow = date.getDay();
       const weekendBoost = dow === 0 || dow === 6 ? 1.35 : 1;
-      const noise = 1 + (rand() - 0.5) * 2 * profile.noise;
-      let qty = profile.base * growth * weekendBoost * noise;
-      qty = Math.max(0, Math.round(qty));
-      if (qty > 0) {
-        sales.push({
-          productId: p.id,
-          quantity: qty,
-          date,
-        });
-        counter++;
-      }
+      const noise = 1 + (rand() - 0.5) * 2 * s.noise;
+      const qty = Math.max(0, Math.round(s.base * growth * weekendBoost * noise));
+      if (qty > 0) sales.push({ productId: s.id, quantity: qty, date });
     }
   }
   return sales;

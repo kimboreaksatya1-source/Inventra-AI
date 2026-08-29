@@ -1,0 +1,49 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { commitCatalog } from "@/lib/import";
+import type { ReviewProduct } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
+const productSchema = z.object({
+  rawName: z.string(),
+  name: z.string().min(1).max(300),
+  brand: z.string().max(120),
+  category: z.string().max(120),
+  productCode: z.string().max(120).nullable(),
+  barcode: z.string().max(64).nullable(),
+  confidence: z.number().min(0).max(1),
+  source: z.enum(["kb", "rules", "ai", "manual"]),
+  matchedKbName: z.string().optional(),
+  sku: z.string().min(1).max(64),
+  stock: z.number().min(0),
+  dailySales: z.number().min(0),
+  sellingPrice: z.number().positive(),
+  costPrice: z.number().min(0),
+  status: z.enum(["approved", "pending", "ignored"]),
+});
+
+const bodySchema = z.object({
+  fileName: z.string().min(1).max(260),
+  products: z.array(productSchema).min(1).max(3000),
+});
+
+export async function POST(req: Request) {
+  const parsed = bodySchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request", issues: parsed.error.issues }, { status: 422 });
+  }
+
+  const kept = parsed.data.products.filter((p) => p.status !== "ignored");
+  if (kept.length === 0) {
+    return NextResponse.json({ error: "No products to import" }, { status: 422 });
+  }
+
+  try {
+    const result = await commitCatalog(parsed.data.fileName, parsed.data.products as ReviewProduct[]);
+    return NextResponse.json({ ok: true, ...result });
+  } catch (err) {
+    console.error("[/api/catalog/commit] error", err);
+    return NextResponse.json({ error: "Failed to save the catalog" }, { status: 500 });
+  }
+}

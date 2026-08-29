@@ -26,7 +26,8 @@ const EMPTY_GROUPS = (): Record<Priority, BusinessAction[]> => ({
 
 const BRIEFING_SYSTEM = `You are Inventra AI writing the opening lines of a business owner's action list.
 Write 2–3 confident sentences: what is most urgent, the single headline dollar figure, and a
-forward-looking close. Reference real product names. No lists, no headings, plain prose.`;
+forward-looking close. Refer to products by their full catalog name and SKU exactly as given
+(e.g. "Buldak Carbonara (SKU NDL-001)"). No lists, no headings, plain prose.`;
 
 export async function GET() {
   try {

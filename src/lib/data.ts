@@ -33,6 +33,7 @@ export async function loadData(): Promise<LoadedData> {
     name: p.name,
     category: p.category,
     sku: p.sku,
+    brand: p.brand,
     stockQuantity: p.stockQuantity,
     dailySales: p.dailySales,
     sellingPrice: p.sellingPrice,
@@ -70,6 +71,8 @@ export async function loadAnalysisInputs(): Promise<{
     products: products.map((p) => ({
       id: p.id,
       name: p.name,
+      brand: p.brand,
+      sku: p.sku,
       category: p.category,
       stock: p.stockQuantity,
       dailySales: p.dailySales,

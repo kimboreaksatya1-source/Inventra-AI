@@ -4,6 +4,7 @@
 
 import { AI_MODEL, getAIClient, isAIConfigured } from "./ai";
 import { healthLabel } from "./analysis";
+import { shortLabel } from "./product-label";
 import type {
   BusinessBrief,
   CriticalRisk,
@@ -44,7 +45,7 @@ export function buildDeterministicBrief(analysis: InventoryAnalysis): BusinessBr
   const criticalRisks: CriticalRisk[] = atRisk
     .slice(0, 6)
     .map((p) => ({
-      product: p.name,
+      product: shortLabel(p),
       daysRemaining: roundDays(p.daysRemaining),
       revenueAtRisk: Math.round(p.estimatedRevenueAtRisk),
       priority: PRIORITY_BY_RISK[p.riskLevel],
@@ -55,7 +56,7 @@ export function buildDeterministicBrief(analysis: InventoryAnalysis): BusinessBr
   const recommendedActions: RecommendedAction[] = [
     ...atRisk.slice(0, 5).map<RecommendedAction>((p) => ({
       priority: PRIORITY_BY_RISK[p.riskLevel],
-      action: `Reorder ${p.name}`,
+      action: `Reorder ${shortLabel(p)}`,
       reason:
         p.riskLevel === "Critical"
           ? `Stockout expected within ${roundDays(p.daysRemaining)} days at ${p.dailySales}/day.`
@@ -68,7 +69,7 @@ export function buildDeterministicBrief(analysis: InventoryAnalysis): BusinessBr
       .slice(0, 2)
       .map<RecommendedAction>((p) => ({
         priority: "LOW",
-        action: `Discount or bundle ${p.name}`,
+        action: `Discount or bundle ${shortLabel(p)}`,
         reason: `No recent sales — ${usd(p.inventoryValue)} of capital is tied up in dead stock.`,
         expectedImpact: `Free up ${usd(p.inventoryValue)} in working capital.`,
       })),
@@ -117,7 +118,7 @@ function buildExecutiveSummary(analysis: InventoryAnalysis): string {
   const topNames = products
     .filter((p) => p.riskLevel === "Critical" || p.riskLevel === "High")
     .slice(0, 3)
-    .map((p) => p.name);
+    .map((p) => shortLabel(p));
   const namePhrase =
     topNames.length > 0 ? ` — most urgently ${topNames.join(", ")}` : "";
 
@@ -144,8 +145,8 @@ function buildOpportunities(products: ProductAnalysis[]): RevenueOpportunity[] {
     const upliftUnits = Math.max(1, Math.round(weeklyUnits * 0.25));
     const impact = Math.round(upliftUnits * p.unitMargin * 4); // ~monthly margin uplift
     return {
-      title: `Grow ${p.name}`,
-      observation: `${p.name} sells ${p.dailySales}/day at a ${usd(p.unitMargin)} unit margin and is not at stockout risk — demand is steady and under-served.`,
+      title: `Grow ${shortLabel(p)}`,
+      observation: `${shortLabel(p)} sells ${p.dailySales}/day at a ${usd(p.unitMargin)} unit margin and is not at stockout risk — demand is steady and under-served.`,
       recommendedAction: `Increase order quantity by ~25% (about ${upliftUnits} more units/week) and give it more shelf space.`,
       expectedRevenueImpact: impact,
     };
@@ -163,14 +164,15 @@ Return ONLY a strict JSON object (no markdown, no code fences) of this exact sha
   "revenueOpportunities": [ { "title": string, "observation": string, "recommendedAction": string, "expectedRevenueImpact": number } ],
   "recommendedActions": [ { "priority": "CRITICAL"|"HIGH"|"MEDIUM"|"LOW", "action": string, "reason": string, "expectedImpact": string } ]
 }
-Base every number on the data provided. Keep 1-6 items per array. Do not invent products.`;
+Base every number on the data provided. Keep 1-6 items per array. Do not invent products.
+Always write a product as its full catalog name plus SKU, e.g. "Buldak Carbonara (SKU NDL-001)".`;
 
 function buildContext(analysis: InventoryAnalysis): string {
   const lines = analysis.products
     .slice(0, 40)
     .map(
       (p) =>
-        `- ${p.name} (${p.category}) | stock ${p.stock} | ${p.dailySales}/day | price ${usd(
+        `- ${shortLabel(p)} (${p.category}) | stock ${p.stock} | ${p.dailySales}/day | price ${usd(
           p.sellingPrice
         )} cost ${usd(p.costPrice)} | days left ${
           Number.isFinite(p.daysRemaining) ? p.daysRemaining.toFixed(1) : "30+"

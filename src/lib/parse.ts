@@ -51,6 +51,55 @@ export function isAcceptedFile(file: File): boolean {
 
 export class ParseError extends Error {}
 
+export interface ParsedWorkbook {
+  fileName: string;
+  headers: string[];
+  rows: unknown[][]; // data rows only, aligned to `headers`
+}
+
+/** Parse a spreadsheet into its raw header row + data rows — no mapping, no validation. */
+export async function parseWorkbook(file: File): Promise<ParsedWorkbook> {
+  if (!isAcceptedFile(file)) {
+    throw new ParseError(
+      `Unsupported file type “${fileExtension(file.name) || file.name}”. Upload a .csv or .xlsx file.`
+    );
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    throw new ParseError("File is larger than 5 MB. Split it into smaller files.");
+  }
+
+  const buffer = await file.arrayBuffer();
+  let workbook: XLSX.WorkBook;
+  try {
+    workbook = XLSX.read(buffer, { type: "array" });
+  } catch {
+    throw new ParseError("Could not read this file. Make sure it is a valid CSV or Excel file.");
+  }
+
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) throw new ParseError("The file has no sheets.");
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName], {
+    header: 1,
+    blankrows: false,
+    defval: null,
+  });
+  if (matrix.length < 2) {
+    throw new ParseError("The file needs a header row and at least one product row.");
+  }
+
+  const headers = (matrix[0] as unknown[]).map((c) => String(c ?? "").trim());
+  const width = headers.length;
+  const rows: unknown[][] = [];
+  for (let i = 1; i < matrix.length; i++) {
+    const row = matrix[i] as unknown[];
+    if (row.every((c) => c === null || String(c).trim() === "")) continue;
+    const padded = Array.from({ length: width }, (_, j) => row[j] ?? null);
+    rows.push(padded);
+  }
+  if (rows.length === 0) throw new ParseError("No product rows found in the file.");
+  return { fileName: file.name, headers, rows };
+}
+
 /** Parse a File into raw rows, mapping arbitrary header names to canonical fields. */
 export async function parseSpreadsheet(file: File): Promise<RawRow[]> {
   if (!isAcceptedFile(file)) {

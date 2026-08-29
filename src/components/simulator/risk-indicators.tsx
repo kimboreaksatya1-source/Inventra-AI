@@ -48,7 +48,10 @@ function RiskRow({ p, hasReorder }: { p: SimProductResult; hasReorder: boolean }
   return (
     <li>
       <div className="flex items-center justify-between gap-2 text-sm">
-        <span className="font-medium">{p.name}</span>
+        <span className="font-medium">
+          {p.name}
+          {p.sku && <span className="ml-1.5 font-mono text-[10px] text-muted-foreground">{p.sku}</span>}
+        </span>
         <span className="tabular-nums text-xs text-muted-foreground">
           cover {fmtDays(p.coverBefore)} → {fmtDays(p.coverAfter)}
         </span>

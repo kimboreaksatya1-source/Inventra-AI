@@ -21,6 +21,7 @@ export interface RawProduct {
   name: string;
   category: string;
   sku: string | null;
+  brand: string | null;
   stockQuantity: number;
   dailySales: number;
   sellingPrice: number;

@@ -17,6 +17,8 @@ export interface AnalysisInput {
   dailySales: number;
   sellingPrice: number;
   costPrice: number;
+  brand?: string | null;
+  sku?: string | null;
 }
 
 /** Bounded horizon (days) used for revenue-at-risk projections. */
@@ -49,6 +51,8 @@ export function analyzeProduct(p: AnalysisInput): ProductAnalysis {
   return {
     id: p.id,
     name: p.name,
+    brand: p.brand ?? null,
+    sku: p.sku ?? null,
     category: p.category,
     stock: p.stock,
     dailySales: p.dailySales,

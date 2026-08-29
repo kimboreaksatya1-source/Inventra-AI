@@ -4,6 +4,7 @@
 
 import type { AnalysisInput } from "./analysis";
 import { suggestedOrderQuantity } from "./inventory";
+import { shortLabel } from "./product-label";
 import { simulateScenario } from "./simulator";
 import type {
   BusinessAction,
@@ -48,7 +49,7 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       key: `reorder:${p.id}`,
       priority,
       category: "reorder",
-      recommendation: `Reorder ${p.name}${qty > 0 ? ` — ${qty} units` : ""}`,
+      recommendation: `Reorder ${shortLabel(p)}${qty > 0 ? ` — ${qty} units` : ""}`,
       reason: `${days} days of stock left at ${p.dailySales}/day. ${usd(p.estimatedRevenueAtRisk)} of sales is exposed if it runs out.`,
       expectedImpact: `Protect ${usd(p.estimatedRevenueAtRisk)} of revenue`,
       impactValue: Math.round(p.estimatedRevenueAtRisk),
@@ -88,10 +89,10 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       key: `cashflow:${p.id}`,
       priority: "LOW",
       category: "cashflow",
-      recommendation: `Discount or bundle ${p.name}`,
+      recommendation: `Discount or bundle ${shortLabel(p)}`,
       reason:
         p.dailySales === 0
-          ? `No recent sales — ${usd(p.inventoryValue)} of capital is tied up in ${p.name}.`
+          ? `No recent sales — ${usd(p.inventoryValue)} of capital is tied up in ${shortLabel(p)}.`
           : `${Math.round(p.daysRemaining)} days of cover — ${usd(p.inventoryValue)} of capital is sitting idle.`,
       expectedImpact: `Free up ${usd(p.inventoryValue)} of working capital`,
       impactValue: Math.round(p.inventoryValue),
@@ -114,8 +115,8 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       key: `scenario:demand:${r.id}`,
       priority: r.stockoutProbability >= 60 ? "HIGH" : "MEDIUM",
       category: "scenario",
-      recommendation: `Pre-order ${r.name} before demand climbs`,
-      reason: `If demand rises 20%, ${r.name}'s stockout probability jumps to ${r.stockoutProbability}% and cover drops to ${r.coverAfter} days. Roughly ${usd(atRisk)} of sales would be at risk.`,
+      recommendation: `Pre-order ${shortLabel(r)} before demand climbs`,
+      reason: `If demand rises 20%, ${shortLabel(r)}'s stockout probability jumps to ${r.stockoutProbability}% and cover drops to ${r.coverAfter} days. Roughly ${usd(atRisk)} of sales would be at risk.`,
       expectedImpact: `Protect ${usd(atRisk)} against a demand spike`,
       impactValue: Math.round(atRisk),
       confidence: 58,
@@ -134,8 +135,8 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       key: `scenario:delay:${r.id}`,
       priority: "MEDIUM",
       category: "scenario",
-      recommendation: `Bring the ${r.name} order forward ~10 days`,
-      reason: `A 10-day supplier delay would leave ${r.name} short — stockout probability ${r.stockoutProbability}%. Order early or line up a backup supplier.`,
+      recommendation: `Bring the ${shortLabel(r)} order forward ~10 days`,
+      reason: `A 10-day supplier delay would leave ${shortLabel(r)} short — stockout probability ${r.stockoutProbability}%. Order early or line up a backup supplier.`,
       expectedImpact: `Protect ${usd(atRisk)} from supply disruption`,
       impactValue: Math.round(atRisk),
       confidence: 55,
