@@ -104,3 +104,14 @@ model ImportBatch {
   rowCount  Int
   createdAt DateTime @default(now())
 }
+
+/// A saved what-if scenario from the Scenario Simulator
+model Scenario {
+  id        String   @id @default(cuid())
+  name      String
+  params    Json     // ScenarioParams
+  result    Json     // SimulationResult
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

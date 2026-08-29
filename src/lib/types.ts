@@ -375,3 +375,75 @@ export interface CopilotStreamError {
   type: "error";
   message: string;
 }
+
+/* ============================================================
+   Phase 3 — Scenario Simulator
+   ============================================================ */
+
+export interface ScenarioParams {
+  demandGrowthPct: number; // sustained demand change, -50..200
+  salesIncreasePct: number; // promo / one-off uplift, 0..200
+  seasonalMultiplier: number; // direct demand multiplier, 0.25..3
+  supplierDelayDays: number; // added to base lead time, 0..30
+  reorderQuantity: number; // units added per at-risk product, 0..500
+}
+
+export interface SimProductResult {
+  id: string;
+  name: string;
+  category: string;
+  effectiveDailySales: number;
+  coverBefore: number; // days (Infinity encoded as a large number over the wire)
+  coverAfter: number;
+  coverAfterReorder: number;
+  stockoutProbability: number; // 0..99, after the scenario, before any reorder
+  mitigatedProbability: number; // 0..99, after the reorder lands
+  revenueImpact: number; // 30-day $
+  atRisk: boolean;
+}
+
+export interface SimulationSnapshot {
+  revenue30d: number;
+  inventoryValue: number;
+  avgStockoutProbability: number;
+  productsAtRisk: number;
+}
+
+export interface SimulationDeltas {
+  revenueImpact: number;
+  inventoryImpact: number;
+  cashOutlay: number;
+  protectedRevenue: number;
+  netCashFlowImpact: number;
+}
+
+export interface SimulationRecommendedAction {
+  headline: string;
+  detail: string;
+  suggestedReorderQuantity: number;
+}
+
+export interface SimulationResult {
+  generatedAt: string;
+  horizonDays: number;
+  params: ScenarioParams;
+  before: SimulationSnapshot;
+  after: SimulationSnapshot;
+  deltas: SimulationDeltas;
+  productsAtRisk: SimProductResult[];
+  topOpportunities: { name: string; revenueImpact: number }[];
+  recommendedAction: SimulationRecommendedAction;
+}
+
+export interface SavedScenario {
+  id: string;
+  name: string;
+  params: ScenarioParams;
+  result: SimulationResult;
+  createdAt: string;
+}
+
+export interface SimulationExplanation {
+  explanation: string;
+  source: "ai" | "deterministic";
+}
