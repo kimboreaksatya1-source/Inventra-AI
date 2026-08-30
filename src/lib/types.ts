@@ -294,6 +294,80 @@ export interface InventoryAnalysis {
   };
 }
 
+/* ---------- Procurement Intelligence ---------- */
+export interface ProcurementRow {
+  id: string;
+  name: string;
+  sku: string | null;
+  category: string;
+  brand: string | null;
+  stock: number;
+  dailySales: number;
+  daysRemaining: number;
+  velocity: ProductVelocity;
+  revenueImpact: RevenueImpactTier;
+  reorderUrgency: number;
+  costPrice: number;
+  targetCoverageDays: number;
+  suggestedQuantity: number;
+  estimatedCost: number; // suggestedQuantity × costPrice
+  priority: "Critical" | "High" | "Medium" | "Low";
+  reason: string;
+  revenueProtected: number;
+}
+
+export interface ProcurementResult {
+  rows: ProcurementRow[];
+  plan: ProcurementRow[];
+  kpis: {
+    productsToReorder: number;
+    criticalOrders: number;
+    estimatedPurchaseUnits: number;
+    estimatedPurchaseCost: number;
+    revenueProtected: number;
+  };
+  generatedAt: string;
+}
+
+export interface ProcurementPlanResponse {
+  plan: ProcurementRow[];
+  kpis: ProcurementResult["kpis"];
+  summary: string;
+  source: "ai" | "deterministic";
+}
+
+/* ---------- Cash Flow Intelligence ---------- */
+export interface CapitalConsumer {
+  id: string;
+  name: string;
+  sku: string | null;
+  category: string;
+  velocity: ProductVelocity;
+  recommendation: ProductRecommendation;
+  stock: number;
+  unitCost: number;
+  inventoryValue: number;
+  shareOfCapital: number; // 0-1
+}
+
+export interface CashflowResult {
+  hasData: boolean;
+  kpis: {
+    totalInventoryValue: number;
+    slowMovingValue: number;
+    deadInventoryValue: number;
+    cashLocked: number;
+    cashLockedPct: number; // 0-1
+    revenueAtRisk: number;
+    workingCapitalHealth: number; // 0-100
+    workingCapitalLabel: string;
+  };
+  breakdown: { healthy: number; slowMoving: number; dead: number };
+  topConsumers: CapitalConsumer[];
+  explanation: string;
+  generatedAt: string;
+}
+
 /** AI Business Brief (Feature 3). */
 export interface CriticalRisk {
   product: string;
@@ -351,6 +425,17 @@ export interface CopilotContext {
   velocityMix?: { fast: number; medium: number; slow: number };
   recommendationMix?: { reorder: number; reduce: number; monitor: number; opportunity: number };
   categoryMix?: { category: string; weeklyRevenue: number; atRisk: number }[];
+  procurement?: {
+    productsToReorder: number;
+    estimatedPurchaseCost: number;
+    revenueProtected: number;
+  };
+  cashflow?: {
+    totalInventoryValue: number;
+    cashLocked: number;
+    cashLockedPct: number;
+    workingCapitalHealth: number;
+  };
 }
 
 /** The 4 insight cards rendered beneath every assistant response. */

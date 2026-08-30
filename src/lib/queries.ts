@@ -1,7 +1,14 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { BusinessBrief, ImportRow, InventoryAnalysis } from "./types";
+import type {
+  BusinessBrief,
+  CashflowResult,
+  ImportRow,
+  InventoryAnalysis,
+  ProcurementPlanResponse,
+  ProcurementResult,
+} from "./types";
 
 async function getJSON<T>(url: string): Promise<T> {
   const res = await fetch(url);
@@ -43,6 +50,34 @@ export interface ImportResult {
   imported: number;
   batchId: string;
   business: string;
+}
+
+export function useProcurement() {
+  return useQuery({
+    queryKey: ["procurement"],
+    queryFn: () =>
+      getJSON<{ hasData: boolean } & Partial<ProcurementResult>>("/api/procurement"),
+  });
+}
+
+export function useCashflow() {
+  return useQuery({
+    queryKey: ["cashflow"],
+    queryFn: () => getJSON<CashflowResult & { hasData?: boolean }>("/api/cashflow"),
+  });
+}
+
+export function useGeneratePurchasePlan() {
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/procurement/plan", { method: "POST" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || `Failed to generate the purchase plan (${res.status})`);
+      }
+      return res.json() as Promise<ProcurementPlanResponse>;
+    },
+  });
 }
 
 export function useImportMutation() {

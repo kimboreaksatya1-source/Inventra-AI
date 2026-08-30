@@ -51,6 +51,10 @@ const SPECS: SeedSpec[] = [
   { id: "p-sunlight", name: "Sunlight Dishwashing Liquid", brand: "Sunlight", category: "Household", sku: "HHD-002", stockQuantity: 18, sellingPrice: 1.1, costPrice: 0.75, base: 1.4, trend: 0.01, noise: 0.35 },
   { id: "p-panadol", name: "Panadol Paracetamol 500mg", brand: "Panadol", category: "Health", sku: "HLT-001", stockQuantity: 22, sellingPrice: 0.5, costPrice: 0.32, base: 1.3, trend: 0.02, noise: 0.4 },
   { id: "p-marlboro", name: "Marlboro Red", brand: "Marlboro", category: "Tobacco", sku: "TOB-001", stockQuantity: 30, sellingPrice: 1.3, costPrice: 1.05, base: 2.5, trend: 0.0, noise: 0.3 },
+
+  // Dead stock, no recent sales → capital locked
+  { id: "p-choc-gift-box", name: "Ferrero Rocher Gift Box T24", brand: "Ferrero", category: "Confectionery", sku: "CFN-009", stockQuantity: 42, sellingPrice: 9.5, costPrice: 7.2, base: 0, trend: 0, noise: 0 },
+  { id: "p-canned-lychee", name: "Canned Lychee in Syrup 565g", brand: "Aroy-D", category: "Canned & Packaged", sku: "CAN-014", stockQuantity: 70, sellingPrice: 1.9, costPrice: 1.35, base: 0, trend: 0, noise: 0 },
 ];
 
 export const SEED_USER = {

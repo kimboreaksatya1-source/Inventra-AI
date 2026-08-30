@@ -5,6 +5,8 @@
 import { loadProductsLite } from "./data";
 import { analyzeInventory } from "./analysis";
 import { buildDeterministicBrief } from "./brief";
+import { buildProcurement } from "./procurement";
+import { buildCashflow } from "./cashflow";
 import { contextLabel, shortLabel } from "./product-label";
 import type { BusinessBrief, CopilotContext, InventoryAnalysis } from "./types";
 
@@ -96,6 +98,8 @@ export function buildCopilotContextFrom(
   }));
 
   const s = analysis.summary;
+  const proc = buildProcurement(analysis);
+  const cash = buildCashflow(analysis);
   const context: CopilotContext = {
     business,
     hasData: true,
@@ -119,6 +123,17 @@ export function buildCopilotContextFrom(
     categoryMix: analysis.categoryRollup
       .slice(0, 6)
       .map((c) => ({ category: c.category, weeklyRevenue: c.weeklyRevenue, atRisk: c.atRisk })),
+    procurement: {
+      productsToReorder: proc.kpis.productsToReorder,
+      estimatedPurchaseCost: proc.kpis.estimatedPurchaseCost,
+      revenueProtected: proc.kpis.revenueProtected,
+    },
+    cashflow: {
+      totalInventoryValue: cash.kpis.totalInventoryValue,
+      cashLocked: cash.kpis.cashLocked,
+      cashLockedPct: cash.kpis.cashLockedPct,
+      workingCapitalHealth: cash.kpis.workingCapitalHealth,
+    },
   };
 
   const velLabel = (v: string) =>
@@ -140,6 +155,19 @@ export function buildCopilotContextFrom(
     `Products tracked: ${context.productCount}`,
     ``,
     `WHAT THE RULES SAY: ${s.reorderCount} to reorder, ${s.reduceCount} to reduce/clear, ${s.opportunityCount} opportunities, ${s.monitorCount} to monitor. Velocity: ${s.fastMovers} fast / ${s.mediumMovers} medium / ${s.slowMovers} slow movers.`,
+    ``,
+    `PURCHASE PLAN (coverage targets: fast 21d / medium 30d / slow 45d): ${proc.kpis.productsToReorder} products to order, ${proc.kpis.criticalOrders} critical, est. cost ${usd(proc.kpis.estimatedPurchaseCost)}, protecting ${usd(proc.kpis.revenueProtected)} of revenue.`,
+    proc.plan
+      .slice(0, 12)
+      .map((r) => `  - ${contextLabel(r)} — order ${r.suggestedQuantity} units (~${usd(r.estimatedCost)}), ${r.priority}`)
+      .join("\n") || "  - nothing needs ordering",
+    ``,
+    `CASH POSITION: inventory value ${usd(cash.kpis.totalInventoryValue)}; cash locked in slow/dead stock ${usd(cash.kpis.cashLocked)} (${Math.round(cash.kpis.cashLockedPct * 100)}%); working-capital health ${cash.kpis.workingCapitalHealth}/100. Top capital consumers: ${
+      cash.topConsumers
+        .slice(0, 5)
+        .map((c) => `${c.name} ${usd(c.inventoryValue)} (${c.velocity})`)
+        .join(", ") || "n/a"
+    }.`,
     ``,
     `PRODUCT NAMING: each product shows the owner's ORIGINAL name, then in [brackets] its canonical`,
     `English name + brand. Match and reason using the canonical name, but ALWAYS write the ORIGINAL`,

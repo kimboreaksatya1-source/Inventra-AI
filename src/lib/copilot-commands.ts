@@ -112,11 +112,20 @@ export const COPILOT_COMMANDS: CopilotCommand[] = [
   },
   {
     id: "/cashflow",
-    title: "Cash Flow Advice",
-    description: "Free up trapped cash from inventory",
-    prompt: "How can I improve my cash flow based on my current inventory?",
+    title: "Cash Flow Analysis",
+    description: "Inventory value, capital locked, working-capital risk",
+    prompt:
+      "Analyse my inventory value, where capital is locked, and my working-capital risks. What should I free up first?",
     autoSubmit: true,
-    keywords: ["working capital", "liquidity", "money"],
+    keywords: ["working capital", "liquidity", "money", "cash locked", "capital"],
+  },
+  {
+    id: "/purchase-plan",
+    title: "Purchase Plan",
+    description: "What to order this week, quantities and why",
+    prompt: "Show the products I should order this week, with quantities, and explain why.",
+    autoSubmit: true,
+    keywords: ["procurement", "order", "buy", "restock", "purchasing"],
   },
 ];
 
@@ -169,12 +178,22 @@ export function suggestedCommands(ctx: CopilotContext | undefined): SuggestedCom
   const rec = ctx.recommendationMix;
   const vel = ctx.velocityMix;
 
-  const reorderN = rec?.reorder ?? ctx.criticalProducts.length;
-  if (reorderN > 0) {
-    out.push({ cmd: BY_ID.get("/reorder")!, badge: `${reorderN} to reorder` });
+  const toOrder = ctx.procurement?.productsToReorder ?? rec?.reorder ?? ctx.criticalProducts.length;
+  if (toOrder > 0) {
+    out.push({ cmd: BY_ID.get("/purchase-plan")!, badge: `${toOrder} to order` });
   }
   if (ctx.revenueAtRisk > 0) {
     out.push({ cmd: BY_ID.get("/risk")!, badge: `${usd(ctx.revenueAtRisk)} at risk` });
+  }
+  if ((ctx.cashflow?.cashLockedPct ?? 0) >= 0.25) {
+    out.push({
+      cmd: BY_ID.get("/cashflow")!,
+      badge: `${Math.round((ctx.cashflow?.cashLockedPct ?? 0) * 100)}% cash locked`,
+    });
+  }
+  const reorderN = rec?.reorder ?? ctx.criticalProducts.length;
+  if (reorderN > 0) {
+    out.push({ cmd: BY_ID.get("/reorder")!, badge: `${reorderN} to reorder` });
   }
   if ((rec?.reduce ?? ctx.overstockProducts.length) > 0) {
     const n = rec?.reduce ?? ctx.overstockProducts.length;
