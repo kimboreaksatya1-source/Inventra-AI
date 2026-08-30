@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap">
+  <style>
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:'Geist',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#FFFFFF;color:#111827;-webkit-font-smoothing:antialiased;}
+    a{color:#0F766E;} a:hover{color:#115E59;}
+    .slide{width:1280px;height:720px;padding:64px 80px 64px;display:flex;flex-direction:column;position:relative;overflow:hidden;background:#FFFFFF;}
+    .edge{position:absolute;left:0;top:0;bottom:0;width:6px;background:#0F766E;}
+    .kicker{font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:#0F766E;margin:0 0 14px;}
+    h2{margin:0;font-size:36px;line-height:1.14;font-weight:600;letter-spacing:-0.02em;color:#111827;max-width:880px;}
+    .road{display:flex;align-items:stretch;gap:10px;margin-top:30px;}
+    .phase{flex:1;border:1px solid #E5E7EB;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;}
+    .phase.now{border-color:#0F766E;background:#F0FDFA;}
+    .phase .pi{width:38px;height:38px;border-radius:10px;background:#FFFFFF;border:1px solid #CCFBF1;display:flex;align-items:center;justify-content:center;}
+    .phase .pt{font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#0F766E;}
+    .phase .pl{font-size:16px;font-weight:600;color:#111827;letter-spacing:-0.01em;line-height:1.25;}
+    .rchev{display:flex;align-items:center;flex-shrink:0;}
+    .cols{display:flex;gap:44px;margin-top:28px;flex:1;}
+    .col{flex:1;}
+    .col .ct{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#9CA3AF;margin:0 0 14px;}
+    .cust{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+    .cust .r{display:flex;align-items:center;gap:11px;border:1px solid #E5E7EB;border-radius:10px;padding:11px 13px;font-size:13.5px;font-weight:500;color:#374151;}
+    .saas{border:1px solid #E5E7EB;border-radius:12px;padding:16px 18px;}
+    .saas .st{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:#111827;}
+    .tiers{display:flex;gap:8px;margin-top:14px;}
+    .tier{flex:1;text-align:center;border:1px solid #E5E7EB;border-radius:9px;padding:10px 6px;font-size:12.5px;font-weight:600;color:#6B7280;}
+    .tier.b{background:#F0FDFA;border-color:#CCFBF1;color:#0F766E;}
+    .tier.c{background:#0F766E;border-color:#0F766E;color:#FFFFFF;}
+    .saas .note{margin:12px 0 0;font-size:11.5px;color:#9CA3AF;}
+    .band{margin-top:22px;background:#0F766E;border-radius:14px;padding:20px 28px;display:flex;align-items:center;gap:16px;}
+    .band svg{flex-shrink:0;}
+    .band p{margin:0;font-size:17px;font-weight:500;line-height:1.4;color:#FFFFFF;}
+    .band b{font-weight:700;color:#99F6E4;}
+    .footer{position:absolute;left:80px;right:80px;bottom:26px;display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9CA3AF;}
+    .footer .brand{font-weight:600;color:#6B7280;}
+  </style>
+</helmet>
+<div class="slide">
+  <div class="edge"></div>
+
+  <p class="kicker">Vision &amp; Business Model</p>
+  <h2>Building the AI intelligence layer for Cambodian SMEs</h2>
+
+  <div class="road">
+    <div class="phase now">
+      <div class="pi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></div>
+      <div class="pt">Today</div>
+      <div class="pl">Inventory Intelligence</div>
+    </div>
+    <div class="rchev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></div>
+    <div class="phase">
+      <div class="pi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="4" width="3" height="13"/></svg></div>
+      <div class="pt">Tomorrow</div>
+      <div class="pl">Business Intelligence</div>
+    </div>
+    <div class="rchev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></div>
+    <div class="phase">
+      <div class="pi"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><path d="m6 6 2.6 2.6M15.4 15.4 18 18M18 6l-2.6 2.6M8.6 15.4 6 18"/></svg></div>
+      <div class="pt">Future</div>
+      <div class="pl">AI Operating Copilot for SMEs</div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="col">
+      <p class="ct">Who we serve</p>
+      <div class="cust">
+        <div class="r">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17V7a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v11h8Z"/><path d="M10 8h6l4 4v6h-10"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+          FMCG distributors
+        </div>
+        <div class="r">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 4.5 4h15L21 9"/><path d="M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 20v-6h6v6"/><path d="M3 9h18"/></svg>
+          Mini marts
+        </div>
+        <div class="r">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h12l1 14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1Z"/><path d="M9 6a3 3 0 0 1 6 0"/></svg>
+          Retail SMEs
+        </div>
+        <div class="r">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 7v10l8 4 8-4V7Z"/><path d="m4 7 8 4 8-4"/><path d="M12 11v10"/></svg>
+          Inventory-driven businesses
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <p class="ct">Business model</p>
+      <div class="saas">
+        <div class="st">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 6.5c0-2-2.2-3-5-3s-5 1-5 3.2S9 9.5 12 10s5 1 5 3.3-2.2 3.2-5 3.2-5-1-5-3"/></svg>
+          Software-as-a-Service (SaaS)
+        </div>
+        <div class="tiers">
+          <div class="tier b">Basic</div>
+          <div class="tier">Pro</div>
+          <div class="tier c">Enterprise</div>
+        </div>
+        <p class="note">Subscription tiers scale with store count, SKU volume, and AI usage. &nbsp;[Pricing TBD]</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="band">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#99F6E4" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></svg>
+    <p>Inventra AI moves SMEs from <b>intuition-based decisions</b> to <b>data-driven growth</b>.</p>
+  </div>
+
+  <div class="footer">
+    <span class="brand">Inventra AI</span>
+    <span>AIM Build Week 2026 &nbsp;&middot;&nbsp; 05</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
