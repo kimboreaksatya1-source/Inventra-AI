@@ -166,38 +166,32 @@ export interface SuggestedCommand {
 export function suggestedCommands(ctx: CopilotContext | undefined): SuggestedCommand[] {
   if (!ctx || !ctx.hasData) return [];
   const out: SuggestedCommand[] = [];
+  const rec = ctx.recommendationMix;
+  const vel = ctx.velocityMix;
 
-  const critical = ctx.criticalProducts.length;
-  if (critical > 0) {
-    out.push({
-      cmd: BY_ID.get("/reorder")!,
-      badge: `${critical} product${critical === 1 ? "" : "s"} at risk`,
-    });
+  const reorderN = rec?.reorder ?? ctx.criticalProducts.length;
+  if (reorderN > 0) {
+    out.push({ cmd: BY_ID.get("/reorder")!, badge: `${reorderN} to reorder` });
   }
   if (ctx.revenueAtRisk > 0) {
     out.push({ cmd: BY_ID.get("/risk")!, badge: `${usd(ctx.revenueAtRisk)} at risk` });
   }
+  if ((rec?.reduce ?? ctx.overstockProducts.length) > 0) {
+    const n = rec?.reduce ?? ctx.overstockProducts.length;
+    out.push({ cmd: BY_ID.get("/overstock")!, badge: `${n} to reduce` });
+  }
+  if ((vel?.slow ?? 0) > 0) {
+    out.push({ cmd: BY_ID.get("/slow-moving")!, badge: `${vel!.slow} slow mover${vel!.slow === 1 ? "" : "s"}` });
+  }
+  if ((rec?.opportunity ?? ctx.opportunities.length) > 0) {
+    const n = rec?.opportunity ?? ctx.opportunities.length;
+    out.push({ cmd: BY_ID.get("/opportunities")!, badge: `${n} opportunit${n === 1 ? "y" : "ies"}` });
+  }
   if (ctx.recommendedActions.length > 0) {
-    out.push({
-      cmd: BY_ID.get("/action")!,
-      badge: `${ctx.recommendedActions.length} recommended`,
-    });
-  }
-  if (ctx.overstockProducts.length > 0) {
-    out.push({
-      cmd: BY_ID.get("/overstock")!,
-      badge: `${ctx.overstockProducts.length} tying up cash`,
-    });
-  }
-  if (ctx.opportunities.length > 0) {
-    out.push({
-      cmd: BY_ID.get("/opportunities")!,
-      badge: `${ctx.opportunities.length} opportunit${ctx.opportunities.length === 1 ? "y" : "ies"}`,
-    });
+    out.push({ cmd: BY_ID.get("/action")!, badge: `${ctx.recommendedActions.length} recommended` });
   }
   out.push({ cmd: BY_ID.get("/summary")!, badge: `health ${ctx.healthScore}/100` });
 
-  // de-dup, keep first 3
   const seen = new Set<string>();
   return out.filter((s) => !seen.has(s.cmd.id) && seen.add(s.cmd.id)).slice(0, 3);
 }

@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfidenceMeter } from "@/components/shared/badges";
+import { VelocityChip } from "@/components/shared/fmcg-chips";
 import { EmptyState } from "@/components/shared/empty-state";
 import { cn } from "@/lib/utils";
 import type { CatalogPayload } from "@/lib/types";
@@ -193,6 +194,7 @@ export function CatalogClient() {
               <TableHead>Product Name</TableHead>
               <TableHead>Brand</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Velocity</TableHead>
               <TableHead className="w-40">Confidence</TableHead>
             </TableRow>
           </TableHeader>
@@ -213,6 +215,9 @@ export function CatalogClient() {
                 </TableCell>
                 <TableCell className="text-muted-foreground">{p.brand || "—"}</TableCell>
                 <TableCell className="text-muted-foreground">{p.category}</TableCell>
+                <TableCell>
+                  {p.velocity ? <VelocityChip velocity={p.velocity} /> : <span className="text-xs text-muted-foreground">—</span>}
+                </TableCell>
                 <TableCell>
                   <ConfidenceMeter value={Math.round(p.confidenceScore * 100)} size="sm" />
                 </TableCell>

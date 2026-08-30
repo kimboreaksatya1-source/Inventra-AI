@@ -22,6 +22,8 @@ import type {
 
 const KEY = "singleton";
 const MEM_TTL = 5 * 60_000;
+/** Bump when the shape of analysis/brief/context changes so stale rows rebuild. */
+const SNAPSHOT_VERSION = "fmcg-1";
 
 export interface Snapshot {
   business: string;
@@ -49,7 +51,7 @@ function dataHash(products: { id: string; stock: number; dailySales: number; sel
     h ^= s.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
-  return (h >>> 0).toString(16);
+  return `${SNAPSHOT_VERSION}:${(h >>> 0).toString(16)}`;
 }
 
 function rowToSnapshot(row: {
@@ -93,7 +95,8 @@ export async function getSnapshot(): Promise<Snapshot | null> {
     mem = null;
     return null;
   }
-  if (row && row.productCount === count) {
+  const versionOk = row?.dataHash?.startsWith(`${SNAPSHOT_VERSION}:`) ?? false;
+  if (row && row.productCount === count && versionOk) {
     const snap = rowToSnapshot(row);
     mem = { snap, at: Date.now() };
     if (snap.aiStale) void refreshSnapshotAI();
@@ -172,10 +175,11 @@ export async function rebuildSnapshot(opts?: { refreshAI?: boolean }): Promise<S
   return snap;
 }
 
-const BRIEFING_SYSTEM = `You are Inventra AI writing the opening lines of a business owner's action list.
-Write 2–3 confident sentences: what is most urgent, the single headline dollar figure, and a
-forward-looking close. Refer to each product by the exact name and SKU shown in the summary — if it
-is a Khmer name, keep it in Khmer, never translate it. No lists, no headings, plain prose.`;
+const BRIEFING_SYSTEM = `You are Inventra AI, an FMCG inventory advisor, writing the opening lines of the
+owner's action list. 2–3 confident sentences: what's most urgent (usually a fast mover about to stock
+out), the single headline dollar figure, and a forward-looking close (e.g. slow movers to clear).
+Refer to each product by the exact name and SKU in the summary — keep Khmer names in Khmer, never
+translate. No lists, no headings, plain prose.`;
 
 /** Background: generate the AI brief + AI action briefing, persist, refresh memory. */
 export async function refreshSnapshotAI(): Promise<void> {

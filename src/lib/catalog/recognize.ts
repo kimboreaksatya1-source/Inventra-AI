@@ -220,14 +220,15 @@ function normalizeCategory(c: string): Category {
 
 /* ------------------------------- AI ---------------------------------- */
 
-const AI_SYSTEM = `You classify retail products for a Cambodian minimart / convenience store.
+const AI_SYSTEM = `You classify FMCG products for a Cambodian distributor / mini-mart / grocery store.
 For each item you get an index and a raw product string. The string MAY be in Khmer.
 Return ONLY a JSON array (no prose, no code fences) of objects:
 {"index": number, "canonicalName": string, "brand": string, "category": string}.
 - "canonicalName": the standard ENGLISH product name (translate/transliterate from Khmer if needed;
   fix casing; keep size like "330ml"). e.g. "កូកាកូឡា 330ml" -> "Coca-Cola Original 330ml".
 - "brand": the manufacturer/brand, or "" if genuinely unknown.
-- "category": EXACTLY one of: Beverage, Water, Instant Noodles, Dairy, Snacks, Personal Care, Household, Other.`;
+- "category": EXACTLY one of: Beverage, Water, Instant Noodles, Dairy, Snacks, Confectionery, Cooking,
+  Canned & Packaged, Coffee & Tea, Personal Care, Baby Care, Household, Health, Tobacco, Other.`;
 
 export async function enrichWithAI(
   items: { index: number; rawName: string }[]

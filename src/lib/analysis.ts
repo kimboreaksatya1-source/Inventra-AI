@@ -1,9 +1,19 @@
-// Inventra AI — Inventory Analysis Engine (Feature 2)
-// Pure, server-side. Reads Product.dailySales directly (spec formulas),
-// independent of the sales-history math in inventory.ts.
+// Inventra AI — Inventory Analysis Engine (Feature 2) + FMCG knowledge layer.
+// Pure, server-side. Reads Product.dailySales directly; layers velocity + rules on top.
 
+import {
+  LEAD_TIME_DAYS,
+  classifyVelocities,
+  overstockRisk,
+  percentile,
+  recommendationFor,
+  reorderUrgency,
+  revenueImpactTier,
+  weeklyRevenueOf,
+} from "./fmcg-rules";
 import type {
   AnalysisSummary,
+  CategoryRollup,
   InventoryAnalysis,
   ProductAnalysis,
   RiskLevel,
@@ -22,9 +32,7 @@ export interface AnalysisInput {
   sku?: string | null;
 }
 
-/** Bounded horizon (days) used for revenue-at-risk projections. */
 const RISK_HORIZON_DAYS = 30;
-const OVERSTOCK_DAYS = 45;
 
 export function daysRemaining(stock: number, dailySales: number): number {
   return dailySales > 0 ? stock / dailySales : Infinity;
@@ -38,14 +46,22 @@ export function riskLevelFor(days: number, dailySales: number): RiskLevel {
   return "Low";
 }
 
-export function analyzeProduct(p: AnalysisInput): ProductAnalysis {
-  const days = daysRemaining(p.stock, p.dailySales);
-  const daysUntilStockout = Number.isFinite(days)
-    ? Math.min(days, RISK_HORIZON_DAYS)
-    : 0;
-  const riskLevel = riskLevelFor(days, p.dailySales);
+/** Base per-product metrics — no cross-catalog context yet. */
+type BaseAnalysis = Omit<
+  ProductAnalysis,
+  | "velocity"
+  | "weeklyRevenue"
+  | "revenueImpact"
+  | "overstockRisk"
+  | "reorderUrgency"
+  | "reorderUrgencyLevel"
+  | "recommendation"
+>;
 
-  // spec: estimatedRevenueAtRisk = daysUntilStockout * dailySales * sellingPrice
+export function analyzeProduct(p: AnalysisInput): BaseAnalysis {
+  const days = daysRemaining(p.stock, p.dailySales);
+  const daysUntilStockout = Number.isFinite(days) ? Math.min(days, RISK_HORIZON_DAYS) : 0;
+  const riskLevel = riskLevelFor(days, p.dailySales);
   const estimatedRevenueAtRisk =
     Math.round(daysUntilStockout * p.dailySales * p.sellingPrice * 100) / 100;
 
@@ -80,31 +96,26 @@ export function computeHealthScore(products: ProductAnalysis[]): {
   const n = products.length;
   const active = products.filter((p) => p.dailySales > 0);
 
-  // 1. Stockout risk (40%) — penalise Critical/High share, weighted by severity.
+  // 1. Stockout risk (40%)
   const critical = active.filter((p) => p.riskLevel === "Critical").length;
   const high = active.filter((p) => p.riskLevel === "High").length;
   const medium = active.filter((p) => p.riskLevel === "Medium").length;
   const riskPenalty = (critical * 1 + high * 0.55 + medium * 0.2) / n;
   const stockoutRisk = clamp(100 - riskPenalty * 130);
 
-  // 2. Inventory balance (30%) — penalise overstock and dead stock.
-  const overstock = products.filter(
-    (p) => Number.isFinite(p.daysRemaining) && p.daysRemaining > OVERSTOCK_DAYS
-  ).length;
+  // 2. Inventory balance (30%) — velocity-aware overstock, not a fixed day count.
+  const overstock = products.filter((p) => p.overstockRisk !== "Low").length;
   const deadStock = products.filter((p) => p.dailySales === 0 && p.stock > 0).length;
-  const balancePenalty = (overstock * 0.7 + deadStock * 1) / n;
+  const balancePenalty = (overstock * 0.55 + deadStock * 0.45) / n;
   const inventoryBalance = clamp(100 - balancePenalty * 120);
 
-  // 3. Product health (30%) — share of products that are profitable and not in danger.
+  // 3. Product health (30%)
   const healthy = products.filter(
     (p) => p.riskLevel !== "Critical" && p.riskLevel !== "High" && p.unitMargin > 0
   ).length;
   const productHealth = clamp((healthy / n) * 100);
 
-  const score = Math.round(
-    stockoutRisk * 0.4 + inventoryBalance * 0.3 + productHealth * 0.3
-  );
-
+  const score = Math.round(stockoutRisk * 0.4 + inventoryBalance * 0.3 + productHealth * 0.3);
   return {
     score: clamp(score),
     breakdown: {
@@ -127,7 +138,10 @@ export function healthLabel(score: number): string {
   return "No Data";
 }
 
-function buildExplanation(summary: Omit<AnalysisSummary, "explanation">, score: number): string {
+function buildExplanation(
+  summary: Omit<AnalysisSummary, "explanation">,
+  score: number
+): string {
   if (summary.totalProducts === 0) {
     return "Import your product data to generate an inventory health score.";
   }
@@ -138,13 +152,13 @@ function buildExplanation(summary: Omit<AnalysisSummary, "explanation">, score: 
     );
   }
   if (summary.atRiskWithinWeek > summary.criticalCount) {
-    parts.push(
-      `${summary.atRiskWithinWeek} will run out within a week if demand holds`
-    );
+    parts.push(`${summary.atRiskWithinWeek} will run out within a week if demand holds`);
   }
-  if (parts.length === 0) {
-    parts.push("no products are at immediate risk of stocking out");
-  }
+  if (parts.length === 0) parts.push("no products are at immediate risk of stocking out");
+  const balance =
+    summary.reduceCount > 0
+      ? ` ${summary.reduceCount} slow-moving or overstocked line${summary.reduceCount > 1 ? "s are" : " is"} tying up cash.`
+      : "";
   const money =
     summary.totalRevenueAtRisk > 0
       ? ` Roughly $${Math.round(summary.totalRevenueAtRisk).toLocaleString()} of revenue is exposed over the next 30 days.`
@@ -155,7 +169,7 @@ function buildExplanation(summary: Omit<AnalysisSummary, "explanation">, score: 
       : score >= 55
       ? "Your inventory needs attention in a few places."
       : "Your inventory is carrying meaningful risk right now.";
-  return `${verdict} ${capitalize(parts.join("; "))}.${money}`;
+  return `${verdict} ${capitalize(parts.join("; "))}.${balance}${money}`;
 }
 
 function capitalize(s: string): string {
@@ -166,17 +180,61 @@ export function analyzeInventory(
   products: AnalysisInput[],
   business = "Your Business"
 ): InventoryAnalysis {
-  const analyzed = products
-    .map(analyzeProduct)
-    .sort((a, b) => b.estimatedRevenueAtRisk - a.estimatedRevenueAtRisk);
+  const base = products.map(analyzeProduct);
+
+  /* --- FMCG layer --- */
+  const velocities = classifyVelocities(base);
+  const weekly = new Map(base.map((p) => [p.id, weeklyRevenueOf(p)]));
+  const totalWeekly = [...weekly.values()].reduce((s, v) => s + v, 0);
+  const top5 = new Set(
+    [...base].sort((a, b) => weekly.get(b.id)! - weekly.get(a.id)!).slice(0, 5).map((p) => p.id)
+  );
+  const invValueQ3 = percentile(
+    base.map((p) => p.inventoryValue),
+    0.75
+  );
+
+  const analyzed: ProductAnalysis[] = base.map((p) => {
+    const velocity = velocities.get(p.id) ?? "None";
+    const weeklyRevenue = weekly.get(p.id) ?? 0;
+    const revenueImpact = revenueImpactTier(weeklyRevenue, totalWeekly, top5.has(p.id));
+    const ovr = overstockRisk(p, velocity);
+    const { score: reorderUrg, level: reorderUrgencyLevel } = reorderUrgency(
+      p,
+      velocity,
+      revenueImpact
+    );
+    const recommendation = recommendationFor(
+      p,
+      velocity,
+      ovr,
+      reorderUrg,
+      revenueImpact,
+      invValueQ3
+    );
+    return {
+      ...p,
+      velocity,
+      weeklyRevenue,
+      revenueImpact,
+      overstockRisk: ovr,
+      reorderUrgency: reorderUrg,
+      reorderUrgencyLevel,
+      recommendation,
+    };
+  });
+
+  analyzed.sort(
+    (a, b) =>
+      b.estimatedRevenueAtRisk - a.estimatedRevenueAtRisk || b.reorderUrgency - a.reorderUrgency
+  );
 
   const { score, breakdown } = computeHealthScore(analyzed);
 
-  const criticalCount = analyzed.filter((p) => p.riskLevel === "Critical").length;
-  const highCount = analyzed.filter((p) => p.riskLevel === "High").length;
-  const atRiskWithinWeek = analyzed.filter(
-    (p) => p.riskLevel === "Critical" || p.riskLevel === "High"
-  ).length;
+  const count = (fn: (p: ProductAnalysis) => boolean) => analyzed.filter(fn).length;
+  const criticalCount = count((p) => p.riskLevel === "Critical");
+  const highCount = count((p) => p.riskLevel === "High");
+  const atRiskWithinWeek = count((p) => p.riskLevel === "Critical" || p.riskLevel === "High");
   const totalRevenueAtRisk =
     Math.round(analyzed.reduce((s, p) => s + p.estimatedRevenueAtRisk, 0) * 100) / 100;
   const totalInventoryValue =
@@ -190,6 +248,14 @@ export function analyzeInventory(
     totalRevenueAtRisk,
     totalInventoryValue,
     healthLabel: healthLabel(score),
+    fastMovers: count((p) => p.velocity === "Fast"),
+    mediumMovers: count((p) => p.velocity === "Medium"),
+    slowMovers: count((p) => p.velocity === "Slow"),
+    reorderCount: count((p) => p.recommendation === "Reorder"),
+    reduceCount: count((p) => p.recommendation === "Reduce"),
+    monitorCount: count((p) => p.recommendation === "Monitor"),
+    opportunityCount: count((p) => p.recommendation === "Opportunity"),
+    totalWeeklyRevenue: Math.round(totalWeekly),
   };
 
   const summary: AnalysisSummary = {
@@ -197,12 +263,34 @@ export function analyzeInventory(
     explanation: buildExplanation(summaryBase, score),
   };
 
+  const catMap = new Map<string, CategoryRollup>();
+  for (const p of analyzed) {
+    const c = catMap.get(p.category) ?? {
+      category: p.category,
+      products: 0,
+      weeklyRevenue: 0,
+      atRisk: 0,
+      slowMovers: 0,
+    };
+    c.products += 1;
+    c.weeklyRevenue += p.weeklyRevenue;
+    if (p.riskLevel === "Critical" || p.riskLevel === "High") c.atRisk += 1;
+    if (p.velocity === "Slow" || p.velocity === "None") c.slowMovers += 1;
+    catMap.set(p.category, c);
+  }
+  const categoryRollup = [...catMap.values()]
+    .map((c) => ({ ...c, weeklyRevenue: Math.round(c.weeklyRevenue) }))
+    .sort((a, b) => b.weeklyRevenue - a.weeklyRevenue);
+
   return {
     generatedAt: new Date().toISOString(),
     business,
     products: analyzed,
     summary,
+    categoryRollup,
     healthScore: score,
     healthBreakdown: breakdown,
   };
 }
+
+export { LEAD_TIME_DAYS };

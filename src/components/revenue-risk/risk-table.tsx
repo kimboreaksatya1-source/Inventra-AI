@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/kpi-card";
 import { PriorityBadge } from "@/components/shared/badges";
+import { RecommendationChip, VelocityChip } from "@/components/shared/fmcg-chips";
 import { TableSkeleton } from "@/components/shared/skeletons";
 import { EmptyState, NoRiskEmptyState } from "@/components/shared/empty-state";
 import { cn } from "@/lib/utils";
@@ -196,6 +197,7 @@ export function RiskTable() {
               <SortHeader label="Days Remaining" align="right" active={sortKey === "daysRemaining"} dir={sortDir} onClick={() => toggleSort("daysRemaining")} />
               <SortHeader label="Revenue at Risk" align="right" active={sortKey === "estimatedRevenueAtRisk"} dir={sortDir} onClick={() => toggleSort("estimatedRevenueAtRisk")} />
               <TableHead className="text-center">Priority</TableHead>
+              <TableHead>Suggested</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -207,7 +209,10 @@ export function RiskTable() {
                   className={cn(critical && "bg-red-50/70 hover:bg-red-50 dark:bg-red-950/20")}
                 >
                   <TableCell>
-                    <div className="font-medium">{p.name}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{p.name}</span>
+                      <VelocityChip velocity={p.velocity} />
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {p.sku ? `${p.sku} · ` : ""}
                       {p.category}
@@ -241,6 +246,9 @@ export function RiskTable() {
                     ) : (
                       <PriorityBadge priority={PRIORITY_BY_RISK[p.riskLevel]} />
                     )}
+                  </TableCell>
+                  <TableCell>
+                    <RecommendationChip recommendation={p.recommendation} />
                   </TableCell>
                 </TableRow>
               );

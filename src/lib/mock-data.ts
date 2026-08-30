@@ -21,24 +21,36 @@ interface SeedSpec {
 }
 
 const SPECS: SeedSpec[] = [
+  // Fast movers, low cover → Reorder
   { id: "p-coke-330", name: "Coca-Cola Original 330ml", khmerName: "កូកាកូឡា 330ml", brand: "Coca-Cola", category: "Beverage", sku: "BEV-001", stockQuantity: 18, sellingPrice: 1.2, costPrice: 0.85, base: 8, trend: 0.04, noise: 0.25 },
-  { id: "p-coke-zero", name: "Coca-Cola Zero", brand: "Coca-Cola", category: "Beverage", sku: "BEV-002", stockQuantity: 40, sellingPrice: 1.2, costPrice: 0.85, base: 3, trend: 0.03, noise: 0.35 },
-  { id: "p-sprite-330", name: "Sprite 330ml", brand: "Sprite", category: "Beverage", sku: "BEV-003", stockQuantity: 34, sellingPrice: 1.1, costPrice: 0.78, base: 4, trend: 0.02, noise: 0.3 },
-  { id: "p-sting-red", name: "Sting Strawberry", brand: "Sting", category: "Beverage", sku: "BEV-004", stockQuantity: 140, sellingPrice: 0.6, costPrice: 0.4, base: 2, trend: -0.1, noise: 0.5 },
-  { id: "p-redbull", name: "Red Bull", brand: "Red Bull", category: "Beverage", sku: "BEV-005", stockQuantity: 22, sellingPrice: 1.0, costPrice: 0.72, base: 4, trend: 0.05, noise: 0.3 },
-  { id: "p-vital-500", name: "Vital Water 500ml", khmerName: "ទឹកសុទ្ធ Vital 500ml", brand: "Vital", category: "Water", sku: "WTR-001", stockQuantity: 26, sellingPrice: 0.5, costPrice: 0.28, base: 6, trend: 0.18, noise: 0.3 },
-  { id: "p-vital-1500", name: "Vital Water 1500ml", brand: "Vital", category: "Water", sku: "WTR-002", stockQuantity: 60, sellingPrice: 0.8, costPrice: 0.45, base: 3.5, trend: 0.04, noise: 0.35 },
-  { id: "p-buldak-carb", name: "Buldak Carbonara", brand: "Samyang", category: "Instant Noodles", sku: "NDL-001", stockQuantity: 12, sellingPrice: 1.1, costPrice: 0.8, base: 5, trend: 0.09, noise: 0.3 },
-  { id: "p-mama-shrimp", name: "Mama Shrimp", khmerName: "មីម៉ាម៉ា បង្គា", brand: "Mama", category: "Instant Noodles", sku: "NDL-002", stockQuantity: 30, sellingPrice: 0.4, costPrice: 0.25, base: 14, trend: 0.05, noise: 0.2 },
-  { id: "p-indomie-goreng", name: "Indomie Mi Goreng", brand: "Indomie", category: "Instant Noodles", sku: "NDL-003", stockQuantity: 22, sellingPrice: 0.45, costPrice: 0.3, base: 6, trend: 0.06, noise: 0.3 },
-  { id: "p-anchor-milk", name: "Anchor Milk 1L", brand: "Anchor", category: "Dairy", sku: "DRY-001", stockQuantity: 16, sellingPrice: 2.4, costPrice: 1.9, base: 2.2, trend: 0.02, noise: 0.25 },
-  { id: "p-bearbrand", name: "Bear Brand", brand: "Bear Brand", category: "Dairy", sku: "DRY-002", stockQuantity: 28, sellingPrice: 0.9, costPrice: 0.62, base: 3, trend: 0.03, noise: 0.3 },
+  { id: "p-mama-shrimp", name: "Mama Shrimp Tom Yum", khmerName: "មីម៉ាម៉ា បង្គា", brand: "Mama", category: "Instant Noodles", sku: "NDL-001", stockQuantity: 40, sellingPrice: 0.4, costPrice: 0.25, base: 16, trend: 0.05, noise: 0.2 },
+  { id: "p-vital-500", name: "Vital Water 500ml", khmerName: "ទឹកសុទ្ធ Vital 500ml", brand: "Vital", category: "Water", sku: "WTR-001", stockQuantity: 30, sellingPrice: 0.5, costPrice: 0.28, base: 9, trend: 0.18, noise: 0.3 },
+  { id: "p-nescafe-3in1", name: "Nescafe 3-in-1 Original", brand: "Nescafé", category: "Coffee & Tea", sku: "CFT-001", stockQuantity: 45, sellingPrice: 0.3, costPrice: 0.2, base: 12, trend: 0.03, noise: 0.25 },
+  { id: "p-oreo", name: "Oreo Original", brand: "Oreo", category: "Confectionery", sku: "CFN-001", stockQuantity: 26, sellingPrice: 0.7, costPrice: 0.48, base: 7, trend: 0.08, noise: 0.35 },
+
+  // Fast mover, healthy cover, strong seller → Opportunity
+  { id: "p-sprite-330", name: "Sprite 330ml", brand: "Sprite", category: "Beverage", sku: "BEV-002", stockQuantity: 120, sellingPrice: 1.1, costPrice: 0.78, base: 8, trend: 0.06, noise: 0.25 },
+  { id: "p-redbull", name: "Red Bull", brand: "Red Bull", category: "Beverage", sku: "BEV-003", stockQuantity: 95, sellingPrice: 1.0, costPrice: 0.72, base: 6, trend: 0.09, noise: 0.3 },
+
+  // Medium movers → Monitor / Reorder
+  { id: "p-coke-zero", name: "Coca-Cola Zero", brand: "Coca-Cola", category: "Beverage", sku: "BEV-004", stockQuantity: 40, sellingPrice: 1.2, costPrice: 0.85, base: 3, trend: 0.03, noise: 0.35 },
+  { id: "p-anchor-milk", name: "Anchor UHT Milk 1L", brand: "Anchor", category: "Dairy", sku: "DRY-001", stockQuantity: 16, sellingPrice: 2.4, costPrice: 1.9, base: 2.2, trend: 0.02, noise: 0.25 },
   { id: "p-lays-bbq", name: "Lay's BBQ", brand: "Lay's", category: "Snacks", sku: "SNK-001", stockQuantity: 38, sellingPrice: 0.8, costPrice: 0.5, base: 3, trend: 0.07, noise: 0.4 },
-  { id: "p-pringles-og", name: "Pringles Original", brand: "Pringles", category: "Snacks", sku: "SNK-002", stockQuantity: 11, sellingPrice: 2.0, costPrice: 1.5, base: 1.6, trend: 0.09, noise: 0.35 },
-  { id: "p-colgate-total", name: "Colgate Total", brand: "Colgate", category: "Personal Care", sku: "PCR-001", stockQuantity: 14, sellingPrice: 1.6, costPrice: 1.1, base: 1.8, trend: 0.04, noise: 0.3 },
-  { id: "p-headshoulders", name: "Head & Shoulders", brand: "Head & Shoulders", category: "Personal Care", sku: "PCR-002", stockQuantity: 90, sellingPrice: 0.15, costPrice: 0.08, base: 1, trend: -0.05, noise: 0.6 },
-  { id: "p-tide", name: "Tide Detergent", brand: "Tide", category: "Household", sku: "HHD-001", stockQuantity: 22, sellingPrice: 3.2, costPrice: 2.5, base: 1.2, trend: 0.03, noise: 0.4 },
-  { id: "p-sunlight", name: "Sunlight Dishwashing Liquid", brand: "Sunlight", category: "Household", sku: "HHD-002", stockQuantity: 18, sellingPrice: 1.1, costPrice: 0.75, base: 1.5, trend: 0.01, noise: 0.35 },
+  { id: "p-indomie-goreng", name: "Indomie Mi Goreng", brand: "Indomie", category: "Instant Noodles", sku: "NDL-002", stockQuantity: 22, sellingPrice: 0.45, costPrice: 0.3, base: 3.5, trend: 0.06, noise: 0.3 },
+  { id: "p-colgate-total", name: "Colgate Total Toothpaste", brand: "Colgate", category: "Personal Care", sku: "PCR-001", stockQuantity: 30, sellingPrice: 1.6, costPrice: 1.1, base: 2.2, trend: 0.04, noise: 0.3 },
+  { id: "p-mamypoko-m", name: "MamyPoko Pants M", brand: "MamyPoko", category: "Baby Care", sku: "BBY-001", stockQuantity: 24, sellingPrice: 6.5, costPrice: 5.4, base: 1.6, trend: 0.05, noise: 0.35 },
+
+  // Slow movers, cash tied up → Reduce
+  { id: "p-sting-red", name: "Sting Strawberry", brand: "Sting", category: "Beverage", sku: "BEV-005", stockQuantity: 180, sellingPrice: 0.6, costPrice: 0.4, base: 2, trend: -0.1, noise: 0.5 },
+  { id: "p-tide", name: "Tide Detergent Powder 1kg", brand: "Tide", category: "Household", sku: "HHD-001", stockQuantity: 60, sellingPrice: 3.2, costPrice: 2.5, base: 1.0, trend: -0.03, noise: 0.4 },
+  { id: "p-pringles-og", name: "Pringles Original", brand: "Pringles", category: "Snacks", sku: "SNK-002", stockQuantity: 55, sellingPrice: 2.0, costPrice: 1.5, base: 1.2, trend: -0.04, noise: 0.35 },
+  { id: "p-ligo-sardines", name: "Ligo Sardines in Tomato Sauce", brand: "Ligo", category: "Canned & Packaged", sku: "CAN-001", stockQuantity: 90, sellingPrice: 1.1, costPrice: 0.85, base: 1.4, trend: -0.02, noise: 0.4 },
+
+  // Slow movers, cheap → Monitor
+  { id: "p-headshoulders", name: "Head & Shoulders Shampoo", brand: "Head & Shoulders", category: "Personal Care", sku: "PCR-002", stockQuantity: 40, sellingPrice: 0.15, costPrice: 0.08, base: 1, trend: -0.05, noise: 0.6 },
+  { id: "p-sunlight", name: "Sunlight Dishwashing Liquid", brand: "Sunlight", category: "Household", sku: "HHD-002", stockQuantity: 18, sellingPrice: 1.1, costPrice: 0.75, base: 1.4, trend: 0.01, noise: 0.35 },
+  { id: "p-panadol", name: "Panadol Paracetamol 500mg", brand: "Panadol", category: "Health", sku: "HLT-001", stockQuantity: 22, sellingPrice: 0.5, costPrice: 0.32, base: 1.3, trend: 0.02, noise: 0.4 },
+  { id: "p-marlboro", name: "Marlboro Red", brand: "Marlboro", category: "Tobacco", sku: "TOB-001", stockQuantity: 30, sellingPrice: 1.3, costPrice: 1.05, base: 2.5, trend: 0.0, noise: 0.3 },
 ];
 
 export const SEED_USER = {

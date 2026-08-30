@@ -8,8 +8,6 @@ import { buildDeterministicBrief } from "./brief";
 import { contextLabel, shortLabel } from "./product-label";
 import type { BusinessBrief, CopilotContext, InventoryAnalysis } from "./types";
 
-const OVERSTOCK_DAYS = 45;
-
 function usd(n: number): string {
   return `$${Math.round(n).toLocaleString()}`;
 }
@@ -71,11 +69,7 @@ export function buildCopilotContextFrom(
     }));
 
   const overstockProducts = analysis.products
-    .filter(
-      (p) =>
-        (Number.isFinite(p.daysRemaining) && p.daysRemaining > OVERSTOCK_DAYS) ||
-        (p.dailySales === 0 && p.stock > 0)
-    )
+    .filter((p) => p.overstockRisk !== "Low" || p.recommendation === "Reduce")
     .sort((a, b) => b.inventoryValue - a.inventoryValue)
     .slice(0, 6)
     .map((p) => ({
@@ -101,31 +95,65 @@ export function buildCopilotContextFrom(
     expectedRevenueImpact: Math.round(o.expectedRevenueImpact),
   }));
 
+  const s = analysis.summary;
   const context: CopilotContext = {
     business,
     hasData: true,
     productCount: analysis.products.length,
     healthScore: analysis.healthScore,
-    healthLabel: analysis.summary.healthLabel,
-    revenueAtRisk: Math.round(analysis.summary.totalRevenueAtRisk),
-    inventoryValue: Math.round(analysis.summary.totalInventoryValue),
+    healthLabel: s.healthLabel,
+    revenueAtRisk: Math.round(s.totalRevenueAtRisk),
+    inventoryValue: Math.round(s.totalInventoryValue),
     criticalProducts,
     overstockProducts,
     recommendedActions: brief.recommendedActions,
     opportunities,
     topSellers,
+    velocityMix: { fast: s.fastMovers, medium: s.mediumMovers, slow: s.slowMovers },
+    recommendationMix: {
+      reorder: s.reorderCount,
+      reduce: s.reduceCount,
+      monitor: s.monitorCount,
+      opportunity: s.opportunityCount,
+    },
+    categoryMix: analysis.categoryRollup
+      .slice(0, 6)
+      .map((c) => ({ category: c.category, weeklyRevenue: c.weeklyRevenue, atRisk: c.atRisk })),
   };
 
+  const velLabel = (v: string) =>
+    v === "Fast" ? "fast mover" : v === "Slow" ? "slow mover" : v === "None" ? "no sales" : "medium mover";
+  const productLines = analysis.products
+    .slice(0, 40)
+    .map(
+      (p) =>
+        `- ${contextLabel(p)} | ${p.category} | ${velLabel(p.velocity)} | ${days(p.daysRemaining)}d cover | rule: ${p.recommendation} | ${p.revenueImpact} revenue impact`
+    )
+    .join("\n");
+
   const promptBlock = [
-    `BUSINESS SUMMARY — ${business}`,
+    `BUSINESS SUMMARY — ${business} (FMCG inventory)`,
     `Inventory Health: ${context.healthScore}/100 (${context.healthLabel})`,
     `Revenue at Risk (next 30 days): ${usd(context.revenueAtRisk)}`,
     `Inventory Value on hand: ${usd(context.inventoryValue)}`,
+    `Weekly revenue run-rate: ${usd(s.totalWeeklyRevenue)}`,
     `Products tracked: ${context.productCount}`,
+    ``,
+    `WHAT THE RULES SAY: ${s.reorderCount} to reorder, ${s.reduceCount} to reduce/clear, ${s.opportunityCount} opportunities, ${s.monitorCount} to monitor. Velocity: ${s.fastMovers} fast / ${s.mediumMovers} medium / ${s.slowMovers} slow movers.`,
     ``,
     `PRODUCT NAMING: each product shows the owner's ORIGINAL name, then in [brackets] its canonical`,
     `English name + brand. Match and reason using the canonical name, but ALWAYS write the ORIGINAL`,
     `name back to the owner — never translate or replace it.`,
+    ``,
+    `PRODUCT LINES (velocity | days of cover | rule-based action | revenue impact):`,
+    productLines || "- none",
+    ``,
+    `CATEGORY MIX (by weekly revenue): ${
+      analysis.categoryRollup
+        .slice(0, 6)
+        .map((c) => `${c.category} ${usd(c.weeklyRevenue)}/wk (${c.atRisk} at risk)`)
+        .join(", ") || "n/a"
+    }`,
     ``,
     `CRITICAL / HIGH-RISK PRODUCTS (stockout risk):`,
     criticalProducts.length

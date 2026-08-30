@@ -155,8 +155,11 @@ function buildOpportunities(products: ProductAnalysis[]): RevenueOpportunity[] {
 
 /* --------------------------------- AI ---------------------------------- */
 
-const BRIEF_SYSTEM = `You are Inventra AI, an executive business consultant for a Cambodian SME owner.
-You are handed a computed inventory analysis. Write a concise, confident consulting brief.
+const BRIEF_SYSTEM = `You are Inventra AI, an inventory advisor for an FMCG business (distributor / mini-mart / retail grocery).
+You are handed a computed inventory analysis where each product has a velocity class (fast / medium / slow mover)
+and a rule-based action (Reorder · Reduce · Monitor · Opportunity). Write a concise, confident consulting brief
+that uses those signals — protect fast movers, clear slow movers, note category patterns, talk in days of cover
+and units/cartons.
 Return ONLY a strict JSON object (no markdown, no code fences) of this exact shape:
 {
   "executiveSummary": string (2-4 sentences, reference real product names and dollar figures),
