@@ -127,6 +127,15 @@ export const COPILOT_COMMANDS: CopilotCommand[] = [
     autoSubmit: true,
     keywords: ["procurement", "order", "buy", "restock", "purchasing"],
   },
+  {
+    id: "/why",
+    title: "Explain a Recommendation",
+    description: "Why an order quantity, priority or velocity is what it is",
+    prompt:
+      "Explain how you calculated the order quantities and priorities in my purchase plan — walk me through the business logic for the top product.",
+    autoSubmit: false,
+    keywords: ["why", "explain", "reason", "how", "logic", "calculation", "critical", "slow moving"],
+  },
 ];
 
 const BY_ID = new Map(COPILOT_COMMANDS.map((c) => [c.id, c]));

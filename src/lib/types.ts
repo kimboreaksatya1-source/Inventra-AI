@@ -295,9 +295,31 @@ export interface InventoryAnalysis {
 }
 
 /* ---------- Procurement Intelligence ---------- */
+
+/**
+ * Full, auditable breakdown of a single procurement recommendation — every input,
+ * the formula, and plain-language reasoning. Powers the "Why?" panels and Copilot.
+ */
+export interface ProcurementExplanation {
+  currentStock: number;
+  dailySales: number; // rounded for display
+  daysRemaining: number; // Infinity when there are no sales
+  daysRemainingLabel: string; // "3" or "30+"
+  velocity: ProductVelocity;
+  velocityLabel: string; // "Fast Moving" | "Medium Moving" | "Slow Moving" | "No Sales"
+  revenueImpact: RevenueImpactTier;
+  targetCoverageDays: number;
+  formula: string; // "(21 × 6) - 18 = 108"
+  suggestedQuantity: number;
+  reason: string; // multi-sentence human-readable explanation of the quantity
+  priorityReason: string; // why this priority / why Critical
+  velocityReason: string; // why this velocity class
+}
+
 export interface ProcurementRow {
   id: string;
   name: string;
+  canonicalName: string | null;
   sku: string | null;
   category: string;
   brand: string | null;
@@ -314,6 +336,7 @@ export interface ProcurementRow {
   priority: "Critical" | "High" | "Medium" | "Low";
   reason: string;
   revenueProtected: number;
+  explanation: ProcurementExplanation;
 }
 
 export interface ProcurementResult {

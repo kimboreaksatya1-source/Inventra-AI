@@ -157,10 +157,19 @@ export function buildCopilotContextFrom(
     `WHAT THE RULES SAY: ${s.reorderCount} to reorder, ${s.reduceCount} to reduce/clear, ${s.opportunityCount} opportunities, ${s.monitorCount} to monitor. Velocity: ${s.fastMovers} fast / ${s.mediumMovers} medium / ${s.slowMovers} slow movers.`,
     ``,
     `PURCHASE PLAN (coverage targets: fast 21d / medium 30d / slow 45d): ${proc.kpis.productsToReorder} products to order, ${proc.kpis.criticalOrders} critical, est. cost ${usd(proc.kpis.estimatedPurchaseCost)}, protecting ${usd(proc.kpis.revenueProtected)} of revenue.`,
+    `HOW EACH ORDER QUANTITY IS DERIVED: suggested qty = (coverage target × daily sales) − current stock, never below 0. When the owner asks WHY a quantity, priority or velocity, walk them through these numbers in plain language — don't just restate the figure.`,
     proc.plan
       .slice(0, 12)
-      .map((r) => `  - ${contextLabel(r)} — order ${r.suggestedQuantity} units (~${usd(r.estimatedCost)}), ${r.priority}`)
+      .map(
+        (r) =>
+          `  - ${contextLabel(r)} — order ${r.suggestedQuantity} units (~${usd(r.estimatedCost)}), ${r.priority}. stock ${r.stock}, ${r.explanation.dailySales}/day, ${r.explanation.daysRemainingLabel}d cover, ${r.velocity} / ${r.revenueImpact} impact, target ${r.targetCoverageDays}d → ${r.explanation.formula}. ${r.explanation.priorityReason}`
+      )
       .join("\n") || "  - nothing needs ordering",
+    ``,
+    `VELOCITY MODEL: Fast = sells ≥5 units/day, or in the top 30% of selling products by sales rate. Slow = under 0.3/day, or in the bottom 35%. Medium = in between. No sales = nothing sold in the window.`,
+    `REORDER URGENCY MODEL: a 0-100 score from how far current cover sits inside the ${
+      2 * 7
+    }-day reorder window (7-day lead time + buffer), plus weight for Fast velocity and High revenue impact. ≥75 → Critical, ≥50 → High, ≥25 → Medium. Anything with under 3 days of cover is forced to at least High.`,
     ``,
     `CASH POSITION: inventory value ${usd(cash.kpis.totalInventoryValue)}; cash locked in slow/dead stock ${usd(cash.kpis.cashLocked)} (${Math.round(cash.kpis.cashLockedPct * 100)}%); working-capital health ${cash.kpis.workingCapitalHealth}/100. Top capital consumers: ${
       cash.topConsumers

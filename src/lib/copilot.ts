@@ -98,10 +98,12 @@ export async function* streamCopilotReply(
 
 /* --------------------------- deterministic ----------------------------- */
 
-type Intent = "reorder" | "risk" | "overstock" | "cashflow" | "opportunity" | "summary" | "general";
+type Intent = "why" | "reorder" | "risk" | "overstock" | "cashflow" | "opportunity" | "summary" | "general";
 
 function classify(message: string): Intent {
   const m = message.toLowerCase();
+  if (/^\s*why\b|\bwhy (is|are|should|does|do|would|was)\b|explain (why|the|this|how)|how did you|how is .* (calculated|derived)|marked (critical|slow|fast)/.test(m))
+    return "why";
   if (/(reorder|re-order|restock|order this week|what.*buy|purchase)/.test(m)) return "reorder";
   if (/(overstock|slow.?mov|dead stock|reduce inventory|too much)/.test(m)) return "overstock";
   if (/(cash ?flow|working capital|free up cash|tied up)/.test(m)) return "cashflow";
@@ -286,6 +288,53 @@ export function buildDeterministicReply(
         inventoryImpact: `${context.criticalProducts.length} products short`,
         riskLevel: context.criticalProducts.some((p) => p.daysRemaining < 3) ? "CRITICAL" : "HIGH",
         recommendedAction: `Reorder ${firstCritical}`,
+      };
+      break;
+    }
+    case "why": {
+      const c0 = context.criticalProducts[0];
+      const body = km
+        ? [
+            "**របៀបដែល Inventra គណនា**",
+            "",
+            "- **បរិមាណបញ្ជាទិញ** = (ថ្ងៃគ្របដណ្តប់គោលដៅ × ការលក់ប្រចាំថ្ងៃ) − ស្តុកបច្ចុប្បន្ន មិនតិចជាងសូន្យ។ គោលដៅ៖ ២១ ថ្ងៃសម្រាប់ទំនិញលក់ដាច់ ៣០ សម្រាប់មធ្យម ៤៥ សម្រាប់លក់យឺត។",
+            "- **ល្បឿនលក់** — លឿន = លក់ ≥៥ ឯកតា/ថ្ងៃ ឬស្ថិតក្នុង ៣០% ខ្ពស់បំផុត; យឺត = តិចជាង ០.៣/ថ្ងៃ ឬ ៣៥% ទាបបំផុត; មធ្យម = នៅចន្លោះ។",
+            "- **អាទិភាព / Critical** — ពិន្ទុ ០-១០០ ផ្អែកលើថ្ងៃគ្របដណ្តប់ដែលនៅសល់ធៀបនឹងបង្អួច ១៤ ថ្ងៃ (lead time ៧ ថ្ងៃ + បម្រុង) បូកទម្ងន់សម្រាប់ល្បឿនលឿន និងផលប៉ះពាល់ចំណូលខ្ពស់។ ≥៧៥ = Critical; តិចជាង ៣ ថ្ងៃ = យ៉ាងហោចណាស់ High។",
+          ]
+        : [
+            "**How Inventra decides**",
+            "",
+            "- **Suggested order quantity** = (target coverage days × daily sales) − current stock, never below zero. Target coverage is 21 days for fast movers, 30 for medium, 45 for slow.",
+            "- **Velocity** — Fast = sells ≥5 units/day or sits in the top 30% of selling products by rate; Slow = under 0.3/day or the bottom 35%; Medium is in between.",
+            "- **Priority / Critical** — a 0–100 reorder-urgency score from how little cover is left against a 14-day reorder window (7-day lead time + buffer), plus weight for fast velocity and high revenue impact. 75+ is Critical; anything under 3 days of cover is at least High.",
+          ];
+      if (c0) {
+        body.push(
+          "",
+          km
+            ? `ឧទាហរណ៍៖ **${c0.name}** នៅសល់ត្រឹម ${c0.daysRemaining} ថ្ងៃ ហើយមានចំណូល ${usd(
+                c0.revenueAtRisk
+              )} ប្រឈមនឹងហានិភ័យ — នេះជាមូលហេតុ។`
+            : `Example: **${c0.name}** has ${c0.daysRemaining} days of cover left and ${usd(
+                c0.revenueAtRisk
+              )} of revenue exposed — that is why it is flagged.`
+        );
+      }
+      content =
+        body.join("\n") +
+        close(
+          km
+            ? "បើកទំព័រ Procurement រួចចុច “Why?” លើទំនិញណាមួយ ដើម្បីមើលការគណនាពេញលេញ។"
+            : "Open the Procurement page and hit “Why?” on any product for its full breakdown.",
+          km
+            ? "តម្លាភាពពេញលេញលើរាល់ការណែនាំ។"
+            : "Full transparency on every recommendation."
+        );
+      cards = {
+        revenueImpact: `${usd(context.revenueAtRisk)} at risk`,
+        inventoryImpact: `${context.criticalProducts.length} products flagged`,
+        riskLevel: context.criticalProducts.some((p) => p.daysRemaining < 3) ? "CRITICAL" : "MEDIUM",
+        recommendedAction: km ? "មើលការគណនានៅទំព័រ Procurement" : "Review the Procurement breakdown",
       };
       break;
     }

@@ -12,6 +12,11 @@ function money(n: number): string {
   return `$${Math.round(n).toLocaleString()}`;
 }
 
+/** jsPDF core fonts are Latin-1 only — swap the math glyphs for ASCII. */
+function ascii(s: string): string {
+  return s.replace(/×/g, "x").replace(/[−–—]/g, "-").replace(/→/g, "->");
+}
+
 export function exportPurchasePlanPdf(plan: ProcurementPlanResponse, business: string) {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -45,7 +50,7 @@ export function exportPurchasePlanPdf(plan: ProcurementPlanResponse, business: s
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10.5);
   doc.setTextColor(40, 40, 40);
-  const summary = plan.summary.replace(/\*\*/g, "");
+  const summary = ascii(plan.summary.replace(/\*\*/g, ""));
   const lines = doc.splitTextToSize(summary, contentWidth);
   doc.text(lines, margin, y);
   y += lines.length * 14 + 18;
@@ -66,26 +71,34 @@ export function exportPurchasePlanPdf(plan: ProcurementPlanResponse, business: s
   autoTable(doc, {
     startY: y,
     margin: { left: margin, right: margin },
-    head: [["Product", "SKU", "Current Stock", "Suggested Qty", "Est. Cost", "Priority", "Reason"]],
+    head: [
+      ["Product", "SKU", "Stock", "Daily Sales", "Target", "Calculation", "Qty", "Est. Cost", "Priority", "Reason"],
+    ],
     body: plan.plan.map((r) => [
       r.name,
       r.sku ?? "—",
       String(r.stock),
+      String(r.explanation.dailySales),
+      `${r.targetCoverageDays}d`,
+      ascii(r.explanation.formula),
       String(r.suggestedQuantity),
       money(r.estimatedCost),
       r.priority,
-      r.reason,
+      ascii(r.explanation.reason),
     ]),
     headStyles: { fillColor: TEAL, textColor: 255, fontStyle: "bold" },
     bodyStyles: { textColor: CHARCOAL },
     alternateRowStyles: { fillColor: [244, 248, 248] },
-    styles: { fontSize: 9, cellPadding: 5, overflow: "linebreak" },
+    styles: { fontSize: 7.5, cellPadding: 4, overflow: "linebreak" },
     columnStyles: {
-      0: { cellWidth: 96 },
+      0: { cellWidth: 70 },
       2: { halign: "right" },
-      3: { halign: "right", fontStyle: "bold" },
+      3: { halign: "right" },
       4: { halign: "right" },
-      6: { cellWidth: 130 },
+      5: { cellWidth: 78, font: "courier" },
+      6: { halign: "right", fontStyle: "bold" },
+      7: { halign: "right" },
+      9: { cellWidth: 96 },
     },
   });
 

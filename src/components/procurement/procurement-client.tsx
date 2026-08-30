@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
+  ChevronDown,
   ClipboardCopy,
   FileDown,
   Loader2,
@@ -31,6 +32,7 @@ import { KpiCardSkeleton, TableSkeleton } from "@/components/shared/skeletons";
 import { PriorityBadge } from "@/components/shared/badges";
 import { VelocityChip } from "@/components/shared/fmcg-chips";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ExplanationPanel } from "./explanation-panel";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
 import { useProcurement, useGeneratePurchasePlan } from "@/lib/queries";
@@ -58,6 +60,16 @@ export function ProcurementClient() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ProcurementRow["priority"] | "all">("all");
   const [plan, setPlan] = useState<ProcurementPlanResponse | null>(null);
+  const [openWhy, setOpenWhy] = useState<Set<string>>(new Set());
+
+  function toggleWhy(id: string) {
+    setOpenWhy((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   const rows = data?.rows ?? [];
   const business = "your business";
@@ -206,47 +218,59 @@ export function ProcurementClient() {
             {filtered.map((p) => {
               const needsOrder = p.suggestedQuantity > 0;
               const critical = p.priority === "Critical";
+              const open = openWhy.has(p.id);
               return (
-                <TableRow
-                  key={p.id}
-                  className={cn(critical && "bg-red-50/70 hover:bg-red-50 dark:bg-red-950/20")}
-                >
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{p.name}</span>
-                      <VelocityChip velocity={p.velocity} />
-                    </div>
-                    <div className="text-xs text-muted-foreground">{p.category}</div>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{p.sku ?? "—"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{p.stock}</TableCell>
-                  <TableCell
-                    className={cn(
-                      "text-right font-medium tabular-nums",
-                      critical
-                        ? "text-red-600 dark:text-red-400"
-                        : p.priority === "High"
-                        ? "text-amber-600 dark:text-amber-400"
-                        : "text-foreground"
-                    )}
+                <Fragment key={p.id}>
+                  <TableRow
+                    className={cn(critical && "bg-red-50/70 hover:bg-red-50 dark:bg-red-950/20")}
                   >
-                    {Number.isFinite(p.daysRemaining) ? `${p.daysRemaining.toFixed(1)}d` : "—"}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">
-                    {needsOrder ? p.suggestedQuantity.toLocaleString() : "—"}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {needsOrder ? (
-                      <PriorityBadge priority={PRIORITY_MAP[p.priority]} />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Covered</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {needsOrder ? formatCurrency(p.estimatedCost) : "—"}
-                  </TableCell>
-                  <TableCell className="max-w-xs text-xs text-muted-foreground">{p.reason}</TableCell>
-                </TableRow>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{p.name}</span>
+                        <VelocityChip velocity={p.velocity} />
+                      </div>
+                      <div className="text-xs text-muted-foreground">{p.category}</div>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{p.sku ?? "—"}</TableCell>
+                    <TableCell className="text-right tabular-nums">{p.stock}</TableCell>
+                    <TableCell
+                      className={cn(
+                        "text-right font-medium tabular-nums",
+                        critical
+                          ? "text-red-600 dark:text-red-400"
+                          : p.priority === "High"
+                          ? "text-amber-600 dark:text-amber-400"
+                          : "text-foreground"
+                      )}
+                    >
+                      {Number.isFinite(p.daysRemaining) ? `${p.daysRemaining.toFixed(1)}d` : "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold tabular-nums">
+                      {needsOrder ? p.suggestedQuantity.toLocaleString() : "—"}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {needsOrder ? (
+                        <PriorityBadge priority={PRIORITY_MAP[p.priority]} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Covered</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {needsOrder ? formatCurrency(p.estimatedCost) : "—"}
+                    </TableCell>
+                    <TableCell className="max-w-xs">
+                      <p className="text-xs text-muted-foreground">{p.reason}</p>
+                      <WhyToggle open={open} onClick={() => toggleWhy(p.id)} />
+                    </TableCell>
+                  </TableRow>
+                  {open && (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={8} className="p-3">
+                        <ExplanationPanel row={p} />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </Fragment>
               );
             })}
           </TableBody>
@@ -288,6 +312,19 @@ export function ProcurementClient() {
                   ? "Narrative generated by Inventra AI from your data."
                   : "Generated from your data using Inventra's analysis engine."}
               </span>
+            </div>
+
+            <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">How these quantities were calculated</p>
+              <p className="mt-1">
+                For every product: <span className="font-mono text-xs">Suggested Quantity = (Target
+                Coverage Days × Daily Sales) − Current Stock</span>, never below zero. Target coverage
+                is <span className="font-medium text-foreground">21 days</span> for fast movers,{" "}
+                <span className="font-medium text-foreground">30</span> for medium and{" "}
+                <span className="font-medium text-foreground">45</span> for slow movers. Priority comes
+                from the reorder-urgency score (days of cover vs. a 14-day reorder window, weighted by
+                velocity and revenue impact). Expand any row below for its full breakdown.
+              </p>
             </div>
 
             {plan.plan.length > 0 && (
@@ -336,27 +373,40 @@ export function ProcurementClient() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {plan.plan.map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="font-medium">{r.name}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {r.sku ?? "—"}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">{r.stock}</TableCell>
-                          <TableCell className="text-right font-semibold tabular-nums">
-                            {r.suggestedQuantity.toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {formatCurrency(r.estimatedCost)}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <PriorityBadge priority={PRIORITY_MAP[r.priority]} />
-                          </TableCell>
-                          <TableCell className="max-w-xs text-xs text-muted-foreground">
-                            {r.reason}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {plan.plan.map((r) => {
+                        const open = openWhy.has(r.id);
+                        return (
+                          <Fragment key={r.id}>
+                            <TableRow>
+                              <TableCell className="font-medium">{r.name}</TableCell>
+                              <TableCell className="text-xs text-muted-foreground">
+                                {r.sku ?? "—"}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">{r.stock}</TableCell>
+                              <TableCell className="text-right font-semibold tabular-nums">
+                                {r.suggestedQuantity.toLocaleString()}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {formatCurrency(r.estimatedCost)}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <PriorityBadge priority={PRIORITY_MAP[r.priority]} />
+                              </TableCell>
+                              <TableCell className="max-w-xs">
+                                <p className="text-xs text-muted-foreground">{r.reason}</p>
+                                <WhyToggle open={open} onClick={() => toggleWhy(r.id)} />
+                              </TableCell>
+                            </TableRow>
+                            {open && (
+                              <TableRow className="hover:bg-transparent">
+                                <TableCell colSpan={7} className="p-3">
+                                  <ExplanationPanel row={r} />
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </Fragment>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
@@ -369,12 +419,25 @@ export function ProcurementClient() {
   );
 }
 
+function WhyToggle({ open, onClick }: { open: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-expanded={open}
+      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:text-teal-900 dark:text-teal-400 dark:hover:text-teal-300"
+    >
+      <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
+      {open ? "Hide" : "Why?"}
+    </button>
+  );
+}
+
 function planToText(plan: ProcurementPlanResponse): string {
   const lines = plan.plan.map(
     (r) =>
       `- ${r.name}${r.sku ? ` (${r.sku})` : ""} — order ${r.suggestedQuantity} units (~${formatCurrency(
         r.estimatedCost
-      )}), ${r.priority}. ${r.reason}`
+      )}), ${r.priority}.\n  Calculation: ${r.explanation.formula}\n  ${r.explanation.reason}`
   );
   return [
     "PURCHASE PLAN — Inventra AI",
