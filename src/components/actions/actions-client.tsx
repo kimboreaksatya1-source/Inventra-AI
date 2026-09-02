@@ -6,6 +6,7 @@ import { ClipboardCheck, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { useActionCenter, useUpdateAction } from "@/lib/actions-queries";
 import type { ActionStatus, BusinessAction, Priority, ResolvedAction } from "@/lib/types";
 import { ActionStats } from "./action-stats";
@@ -123,6 +124,10 @@ export function ActionsClient() {
     }
   }
 
+  if (!dataAvailability(data.dataQuality, "brief").available) {
+    return <DataRequiredState dq={data.dataQuality} feature="brief" />;
+  }
+
   const totalOpen = ORDER.reduce((s, p) => s + groups[p].length, 0);
   const allClear = totalOpen === 0;
 
@@ -135,6 +140,8 @@ export function ActionsClient() {
           one list.
         </p>
       </div>
+
+      <DataQualityBanner dq={data.dataQuality} />
 
       <ActionStats totals={data.totals} />
 

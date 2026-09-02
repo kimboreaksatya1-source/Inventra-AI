@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AlertCircle, FileText, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { useBrief } from "@/lib/queries";
 import { ExecutiveSummary } from "./executive-summary";
 import { CriticalRisks } from "./critical-risks";
@@ -78,6 +79,10 @@ export function BriefReport() {
     );
   }
 
+  if (!dataAvailability(data.analysis.dataQuality, "brief").available) {
+    return <DataRequiredState dq={data.analysis.dataQuality} feature="brief" />;
+  }
+
   const { brief, analysis } = data;
   const generated = new Date(brief.generatedAt).toLocaleDateString("en-US", {
     year: "numeric",
@@ -116,6 +121,7 @@ export function BriefReport() {
       </div>
 
       <div className="space-y-8">
+        <DataQualityBanner dq={analysis.dataQuality} />
         <Section n={1} title="Executive Summary">
           <ExecutiveSummary text={brief.executiveSummary} />
         </Section>

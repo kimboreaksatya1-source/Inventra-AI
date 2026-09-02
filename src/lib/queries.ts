@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   BusinessBrief,
   CashflowResult,
+  DataQuality,
+  ForecastEvidence,
   ImportRow,
   InventoryAnalysis,
   ProcurementPlanResponse,
@@ -56,7 +58,13 @@ export function useProcurement() {
   return useQuery({
     queryKey: ["procurement"],
     queryFn: () =>
-      getJSON<{ hasData: boolean } & Partial<ProcurementResult>>("/api/procurement"),
+      getJSON<
+        {
+          hasData: boolean;
+          dataQuality?: DataQuality;
+          forecast?: Record<string, ForecastEvidence>;
+        } & Partial<ProcurementResult>
+      >("/api/procurement"),
   });
 }
 

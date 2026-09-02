@@ -12,9 +12,17 @@ import { Dropzone } from "./dropzone";
 import { ImportStepper, type ImportStage } from "./import-stepper";
 import { ColumnMappingStep } from "./column-mapping-step";
 import { RecognitionReview } from "./recognition-review";
+import { ImportSummaryBar, ImportDetails } from "./import-audit";
 import { parseWorkbook, ParseError, type ParsedWorkbook } from "@/lib/parse";
 import { applyMapping, detectColumnMapping } from "@/lib/catalog/column-mapping";
-import type { ColumnMapping, RecognizeResponse, ReviewProduct } from "@/lib/types";
+import { buildImportAudit, reasonLabel } from "@/lib/import-audit";
+import type {
+  ColumnMapping,
+  ImportAudit,
+  ImportAuditRow,
+  RecognizeResponse,
+  ReviewProduct,
+} from "@/lib/types";
 
 type Step = "upload" | "map" | "review" | "importing" | "done";
 
@@ -36,6 +44,8 @@ export function UploadClient() {
   const [detected, setDetected] = useState<ColumnMapping | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping | null>(null);
   const [review, setReview] = useState<RecognizeResponse | null>(null);
+  const [mappingAudit, setMappingAudit] = useState<ImportAuditRow[]>([]);
+  const [audit, setAudit] = useState<ImportAudit | null>(null);
   const [imported, setImported] = useState(0);
 
   async function handleFile(file: File) {
@@ -57,9 +67,20 @@ export function UploadClient() {
 
   async function runRecognition() {
     if (!workbook || !mapping) return;
-    const rows = applyMapping(workbook.rows, mapping);
+    const { rows, audit: mAudit } = applyMapping(
+      workbook.rows,
+      mapping,
+      workbook.rowNumbers,
+      workbook.blankRowNumbers
+    );
+    setMappingAudit(mAudit);
     if (rows.length === 0) {
-      setError("No usable product rows found with this column mapping.");
+      const reasons = [...new Set(mAudit.filter((a) => a.status === "skipped").map((a) => reasonLabel(a.reason)))];
+      setError(
+        `No usable product rows with this mapping — all ${workbook.totalDataRows} rows were skipped${
+          reasons.length ? ` (${reasons.join(", ")})` : ""
+        }. Check the column mapping.`
+      );
       return;
     }
     setError(null);
@@ -71,6 +92,7 @@ export function UploadClient() {
         body: JSON.stringify({
           fileName: workbook.fileName,
           rows: rows.map((r) => ({
+            sourceRow: r.sourceRow,
             name: r.name,
             productCode: r.productCode,
             brand: r.brand,
@@ -86,7 +108,17 @@ export function UploadClient() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error || "Recognition failed");
       }
-      setReview((await res.json()) as RecognizeResponse);
+      const data = (await res.json()) as RecognizeResponse;
+      setReview(data);
+      setAudit(
+        buildImportAudit({
+          totalDataRows: workbook.totalDataRows,
+          rowNumbers: workbook.rowNumbers,
+          blankRowNumbers: workbook.blankRowNumbers,
+          mappingAudit: mAudit,
+          recognize: data,
+        })
+      );
       setStep("review");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Recognition failed.");
@@ -116,6 +148,19 @@ export function UploadClient() {
       }
       const data = (await res.json()) as { imported: number };
       setImported(data.imported);
+      const ignoredSourceRows = review.products
+        .filter((p) => p.status === "ignored")
+        .flatMap((p) => p.sourceRows ?? []);
+      setAudit(
+        buildImportAudit({
+          totalDataRows: workbook.totalDataRows,
+          rowNumbers: workbook.rowNumbers,
+          blankRowNumbers: workbook.blankRowNumbers,
+          mappingAudit,
+          recognize: review,
+          ignoredSourceRows,
+        })
+      );
       setStage("done");
       setStep("done");
       qc.invalidateQueries();
@@ -133,6 +178,8 @@ export function UploadClient() {
     setDetected(null);
     setMapping(null);
     setReview(null);
+    setMappingAudit([]);
+    setAudit(null);
     setImported(0);
     setError(null);
     setStep("upload");
@@ -213,6 +260,7 @@ export function UploadClient() {
         <RecognitionReview
           products={review.products}
           aiUsed={review.aiUsed}
+          audit={audit}
           onChange={(next) => setReview({ ...review, products: next })}
           onImport={runImport}
           onBack={() => setStep("map")}
@@ -231,12 +279,18 @@ export function UploadClient() {
           <div className="flex size-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300">
             <CheckCircle2 className="size-6" />
           </div>
-          <div>
+          <div className="w-full">
             <h2 className="text-lg font-semibold">{imported} products in your catalog</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Inventra recognised and catalogued your products. Every AI answer now uses their real
               names and SKUs.
             </p>
+            {audit && (
+              <div className="mt-4 space-y-3">
+                <ImportSummaryBar audit={audit} />
+                <ImportDetails audit={audit} />
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild>

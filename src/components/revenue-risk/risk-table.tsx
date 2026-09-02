@@ -27,8 +27,10 @@ import { PriorityBadge } from "@/components/shared/badges";
 import { RecommendationChip, VelocityChip } from "@/components/shared/fmcg-chips";
 import { TableSkeleton } from "@/components/shared/skeletons";
 import { EmptyState, NoRiskEmptyState } from "@/components/shared/empty-state";
+import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
+import { KPI } from "@/lib/kpi-glossary";
 import { useAnalysis } from "@/lib/queries";
 import type { Priority, ProductAnalysis, RiskLevel } from "@/lib/types";
 
@@ -131,25 +133,33 @@ export function RiskTable() {
     );
   }
 
-  const totalAtRisk = products.reduce((s, p) => s + p.estimatedRevenueAtRisk, 0);
-  const criticalCount = products.filter((p) => p.riskLevel === "Critical").length;
+  if (!dataAvailability(data.analysis?.dataQuality, "risk").available) {
+    return <DataRequiredState dq={data.analysis?.dataQuality} feature="risk" />;
+  }
+
+  // Use the engine's summary totals — one source, so the figure matches every other page.
+  const summary = data.analysis?.summary;
+  const totalAtRisk = summary?.totalRevenueAtRisk ?? products.reduce((s, p) => s + p.estimatedRevenueAtRisk, 0);
+  const criticalCount = summary?.criticalCount ?? products.filter((p) => p.riskLevel === "Critical").length;
 
   return (
     <div className="space-y-6">
+      <DataQualityBanner dq={data.analysis?.dataQuality} />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <KpiCard
-          label="Total Revenue at Risk"
+          label={KPI.revenueAtRisk.label}
           value={formatCurrency(totalAtRisk)}
           icon={TrendingDown}
           accent="red"
-          hint="Next 30 days"
+          hint="projected, next 30 days"
+          note={KPI.revenueAtRisk.note}
         />
         <KpiCard
           label="Critical Products"
           value={String(criticalCount)}
           icon={ShieldAlert}
           accent="amber"
-          hint="Stock out < 3 days"
+          hint="stock out within 3 days"
         />
         <KpiCard
           label="Products Tracked"
@@ -158,6 +168,20 @@ export function RiskTable() {
           accent="teal"
         />
       </div>
+
+      <details className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+        <summary className="cursor-pointer font-medium text-foreground">
+          How reliable is this projection?
+        </summary>
+        <p className="mt-1.5">
+          <span className="font-medium text-foreground">Medium confidence.</span> Revenue at Risk is a
+          projection, not a measured trend — it assumes each product keeps selling at its current
+          daily rate over a 30-day horizon with no restock. It{" "}
+          <span className="font-medium">overstates</span> the risk if sales slow down or you reorder
+          in time, and <span className="font-medium">understates</span> it if sales speed up or the
+          imported stock figure is wrong.
+        </p>
+      </details>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative sm:max-w-xs">

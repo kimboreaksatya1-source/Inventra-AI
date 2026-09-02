@@ -2,6 +2,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { isAIConfigured } from "@/lib/ai";
 import { getSnapshot } from "@/lib/snapshot";
+import { buildProcurement } from "@/lib/procurement";
 import type { CopilotContext } from "@/lib/types";
 import {
   buildDeterministicReply,
@@ -10,6 +11,7 @@ import {
   streamCopilotReply,
 } from "@/lib/copilot";
 import { STREAM_SEP as SEP } from "@/lib/copilot-parse";
+import { checkGrounding, type GroundingOptions } from "@/lib/copilot-grounding";
 import type {
   CopilotInsightCards,
   CopilotReorderItem,
@@ -72,9 +74,31 @@ export async function POST(req: Request) {
   };
   const context: CopilotContext = snap?.copilotContext ?? EMPTY_CONTEXT;
   const promptBlock = snap?.promptBlock ?? `BUSINESS SUMMARY\nNo product data has been imported yet.`;
+  // Single source of truth for every reorder figure the Copilot quotes.
+  const procurement = snap ? buildProcurement(snap.analysis) : null;
   const aiMessages = buildMessages(promptBlock, history, message, language);
 
   const encoder = new TextEncoder();
+
+  // Deterministic reply — the single source of truth for reorder figures, and
+  // (when `blocked`) a hard gate: no data / no sales data / cash-flow without
+  // cost data → the AI is NOT consulted at all.
+  const fb = buildDeterministicReply(context, message, language, procurement);
+
+  // What the grounding check needs to spot invented products / contradictions.
+  const groundingOpts: GroundingOptions = {
+    knownProducts: [
+      ...(context.evidence ?? []).map((e) => e.subject),
+      ...context.criticalProducts.map((p) => p.name),
+      ...context.overstockProducts.map((p) => p.name),
+      ...context.topSellers.map((p) => p.name),
+    ],
+    reorderProducts: [
+      ...(procurement?.plan ?? []).map((r) => r.name),
+      ...context.criticalProducts.map((p) => p.name),
+    ],
+    reduceProducts: context.overstockProducts.map((p) => p.name),
+  };
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -84,8 +108,20 @@ export async function POST(req: Request) {
       let insightCards: CopilotInsightCards | null = null;
       let reorder: CopilotReorderItem[] = [];
 
+      const streamDeterministic = async () => {
+        cleanText = fb.content;
+        insightCards = fb.insightCards;
+        reorder = fb.reorder;
+        for (const slice of fb.content.match(/[\s\S]{1,24}/g) ?? []) {
+          send(slice);
+          await sleep(14);
+        }
+      };
+
       try {
-        if (isAIConfigured()) {
+        if (fb.blocked || !isAIConfigured()) {
+          await streamDeterministic();
+        } else {
           let full = "";
           for await (const chunk of streamCopilotReply(aiMessages)) {
             full += chunk;
@@ -94,27 +130,36 @@ export async function POST(req: Request) {
           const tail = parseStructuredTail(full);
           cleanText = tail.cleanText;
           insightCards = tail.insightCards;
-          reorder = tail.reorder;
 
-          // Backfill structure from the deterministic engine if the model omitted it.
-          if (!insightCards) {
-            const fb = buildDeterministicReply(context, message, language);
-            insightCards = fb.insightCards;
-            if (reorder.length === 0) reorder = fb.reorder;
-          }
-        } else {
-          const fb = buildDeterministicReply(context, message, language);
-          cleanText = fb.content;
-          insightCards = fb.insightCards;
+          // Reorder figures ALWAYS come from the Procurement Engine, never the model.
           reorder = fb.reorder;
-          for (const slice of fb.content.match(/[\s\S]{1,24}/g) ?? []) {
-            send(slice);
-            await sleep(14);
+          if (!insightCards) insightCards = fb.insightCards;
+
+          // Grounding check — prose AND the insight-card strings.
+          const cardText = insightCards
+            ? [insightCards.revenueImpact, insightCards.inventoryImpact, insightCards.recommendedAction].join(" | ")
+            : "";
+          const g1 = checkGrounding(cleanText, promptBlock, context.evidence ?? [], groundingOpts);
+          const g2 = cardText
+            ? checkGrounding(cardText, promptBlock, context.evidence ?? [], groundingOpts)
+            : { grounded: true, reasons: [] };
+
+          if ((!g1.grounded || !g2.grounded) && fb.content) {
+            console.warn(
+              "[/api/copilot/chat] ungrounded reply replaced —",
+              [...g1.reasons, ...g2.reasons].join("; ")
+            );
+            const noteText =
+              language === "km"
+                ? "\n\n_ខ្ញុំកំពុងជំនួសចម្លើយខាងលើដោយតួលេខផ្ទាល់ពីទិន្នន័យរបស់អ្នក៖_\n\n"
+                : "\n\n_Replacing the above with the figures straight from your data:_\n\n";
+            send(noteText + fb.content);
+            cleanText = fb.content;
+            insightCards = fb.insightCards;
           }
         }
       } catch (err) {
         console.error("[/api/copilot/chat] stream error", err);
-        const fb = buildDeterministicReply(context, message, language);
         cleanText = fb.content;
         insightCards = fb.insightCards;
         reorder = fb.reorder;

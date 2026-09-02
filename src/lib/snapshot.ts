@@ -23,7 +23,7 @@ import type {
 const KEY = "singleton";
 const MEM_TTL = 5 * 60_000;
 /** Bump when the shape of analysis/brief/context changes so stale rows rebuild. */
-const SNAPSHOT_VERSION = "fmcg-3";
+const SNAPSHOT_VERSION = "fmcg-6";
 
 export interface Snapshot {
   business: string;

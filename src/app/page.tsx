@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { latestImport } from "@/lib/import";
 import { getSnapshot } from "@/lib/snapshot";
 import { formatCurrency } from "@/lib/format";
+import { KPI } from "@/lib/kpi-glossary";
 
 export const dynamic = "force-dynamic";
 
@@ -84,13 +85,28 @@ export default async function HomePage() {
                   </span>
                 )}
               </div>
+              {summary && !summary.hasSalesData && (
+                <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                  No daily-sales data was imported, so the health, at-risk and revenue-at-risk figures
+                  below cannot be calculated. Import a daily-sales column to see them.
+                </p>
+              )}
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Stat label="Health Score" value={`${summary?.healthScore ?? 0}/100`} />
-                <Stat label="Products" value={String(summary?.totalProducts ?? 0)} />
-                <Stat label="At Risk (7d)" value={String(summary?.atRiskWithinWeek ?? 0)} />
                 <Stat
-                  label="Revenue at Risk"
-                  value={formatCurrency(summary?.totalRevenueAtRisk ?? 0)}
+                  label={KPI.inventoryHealth.label}
+                  value={summary?.hasSalesData ? `${summary?.healthScore ?? 0}/100` : "n/a"}
+                  hint={summary?.hasSalesData ? "heuristic 0–100 score" : "needs daily-sales data"}
+                />
+                <Stat label="Products" value={String(summary?.totalProducts ?? 0)} />
+                <Stat
+                  label="At Risk"
+                  value={summary?.hasSalesData ? String(summary?.atRiskWithinWeek ?? 0) : "n/a"}
+                  hint={summary?.hasSalesData ? "stock out within 7 days" : "needs daily-sales data"}
+                />
+                <Stat
+                  label={KPI.revenueAtRisk.label}
+                  value={summary?.hasSalesData ? formatCurrency(summary?.totalRevenueAtRisk ?? 0) : "n/a"}
+                  hint={summary?.hasSalesData ? "projected, next 30 days" : "needs daily-sales data"}
                 />
               </div>
             </Card>
@@ -128,15 +144,18 @@ async function getSummary() {
     totalProducts: snap?.analysis.summary.totalProducts ?? 0,
     atRiskWithinWeek: snap?.analysis.summary.atRiskWithinWeek ?? 0,
     totalRevenueAtRisk: snap?.analysis.summary.totalRevenueAtRisk ?? 0,
+    // Without imported daily sales the risk / health figures are not meaningful.
+    hasSalesData: snap?.analysis.dataQuality?.hasSalesData ?? true,
     lastImport,
   };
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div>
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-lg font-semibold tabular-nums">{value}</p>
+      {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
     </div>
   );
 }

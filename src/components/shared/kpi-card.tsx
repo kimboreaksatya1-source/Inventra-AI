@@ -2,14 +2,15 @@
 
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import { TrendPill } from "./badges";
-import { ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Info } from "lucide-react";
 
 export interface KpiCardProps {
   label: string;
   value: string;
   icon: React.ComponentType<{ className?: string }>;
   hint?: string;
+  /** Plain-language "what this number is / how it's computed" — shown on hover + as a11y text. */
+  note?: string;
   trend?: number;
   trendSuffix?: string;
   trendInvert?: boolean; // when true, a down trend is good
@@ -30,6 +31,7 @@ export function KpiCard({
   value,
   icon: Icon,
   hint,
+  note,
   trend,
   trendSuffix = "%",
   trendInvert = false,
@@ -41,8 +43,18 @@ export function KpiCard({
     <Card className="relative overflow-hidden p-5 gap-0 hover:shadow-md transition-shadow group">
       <div className="flex items-start justify-between">
         <div className="space-y-2 min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {label}
+            {note && (
+              <span
+                tabIndex={0}
+                title={note}
+                aria-label={`${label}: ${note}`}
+                className="cursor-help text-muted-foreground/70 hover:text-muted-foreground"
+              >
+                <Info className="size-3" />
+              </span>
+            )}
           </p>
           {loading ? (
             <div className="h-8 w-24 animate-pulse rounded-md bg-slate-200 dark:bg-slate-700" />

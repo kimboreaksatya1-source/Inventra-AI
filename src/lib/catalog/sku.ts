@@ -14,10 +14,12 @@ export interface SkuAssignable {
   productCode: string | null;
 }
 
-/** Returns the SKU for each input, in order. Mutates nothing. */
+/** Returns the SKU for each input, in order. Mutates nothing. Every SKU is unique
+ *  even when two source rows carry the same product code (only the first keeps it). */
 export function assignSkus<T extends SkuAssignable>(items: T[]): string[] {
   const seq: Record<string, number> = {};
   const taken = new Set<string>();
+  const usedReserved = new Set<string>();
 
   // reserve well-formed codes that came from the file
   for (const it of items) {
@@ -27,7 +29,10 @@ export function assignSkus<T extends SkuAssignable>(items: T[]): string[] {
 
   return items.map((it) => {
     const existing = (it.productCode ?? "").trim().toUpperCase();
-    if (/^[A-Z]{2,4}-?\d{2,}$/.test(existing)) return existing;
+    if (/^[A-Z]{2,4}-?\d{2,}$/.test(existing) && !usedReserved.has(existing)) {
+      usedReserved.add(existing);
+      return existing;
+    }
 
     const prefix = codeFor(it.category);
     let n = (seq[prefix] ?? 0) + 1;

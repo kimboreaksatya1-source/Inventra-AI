@@ -14,6 +14,7 @@ import {
 import type {
   AnalysisSummary,
   CategoryRollup,
+  DataQuality,
   InventoryAnalysis,
   ProductAnalysis,
   RiskLevel,
@@ -33,6 +34,24 @@ export interface AnalysisInput {
 }
 
 const RISK_HORIZON_DAYS = 30;
+
+/**
+ * What the user actually gave us. Detected from the values, never assumed.
+ * A whole catalog with zero sales / zero cost means the column wasn't provided —
+ * we surface that and let the UI disable the affected features rather than
+ * inventing numbers to fill the gap.
+ */
+export function detectDataQuality(
+  products: { dailySales: number; costPrice: number }[]
+): DataQuality {
+  return {
+    hasSalesData: products.some((p) => p.dailySales > 0),
+    hasCostData: products.some((p) => p.costPrice > 0),
+    productsWithoutSales: products.filter((p) => !(p.dailySales > 0)).length,
+    productsMissingCost: products.filter((p) => !(p.costPrice > 0)).length,
+    totalProducts: products.length,
+  };
+}
 
 export function daysRemaining(stock: number, dailySales: number): number {
   return dailySales > 0 ? stock / dailySales : Infinity;
@@ -288,6 +307,7 @@ export function analyzeInventory(
     products: analyzed,
     summary,
     categoryRollup,
+    dataQuality: detectDataQuality(products),
     healthScore: score,
     healthBreakdown: breakdown,
   };

@@ -3,7 +3,7 @@
 // engines into one de-duplicated, prioritized action list. No new analysis here.
 
 import type { AnalysisInput } from "./analysis";
-import { suggestedOrderQuantity } from "./inventory";
+import { buildProcurement } from "./procurement";
 import { shortLabel } from "./product-label";
 import { simulateScenario } from "./simulator";
 import type {
@@ -11,9 +11,18 @@ import type {
   BusinessBrief,
   InventoryAnalysis,
   Priority,
+  ProcurementRow,
 } from "./types";
 
 const PRIORITY_RANK: Record<Priority, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+
+/** Procurement priority ("Critical"…) → Action Center priority ("CRITICAL"…). */
+const PROC_PRIORITY: Record<ProcurementRow["priority"], Priority> = {
+  Critical: "CRITICAL",
+  High: "HIGH",
+  Medium: "MEDIUM",
+  Low: "LOW",
+};
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
@@ -36,14 +45,30 @@ export interface GenerateActionsInput {
 export function generateActions({ products, analysis, brief }: GenerateActionsInput): Draft[] {
   const drafts: Draft[] = [];
 
-  /* 1 — reorder / stockout risk (Analysis + Revenue Risk) */
+  /* The Procurement Engine is the ONE source of truth for every reorder number
+     (suggested quantity, priority, target coverage, explanation). This module
+     only decides WHICH products surface as an action — it never recalculates a
+     quantity or a priority of its own. */
+  const procurement = buildProcurement(analysis);
+  const procByProduct = new Map(procurement.rows.map((r) => [r.id, r]));
+
+  /* 1 — reorder / stockout risk (Analysis + Revenue Risk + Procurement) */
   for (const p of analysis.products) {
     if (p.riskLevel !== "Critical" && p.riskLevel !== "High") {
       if (!(p.riskLevel === "Medium" && p.estimatedRevenueAtRisk >= 25)) continue;
     }
-    const qty = suggestedOrderQuantity(p.dailySales, p.stock);
+    const proc = procByProduct.get(p.id);
+    const qty = proc?.suggestedQuantity ?? 0;
+    // Procurement owns the priority whenever it recommends an order; otherwise
+    // this is a covered-but-watch item and we keep the stockout-risk level.
     const priority: Priority =
-      p.riskLevel === "Critical" ? "CRITICAL" : p.riskLevel === "High" ? "HIGH" : "MEDIUM";
+      qty > 0 && proc
+        ? PROC_PRIORITY[proc.priority]
+        : p.riskLevel === "Critical"
+        ? "CRITICAL"
+        : p.riskLevel === "High"
+        ? "HIGH"
+        : "MEDIUM";
     const days = Number.isFinite(p.daysRemaining) ? p.daysRemaining.toFixed(1) : "30+";
     drafts.push({
       key: `reorder:${p.id}`,
@@ -54,7 +79,7 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       expectedImpact: `Protect ${usd(p.estimatedRevenueAtRisk)} of revenue`,
       impactValue: Math.round(p.estimatedRevenueAtRisk),
       confidence: priority === "CRITICAL" ? 92 : priority === "HIGH" ? 85 : 72,
-      source: ["Analysis", "Revenue Risk"],
+      source: qty > 0 ? ["Analysis", "Revenue Risk", "Procurement"] : ["Analysis", "Revenue Risk"],
       productId: p.id,
     });
   }
@@ -68,7 +93,7 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       category: "opportunity",
       recommendation: o.recommendedAction || o.title,
       reason: o.observation,
-      expectedImpact: `Capture ${usd(impact)} of additional revenue`,
+      expectedImpact: `Modelled margin upside ${usd(impact)} (~25% more orders)`,
       impactValue: impact,
       confidence: 65,
       source: ["Business Brief"],
@@ -110,7 +135,9 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
   const growth = simulateScenario(products, { demandGrowthPct: 20 });
   const growthTop = growth.productsAtRisk.filter((r) => !criticalIds.has(r.id)).slice(0, 2);
   for (const r of growthTop) {
-    const atRisk = Math.abs(r.revenueImpact) || 40;
+    // Only surface this when the simulator produced a real dollar figure.
+    const atRisk = Math.round(Math.abs(r.revenueImpact));
+    if (atRisk <= 0) continue;
     drafts.push({
       key: `scenario:demand:${r.id}`,
       priority: r.stockoutProbability >= 60 ? "HIGH" : "MEDIUM",
@@ -118,7 +145,7 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       recommendation: `Pre-order ${shortLabel(r)} before demand climbs`,
       reason: `If demand rises 20%, ${shortLabel(r)}'s stockout probability jumps to ${r.stockoutProbability}% and cover drops to ${r.coverAfter} days. Roughly ${usd(atRisk)} of sales would be at risk.`,
       expectedImpact: `Protect ${usd(atRisk)} against a demand spike`,
-      impactValue: Math.round(atRisk),
+      impactValue: atRisk,
       confidence: 58,
       source: ["Simulator"],
       productId: r.id,
@@ -130,7 +157,8 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
     .filter((r) => !criticalIds.has(r.id) && !growthTop.some((g) => g.id === r.id))
     .slice(0, 1);
   for (const r of delayTop) {
-    const atRisk = Math.abs(r.revenueImpact) || 40;
+    const atRisk = Math.round(Math.abs(r.revenueImpact));
+    if (atRisk <= 0) continue;
     drafts.push({
       key: `scenario:delay:${r.id}`,
       priority: "MEDIUM",
@@ -138,7 +166,7 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       recommendation: `Bring the ${shortLabel(r)} order forward ~10 days`,
       reason: `A 10-day supplier delay would leave ${shortLabel(r)} short — stockout probability ${r.stockoutProbability}%. Order early or line up a backup supplier.`,
       expectedImpact: `Protect ${usd(atRisk)} from supply disruption`,
-      impactValue: Math.round(atRisk),
+      impactValue: atRisk,
       confidence: 55,
       source: ["Simulator"],
       productId: r.id,
@@ -182,8 +210,9 @@ export function summarizeActions(actions: Draft[]) {
   const by = (p: Priority) => actions.filter((a) => a.priority === p);
   const critical = by("CRITICAL");
   const high = by("HIGH");
+  // Only reorder actions share a unit (projected 30-day revenue at risk).
   const totalRevenueAtStake = actions
-    .filter((a) => a.category !== "opportunity")
+    .filter((a) => a.category === "reorder")
     .reduce((s, a) => s + a.impactValue, 0);
   const totalOpportunity = actions
     .filter((a) => a.category === "opportunity")

@@ -62,7 +62,7 @@ export function exportPurchasePlanPdf(plan: ProcurementPlanResponse, business: s
   doc.text(
     `${plan.kpis.productsToReorder} products  ·  ${plan.kpis.criticalOrders} critical  ·  ${money(
       plan.kpis.estimatedPurchaseCost
-    )} est. cost  ·  ${money(plan.kpis.revenueProtected)} revenue protected`,
+    )} est. cost  ·  ${money(plan.kpis.revenueProtected)} at-risk revenue covered (30-day projection)`,
     margin,
     y
   );

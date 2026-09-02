@@ -32,9 +32,11 @@ import { KpiCardSkeleton, TableSkeleton } from "@/components/shared/skeletons";
 import { PriorityBadge } from "@/components/shared/badges";
 import { VelocityChip } from "@/components/shared/fmcg-chips";
 import { EmptyState } from "@/components/shared/empty-state";
+import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { ExplanationPanel } from "./explanation-panel";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
+import { KPI } from "@/lib/kpi-glossary";
 import { useProcurement, useGeneratePurchasePlan } from "@/lib/queries";
 import { exportPurchasePlanPdf } from "@/lib/purchase-plan-pdf";
 import type { Priority, ProcurementPlanResponse, ProcurementRow } from "@/lib/types";
@@ -130,6 +132,10 @@ export function ProcurementClient() {
     );
   }
 
+  if (!dataAvailability(data.dataQuality, "procurement").available) {
+    return <DataRequiredState dq={data.dataQuality} feature="procurement" />;
+  }
+
   const k = data.kpis;
 
   async function generate() {
@@ -143,6 +149,7 @@ export function ProcurementClient() {
 
   return (
     <div className="space-y-6">
+      <DataQualityBanner dq={data.dataQuality} />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard
           label="Products to Reorder"
@@ -155,20 +162,31 @@ export function ProcurementClient() {
           value={String(k.criticalOrders)}
           icon={AlertCircle}
           accent="red"
-          hint="Stock out < 3 days"
+          hint="highest reorder urgency"
         />
         <KpiCard
-          label="Estimated Purchase Cost"
-          value={formatCurrency(k.estimatedPurchaseCost)}
+          label={KPI.estimatedPurchaseCost.label}
+          value={
+            data.dataQuality && !data.dataQuality.hasCostData
+              ? "n/a"
+              : formatCurrency(k.estimatedPurchaseCost)
+          }
           icon={PackageCheck}
           accent="charcoal"
-          hint={`${k.estimatedPurchaseUnits.toLocaleString()} units`}
+          note={KPI.estimatedPurchaseCost.note}
+          hint={
+            data.dataQuality && !data.dataQuality.hasCostData
+              ? `${k.estimatedPurchaseUnits.toLocaleString()} units · no cost price`
+              : `${k.estimatedPurchaseUnits.toLocaleString()} units`
+          }
         />
         <KpiCard
-          label="Revenue Protected"
+          label={KPI.revenueAtRiskCovered.label}
           value={formatCurrency(k.revenueProtected)}
           icon={TrendingUp}
           accent="emerald"
+          hint="projected 30-day exposure removed"
+          note={KPI.revenueAtRiskCovered.note}
         />
       </div>
 
@@ -256,7 +274,7 @@ export function ProcurementClient() {
                       )}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {needsOrder ? formatCurrency(p.estimatedCost) : "—"}
+                      {!needsOrder ? "—" : p.costPrice > 0 ? formatCurrency(p.estimatedCost) : "n/a"}
                     </TableCell>
                     <TableCell className="max-w-xs">
                       <p className="text-xs text-muted-foreground">{p.reason}</p>
@@ -266,7 +284,7 @@ export function ProcurementClient() {
                   {open && (
                     <TableRow className="hover:bg-transparent">
                       <TableCell colSpan={8} className="p-3">
-                        <ExplanationPanel row={p} />
+                        <ExplanationPanel row={p} forecast={data.forecast?.[p.id]} />
                       </TableCell>
                     </TableRow>
                   )}
@@ -323,7 +341,9 @@ export function ProcurementClient() {
                 <span className="font-medium text-foreground">30</span> for medium and{" "}
                 <span className="font-medium text-foreground">45</span> for slow movers. Priority comes
                 from the reorder-urgency score (days of cover vs. a 14-day reorder window, weighted by
-                velocity and revenue impact). Expand any row below for its full breakdown.
+                velocity and revenue impact). Expand any row below for its full breakdown — including
+                the forecast confidence, how the quantity moves at ±20% demand, the assumptions it
+                depends on, and what would make it wrong.
               </p>
             </div>
 
@@ -387,7 +407,7 @@ export function ProcurementClient() {
                                 {r.suggestedQuantity.toLocaleString()}
                               </TableCell>
                               <TableCell className="text-right tabular-nums">
-                                {formatCurrency(r.estimatedCost)}
+                                {r.costPrice > 0 ? formatCurrency(r.estimatedCost) : "n/a"}
                               </TableCell>
                               <TableCell className="text-center">
                                 <PriorityBadge priority={PRIORITY_MAP[r.priority]} />
@@ -400,7 +420,10 @@ export function ProcurementClient() {
                             {open && (
                               <TableRow className="hover:bg-transparent">
                                 <TableCell colSpan={7} className="p-3">
-                                  <ExplanationPanel row={r} />
+                                  <ExplanationPanel
+                                    row={r}
+                                    forecast={plan.forecast?.[r.id] ?? data.forecast?.[r.id]}
+                                  />
                                 </TableCell>
                               </TableRow>
                             )}
@@ -446,7 +469,7 @@ function planToText(plan: ProcurementPlanResponse): string {
     "",
     `Products to reorder: ${plan.kpis.productsToReorder} · Critical: ${plan.kpis.criticalOrders} · Est. cost: ${formatCurrency(
       plan.kpis.estimatedPurchaseCost
-    )} · Revenue protected: ${formatCurrency(plan.kpis.revenueProtected)}`,
+    )} · At-risk revenue covered (30-day projection): ${formatCurrency(plan.kpis.revenueProtected)}`,
     "",
     ...lines,
   ].join("\n");

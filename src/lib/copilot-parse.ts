@@ -24,6 +24,10 @@ const reorderItemSchema = z.object({
   suggestedQuantity: z.coerce.number().min(0).default(0),
   revenueProtection: z.coerce.number().min(0).default(0),
   confidence: z.coerce.number().min(0).max(100).default(0),
+  confidenceLabel: z.enum(["High", "Medium", "Low"]).optional(),
+  evidence: z.array(z.string()).optional(),
+  rule: z.string().optional(),
+  formula: z.string().optional(),
 });
 
 const structuredSchema = z.object({

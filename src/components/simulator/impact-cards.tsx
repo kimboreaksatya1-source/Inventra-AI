@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownRight, ArrowUpRight, Boxes, DollarSign, ShieldAlert, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Boxes, DollarSign, Info, ShieldAlert, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
 import type { SimulationResult } from "@/lib/types";
@@ -9,7 +9,12 @@ export function ImpactCards({ result }: { result: SimulationResult }) {
   const { deltas, before, after } = result;
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-2">
+      <p className="text-[11px] text-muted-foreground">
+        Projected figures for a hypothetical scenario — modelled against your real inventory over{" "}
+        {result.horizonDays} days, not actuals.
+      </p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <Card
         icon={<DollarSign className="size-4" />}
         accent="teal"
@@ -34,7 +39,8 @@ export function ImpactCards({ result }: { result: SimulationResult }) {
         value={`${after.avgStockoutProbability}%`}
         delta={before.avgStockoutProbability - after.avgStockoutProbability}
         deltaAsPercent
-        sub={`avg probability · ${after.productsAtRisk} product${after.productsAtRisk === 1 ? "" : "s"} at risk`}
+        sub={`modelled avg probability · ${after.productsAtRisk} product${after.productsAtRisk === 1 ? "" : "s"} at risk`}
+        note="Modelled from days of cover vs. lead time plus a volatility allowance — a planning estimate, not a measured rate."
       />
       <Card
         icon={<Wallet className="size-4" />}
@@ -48,6 +54,7 @@ export function ImpactCards({ result }: { result: SimulationResult }) {
             : "no stock purchase modelled"
         }
       />
+      </div>
     </div>
   );
 }
@@ -66,6 +73,7 @@ function Card({
   sub,
   deltaAsPercent,
   neutralDelta,
+  note,
 }: {
   icon: React.ReactNode;
   accent: "teal" | "slate" | "red" | "emerald" | "amber";
@@ -75,6 +83,7 @@ function Card({
   sub: string;
   deltaAsPercent?: boolean;
   neutralDelta?: boolean;
+  note?: string;
 }) {
   const accentCls = {
     teal: "bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-300",
@@ -93,8 +102,13 @@ function Card({
         <span className={cn("flex size-7 items-center justify-center rounded-lg", accentCls)}>
           {icon}
         </span>
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {label}
+          {note && (
+            <span tabIndex={0} title={note} aria-label={`${label}: ${note}`} className="cursor-help">
+              <Info className="size-3 text-muted-foreground/70" />
+            </span>
+          )}
         </span>
       </div>
       <p className="mt-2 text-xl font-bold tabular-nums">{value}</p>

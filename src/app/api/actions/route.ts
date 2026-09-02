@@ -78,15 +78,19 @@ export async function GET() {
     const openActions = Object.values(groups).flat();
     const completed = resolved.filter((r) => r.status === "completed");
 
+    // Only the reorder actions carry a comparable unit (projected 30-day
+    // revenue-at-risk). cashflow (= capital, at cost) and scenario (= modelled
+    // what-if) impacts are shown per-card but never folded into one $ headline.
+    const isRevenue = (c: string) => c === "reorder";
     const totals = {
       revenueProtected: Math.round(
-        completed.filter((r) => r.category !== "opportunity").reduce((s, r) => s + r.impactValue, 0)
+        completed.filter((r) => isRevenue(r.category)).reduce((s, r) => s + r.impactValue, 0)
       ),
       opportunitiesCaptured: Math.round(
         completed.filter((r) => r.category === "opportunity").reduce((s, r) => s + r.impactValue, 0)
       ),
       revenueAtStake: Math.round(
-        openActions.filter((a) => a.category !== "opportunity").reduce((s, a) => s + a.impactValue, 0)
+        openActions.filter((a) => isRevenue(a.category)).reduce((s, a) => s + a.impactValue, 0)
       ),
       opportunityAvailable: Math.round(
         openActions.filter((a) => a.category === "opportunity").reduce((s, a) => s + a.impactValue, 0)
@@ -104,6 +108,7 @@ export async function GET() {
       groups,
       resolved,
       totals,
+      dataQuality: snap.analysis.dataQuality,
     } satisfies ActionCenterPayload);
   } catch (err) {
     console.error("[/api/actions] error", err);

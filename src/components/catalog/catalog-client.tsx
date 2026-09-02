@@ -26,7 +26,8 @@ import { ConfidenceMeter } from "@/components/shared/badges";
 import { VelocityChip } from "@/components/shared/fmcg-chips";
 import { EmptyState } from "@/components/shared/empty-state";
 import { cn } from "@/lib/utils";
-import type { CatalogPayload } from "@/lib/types";
+import { RECOGNITION_METHOD_LABEL } from "@/lib/recognition-labels";
+import type { CatalogPayload, RecognitionMethod } from "@/lib/types";
 
 const CONF_FILTERS = [
   { id: "all", label: "All" },
@@ -195,6 +196,7 @@ export function CatalogClient() {
               <TableHead>Brand</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Velocity</TableHead>
+              <TableHead>How recognised</TableHead>
               <TableHead className="w-40">Confidence</TableHead>
             </TableRow>
           </TableHeader>
@@ -217,6 +219,16 @@ export function CatalogClient() {
                 <TableCell className="text-muted-foreground">{p.category}</TableCell>
                 <TableCell>
                   {p.velocity ? <VelocityChip velocity={p.velocity} /> : <span className="text-xs text-muted-foreground">—</span>}
+                </TableCell>
+                <TableCell className="max-w-52 text-xs text-muted-foreground">
+                  {p.recognitionMethod ? (
+                    <span title={p.recognitionReason || undefined} className="cursor-help">
+                      {RECOGNITION_METHOD_LABEL[p.recognitionMethod as RecognitionMethod] ??
+                        p.recognitionMethod}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
                 </TableCell>
                 <TableCell>
                   <ConfidenceMeter value={Math.round(p.confidenceScore * 100)} size="sm" />

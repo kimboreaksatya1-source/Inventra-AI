@@ -10,17 +10,32 @@ const productSchema = z.object({
   canonicalName: z.string().max(300),
   brand: z.string().max(120),
   category: z.string().max(120),
-  aliases: z.array(z.string().max(300)).max(30).default([]),
+  aliases: z.array(z.string().max(300)).max(200).default([]),
   productCode: z.string().max(120).nullable(),
   barcode: z.string().max(64).nullable(),
   confidence: z.number().min(0).max(1),
   source: z.enum(["kb", "rules", "ai", "manual"]),
   mergedCount: z.number().optional(),
+  sourceRows: z.array(z.number()).optional(),
+  variantWarning: z.string().optional(),
+  evidence: z
+    .object({
+      source: z.string().max(20).optional(),
+      method: z.string().max(40).optional(),
+      confidenceLabel: z.string().max(20).optional(),
+      reason: z.string().max(1000).optional(),
+      reviewRequired: z.boolean().optional(),
+      reviewReason: z.string().max(600).optional(),
+      matchedAlias: z.string().max(300).optional(),
+      matchedCanonical: z.string().max(300).optional(),
+    })
+    .passthrough()
+    .optional(),
   sku: z.string().min(1).max(64),
-  stock: z.number().min(0),
-  dailySales: z.number().min(0),
-  sellingPrice: z.number().positive(),
-  costPrice: z.number().min(0),
+  stock: z.number().min(0).max(100_000_000),
+  dailySales: z.number().min(0).max(1_000_000),
+  sellingPrice: z.number().positive().max(10_000_000),
+  costPrice: z.number().min(0).max(10_000_000),
   status: z.enum(["approved", "pending", "ignored"]),
 });
 

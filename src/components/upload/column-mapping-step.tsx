@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -43,6 +43,8 @@ export function ColumnMappingStep({
   busy: boolean;
 }) {
   const ready = isMappingComplete(mapping);
+  const noSales = mapping.dailySales === null;
+  const noCost = mapping.costPrice === null;
 
   function setField(field: InternalField, value: string) {
     const idx = value === NONE ? null : Number(value);
@@ -125,8 +127,31 @@ export function ColumnMappingStep({
       {!ready && (
         <p className="text-xs text-muted-foreground">
           Map <strong>Product Name</strong>, <strong>Stock</strong> and <strong>Selling Price</strong> to
-          continue. Brand, category, code and daily sales are filled in automatically if missing.
+          continue. Brand, category and product code are recognised automatically if missing.
         </p>
+      )}
+
+      {(noSales || noCost) && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+          <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+          <div className="space-y-1">
+            {noSales && (
+              <p>
+                <strong>No Daily Sales column mapped.</strong> Inventra will <em>not</em> estimate
+                sales. Inventory analysis still works, but Procurement, the Purchase Plan,
+                Revenue-at-Risk, the Business Brief, the Simulator and Cash-Flow risk stay unavailable
+                until you import sales figures.
+              </p>
+            )}
+            {noCost && (
+              <p>
+                <strong>No Cost Price column mapped.</strong> Inventra will <em>not</em> assume a
+                margin. Inventory value, unit margins, purchase cost and Cash-Flow analysis will be
+                blank for those products.
+              </p>
+            )}
+          </div>
+        </div>
       )}
 
       <div className="flex flex-wrap gap-3">

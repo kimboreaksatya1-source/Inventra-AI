@@ -280,12 +280,26 @@ export interface AnalysisSummary {
   totalWeeklyRevenue: number;
 }
 
+/**
+ * Which business inputs the user actually provided. Detected from the imported
+ * values — never assumed. Downstream modules use this to DISABLE features whose
+ * numbers would otherwise be fabricated, instead of silently filling blanks.
+ */
+export interface DataQuality {
+  hasSalesData: boolean; // at least one product carries a real daily-sales figure
+  hasCostData: boolean; // at least one product carries a real cost price
+  productsWithoutSales: number; // count with dailySales <= 0
+  productsMissingCost: number; // count with costPrice <= 0
+  totalProducts: number;
+}
+
 export interface InventoryAnalysis {
   generatedAt: string;
   business: string;
   products: ProductAnalysis[];
   summary: AnalysisSummary;
   categoryRollup: CategoryRollup[];
+  dataQuality: DataQuality;
   healthScore: number; // 0-100
   healthBreakdown: {
     stockoutRisk: number;
@@ -339,6 +353,40 @@ export interface ProcurementRow {
   explanation: ProcurementExplanation;
 }
 
+/* ---------- Forecast reliability ---------- */
+
+export interface ForecastSensitivity {
+  factorLabel: string; // "Demand −20%"
+  dailySales: number; // the shifted rate used
+  suggestedQuantity: number; // qty the SAME formula would give — display only, not the recommendation
+}
+
+export interface SalesStability {
+  band: "stable" | "moderate" | "volatile" | "unknown";
+  coefficientOfVariation?: number; // present only when sales history exists
+  days?: number; // days of history the CV is based on
+  note: string;
+}
+
+/** Per-product day-to-day sales variability (from Sale history, when it exists). */
+export interface SalesStat {
+  cv?: number; // coefficient of variation; undefined when < 5 days of history
+  days: number;
+}
+
+/** How trustworthy one recommendation is, what it assumes, and what would break it. */
+export interface ForecastEvidence {
+  recommendationType: "reorder" | "revenue-at-risk" | "opportunity" | "simulator";
+  confidence: EvidenceConfidence;
+  confidenceReason: string;
+  formula?: string;
+  inputs: string[]; // the values the recommendation is built from, with their source
+  assumptions: string[]; // what must hold for it to be right
+  sensitivity: ForecastSensitivity[]; // recommendation at ±20% demand (empty for non-quantity types)
+  reliabilityFactors: string[]; // "may become inaccurate if …"
+  salesStability?: SalesStability;
+}
+
 export interface ProcurementResult {
   rows: ProcurementRow[];
   plan: ProcurementRow[];
@@ -355,6 +403,8 @@ export interface ProcurementResult {
 export interface ProcurementPlanResponse {
   plan: ProcurementRow[];
   kpis: ProcurementResult["kpis"];
+  dataQuality?: DataQuality;
+  forecast?: Record<string, ForecastEvidence>; // keyed by product id
   summary: string;
   source: "ai" | "deterministic";
 }
@@ -388,6 +438,7 @@ export interface CashflowResult {
   breakdown: { healthy: number; slowMoving: number; dead: number };
   topConsumers: CapitalConsumer[];
   explanation: string;
+  dataQuality?: DataQuality;
   generatedAt: string;
 }
 
@@ -431,6 +482,26 @@ export interface BusinessBrief {
 
 export type CopilotLanguage = "en" | "km";
 
+/* ---------- Copilot evidence model ---------- */
+
+export type EvidenceConfidence = "High" | "Medium" | "Low";
+
+/**
+ * DATA → RULE → CONCLUSION for one product. Every Copilot recommendation must
+ * map to one of these; nothing is asserted that isn't in `data`.
+ */
+export interface EvidenceBlock {
+  productId: string;
+  subject: string; // "Sting Strawberry (SKU BEV-005)" — original name + SKU
+  topic: "reorder" | "critical" | "overstock" | "opportunity" | "healthy";
+  data: string[]; // actual imported / derived values, one per line
+  rule: string; // why the engine flagged it (the rule, in words)
+  conclusion: string; // the recommendation, with its numbers
+  formula?: string; // "(21 × 8) − 18 = 150" when a quantity is involved
+  confidence: EvidenceConfidence;
+  confidenceReason: string;
+}
+
 /** Structured business context injected into every Copilot AI request. */
 export interface CopilotContext {
   business: string;
@@ -440,6 +511,7 @@ export interface CopilotContext {
   healthLabel: string;
   revenueAtRisk: number;
   inventoryValue: number;
+  dataQuality?: DataQuality;
   criticalProducts: { name: string; contextName?: string; daysRemaining: number; revenueAtRisk: number }[];
   overstockProducts: { name: string; contextName?: string; daysRemaining: number; inventoryValue: number }[];
   recommendedActions: RecommendedAction[];
@@ -448,6 +520,8 @@ export interface CopilotContext {
   velocityMix?: { fast: number; medium: number; slow: number };
   recommendationMix?: { reorder: number; reduce: number; monitor: number; opportunity: number };
   categoryMix?: { category: string; weeklyRevenue: number; atRisk: number }[];
+  /** DATA/RULE/CONCLUSION for the material products — the grounding source */
+  evidence?: EvidenceBlock[];
   procurement?: {
     productsToReorder: number;
     estimatedPurchaseCost: number;
@@ -475,6 +549,11 @@ export interface CopilotReorderItem {
   suggestedQuantity: number;
   revenueProtection: number;
   confidence: number;
+  confidenceLabel?: EvidenceConfidence;
+  /** the DATA lines behind this line item — always present for deterministic replies */
+  evidence?: string[];
+  rule?: string;
+  formula?: string;
 }
 
 /** Structured payload the assistant appends as a fenced JSON block. */
@@ -601,7 +680,12 @@ export interface SimulationExplanation {
 
 export type ActionCategory = "reorder" | "opportunity" | "cashflow" | "risk" | "scenario";
 export type ActionStatus = "open" | "saved" | "completed" | "dismissed";
-export type ActionSource = "Analysis" | "Revenue Risk" | "Business Brief" | "Simulator";
+export type ActionSource =
+  | "Analysis"
+  | "Revenue Risk"
+  | "Business Brief"
+  | "Simulator"
+  | "Procurement";
 
 export interface BusinessAction {
   key: string; // stable identity: `${category}:${productId ?? slug(recommendation)}`
@@ -647,6 +731,7 @@ export interface ActionCenterPayload {
   groups: Record<Priority, BusinessAction[]>;
   resolved: ResolvedAction[];
   totals: ActionCenterTotals;
+  dataQuality?: DataQuality;
 }
 
 /* ============================================================
@@ -673,6 +758,35 @@ export interface ColumnDetection {
 
 export type RecognitionSource = "kb" | "rules" | "ai" | "manual";
 
+/** How the recogniser reached its answer for one product. */
+export type RecognitionMethod =
+  | "exact-name" // KB: the normalised name matched a KB product name
+  | "exact-alias" // KB: the normalised name matched a known alias
+  | "substring" // KB: a KB name/alias sits inside the uploaded name (or vice versa)
+  | "token-overlap" // KB: enough words in common with a KB product
+  | "provided-code" // the source file carried a usable product code / barcode
+  | "provided-fields" // the source file carried the brand and/or category
+  | "brand-keyword" // rules: a known brand name was found in the text
+  | "category-keyword" // rules: the category was inferred from a keyword
+  | "titlecase" // rules: no KB hit, name just tidied for display
+  | "khmer-fallback" // rules: Khmer text, no KB hit, no canonical could be built
+  | "unknown" // rules: nothing matched at all
+  | "ai-suggestion" // the AI proposed the canonical name / brand / category
+  | "merge"; // dedup: this entry combined two or more uploaded rows
+
+/** Full, auditable explanation of one recognition result. */
+export interface RecognitionEvidence {
+  source: RecognitionSource;
+  method: RecognitionMethod;
+  confidence: number; // 0..1 — the same value as RecognizedProduct.confidence
+  confidenceLabel: EvidenceConfidence; // High ≥90 · Medium 70–89 · Low <70
+  reason: string; // plain-language "how this was recognised"
+  matchedAlias?: string; // the KB alias / substring that matched
+  matchedCanonical?: string; // the KB product name it matched
+  reviewRequired: boolean;
+  reviewReason?: string; // why review is required (present iff reviewRequired)
+}
+
 /** One product after recognition, before the user reviews it. */
 export interface RecognizedProduct {
   originalName: string; // exactly what the user uploaded — never overwritten
@@ -684,8 +798,53 @@ export interface RecognizedProduct {
   barcode: string | null;
   confidence: number; // 0..1
   source: RecognitionSource;
+  /** full auditable explanation of the match */
+  evidence?: RecognitionEvidence;
   /** merged numeric totals when this row absorbed duplicates during dedup */
   mergedCount?: number;
+  /** 1-based source spreadsheet rows that produced this entry (>1 = merged) */
+  sourceRows?: number[];
+  /** set when the recogniser gave this row a canonical shared with another row
+   *  but a size / variant / packaging difference blocked the automatic merge */
+  variantWarning?: string;
+}
+
+/* ---------- Import transparency ---------- */
+
+export type ImportRowStatus = "imported" | "warning" | "skipped" | "merged";
+
+export type ImportRowReason =
+  | "ok"
+  | "empty-row"
+  | "missing-name"
+  | "invalid-name"
+  | "invalid-stock"
+  | "invalid-price"
+  | "missing-sales"
+  | "invalid-sales"
+  | "missing-cost"
+  | "invalid-cost"
+  | "negative-stock"
+  | "merged-duplicate"
+  | "row-limit"
+  | "user-ignored";
+
+/** The fate of one uploaded spreadsheet row. */
+export interface ImportAuditRow {
+  row: number; // 1-based source spreadsheet row (header is row 1)
+  name: string; // best-effort product name, may be ""
+  status: ImportRowStatus;
+  reason: ImportRowReason;
+  detail: string; // human-readable sentence
+}
+
+export interface ImportAudit {
+  uploadedRows: number; // data rows in the file (header excluded)
+  importedRows: number; // reached the catalog cleanly
+  warningRows: number; // imported, but something was defaulted / clamped
+  skippedRows: number; // not imported (invalid or over the limit)
+  mergedRows: number; // source rows folded into another row by dedup
+  rows: ImportAuditRow[]; // every non-clean row (skipped / warning / merged)
 }
 
 export type ReviewStatus = "approved" | "pending" | "ignored";
@@ -705,6 +864,8 @@ export interface RecognizeResponse {
   highConfidenceCount: number;
   needsReviewCount: number;
   aiUsed: boolean;
+  /** source rows folded into another entry by duplicate-merge */
+  mergedRowCount: number;
 }
 
 export interface CatalogProduct {
@@ -718,6 +879,8 @@ export interface CatalogProduct {
   category: string;
   confidenceScore: number;
   isAutoGenerated: boolean;
+  recognitionMethod?: string; // RecognitionMethod at import time
+  recognitionReason?: string; // plain-language explanation captured at import
   velocity?: ProductVelocity;
   recommendation?: ProductRecommendation;
 }

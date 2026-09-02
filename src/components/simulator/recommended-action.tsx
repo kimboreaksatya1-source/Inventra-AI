@@ -1,15 +1,19 @@
 "use client";
 
 import { Lightbulb } from "lucide-react";
+import { simulatorEvidence } from "@/lib/forecast-evidence";
 import type { SimulationRecommendedAction } from "@/lib/types";
 
 export function RecommendedAction({
   action,
   onApplyReorder,
+  horizonDays = 30,
 }: {
   action: SimulationRecommendedAction;
   onApplyReorder?: (qty: number) => void;
+  horizonDays?: number;
 }) {
+  const fe = simulatorEvidence(horizonDays);
   return (
     <div className="rounded-xl border border-teal-200 bg-teal-50/60 p-5 dark:border-teal-900 dark:bg-teal-950/30">
       <div className="flex items-start gap-3">
@@ -30,6 +34,15 @@ export function RecommendedAction({
               Apply {action.suggestedReorderQuantity} units to the simulation
             </button>
           )}
+          <details className="mt-2.5 text-[11px] text-teal-800/80 dark:text-teal-200/80">
+            <summary className="cursor-pointer font-medium">Assumptions &amp; limits</summary>
+            <ul className="mt-1 list-disc pl-4">
+              {fe.assumptions.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+              <li>Differs from reality if {fe.reliabilityFactors[0]}.</li>
+            </ul>
+          </details>
         </div>
       </div>
     </div>

@@ -2,7 +2,8 @@
 
 import { VelocityChip } from "@/components/shared/fmcg-chips";
 import { PriorityBadge } from "@/components/shared/badges";
-import type { Priority, ProcurementRow } from "@/lib/types";
+import { ForecastReliability } from "@/components/shared/forecast-reliability";
+import type { ForecastEvidence, Priority, ProcurementRow } from "@/lib/types";
 
 const PRIORITY_MAP: Record<ProcurementRow["priority"], Priority> = {
   Critical: "CRITICAL",
@@ -23,7 +24,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 /** Full "Why?" breakdown for one procurement recommendation. */
-export function ExplanationPanel({ row }: { row: ProcurementRow }) {
+export function ExplanationPanel({
+  row,
+  forecast,
+}: {
+  row: ProcurementRow;
+  forecast?: ForecastEvidence;
+}) {
   const e = row.explanation;
   return (
     <div className="rounded-lg border border-border bg-muted/30 p-4">
@@ -81,6 +88,8 @@ export function ExplanationPanel({ row }: { row: ProcurementRow }) {
           {e.velocityReason}
         </p>
       </div>
+
+      {forecast && <ForecastReliability fe={forecast} recommended={row.suggestedQuantity} />}
     </div>
   );
 }

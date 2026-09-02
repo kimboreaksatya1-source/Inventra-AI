@@ -39,20 +39,31 @@ export function ContextPanel({ language }: { language: CopilotLanguage }) {
 
       {!isLoading && data?.hasData && (
         <div className="space-y-4 px-4 pb-6">
-          <HealthRing score={data.healthScore} label={data.healthLabel} title={t(language, "context.health")} />
-
-          <div className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              <TrendingDown className="size-3.5 text-red-500" />
-              {t(language, "context.revenueAtRisk")}
+          {data.dataQuality && !data.dataQuality.hasSalesData ? (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+              No daily-sales data imported — health, risk and revenue-at-risk can&apos;t be shown.
+              {" "}
+              {data.productCount} products · {formatCurrency(data.inventoryValue)} inventory at cost.
             </div>
-            <p className="mt-1 text-2xl font-bold tabular-nums text-red-600 dark:text-red-400">
-              {formatCurrency(data.revenueAtRisk)}
-            </p>
-            <p className="text-[11px] text-muted-foreground">
-              {formatCurrency(data.inventoryValue)} inventory · {data.productCount} products
-            </p>
-          </div>
+          ) : (
+            <>
+              <HealthRing score={data.healthScore} label={data.healthLabel} title={t(language, "context.health")} />
+
+              <div className="rounded-xl border border-border bg-card p-4">
+                <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  <TrendingDown className="size-3.5 text-red-500" />
+                  {t(language, "context.revenueAtRisk")}
+                </div>
+                <p className="mt-1 text-2xl font-bold tabular-nums text-red-600 dark:text-red-400">
+                  {formatCurrency(data.revenueAtRisk)}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  projected next 30 days · {formatCurrency(data.inventoryValue)} inventory at cost ·{" "}
+                  {data.productCount} products
+                </p>
+              </div>
+            </>
+          )}
 
           <div className="rounded-xl border border-border bg-card p-4">
             <div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -133,6 +144,7 @@ function HealthRing({ score, label, title }: { score: number; label: string; tit
       <div className="min-w-0">
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{title}</p>
         <p className={cn("mt-0.5 text-sm font-semibold", tone)}>{label}</p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">heuristic 0–100 score</p>
       </div>
     </div>
   );

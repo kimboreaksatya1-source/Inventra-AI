@@ -1,21 +1,22 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { mergeDuplicates, recognizeProducts } from "@/lib/catalog/recognize";
+import { confidenceLabel, mergeDuplicates, recognizeProducts } from "@/lib/catalog/recognize";
 import { assignSkus } from "@/lib/catalog/sku";
-import type { RecognizeResponse, ReviewProduct, ReviewStatus } from "@/lib/types";
+import type { RecognitionEvidence, RecognizeResponse, ReviewProduct, ReviewStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 45;
 
 const rowSchema = z.object({
+  sourceRow: z.number().int().nonnegative().optional(),
   name: z.string().min(1).max(300),
   productCode: z.string().max(120).nullish(),
   brand: z.string().max(120).nullish(),
   category: z.string().max(120).nullish(),
-  stock: z.number().min(0),
-  dailySales: z.number().min(0).nullish(),
-  sellingPrice: z.number().positive(),
-  costPrice: z.number().min(0).nullish(),
+  stock: z.number().min(0).max(100_000_000),
+  dailySales: z.number().min(0).max(1_000_000).nullish(),
+  sellingPrice: z.number().positive().max(10_000_000),
+  costPrice: z.number().min(0).max(10_000_000).nullish(),
 });
 
 const bodySchema = z.object({
@@ -41,29 +42,47 @@ export async function POST(req: Request) {
       }))
     );
 
-    // attach numeric data, then collapse duplicates, then assign SKUs
+    // attach numeric data, then collapse duplicates, then assign SKUs.
+    // Missing cost price / daily sales are kept as 0 — NEVER estimated. The
+    // analysis layer detects the gap and disables the features that would
+    // otherwise need a fabricated value.
+    const clamp = (n: number, hi: number) => Math.min(hi, Math.max(0, n));
     const withNumbers = results.map((r, i) => {
       const row = rows[i];
-      const costPrice =
-        row.costPrice && row.costPrice > 0
-          ? row.costPrice
-          : Math.round(row.sellingPrice * 0.7 * 100) / 100;
       return {
         ...r,
-        stock: Math.max(0, Math.round(row.stock)),
-        dailySales: Math.max(0, row.dailySales ?? 0),
-        sellingPrice: row.sellingPrice,
-        costPrice,
+        stock: clamp(Math.round(row.stock), 100_000_000),
+        dailySales: row.dailySales != null && row.dailySales > 0 ? clamp(row.dailySales, 1_000_000) : 0,
+        sellingPrice: clamp(row.sellingPrice, 10_000_000),
+        costPrice: row.costPrice != null && row.costPrice > 0 ? clamp(row.costPrice, 10_000_000) : 0,
+        sourceRows: row.sourceRow != null ? [row.sourceRow] : [],
       };
     });
 
     const merged = mergeDuplicates(withNumbers);
+
+    // A barcode that lands on two or more different products is untrustworthy — drop it.
+    const barcodeCount = new Map<string, number>();
+    for (const m of merged) if (m.barcode) barcodeCount.set(m.barcode, (barcodeCount.get(m.barcode) ?? 0) + 1);
+    for (const m of merged) if (m.barcode && (barcodeCount.get(m.barcode) ?? 0) > 1) m.barcode = null;
     const skus = assignSkus(
       merged.map((r) => ({ category: r.category, productCode: r.productCode }))
     );
 
     const products: ReviewProduct[] = merged.map((r, i) => {
-      const status: ReviewStatus = r.confidence >= 0.9 ? "approved" : "pending";
+      const evidence: RecognitionEvidence =
+        r.evidence ??
+        {
+          source: r.source,
+          method: r.source === "ai" ? "ai-suggestion" : "titlecase",
+          confidence: r.confidence,
+          confidenceLabel: confidenceLabel(r.confidence),
+          reason: "Canonical name is your product name, tidied for display.",
+          reviewRequired: r.confidence < 0.9,
+          reviewReason: r.confidence < 0.9 ? `Recognition confidence is ${confidenceLabel(r.confidence)} (${Math.round(r.confidence * 100)}%).` : undefined,
+        };
+      // Auto-approve ONLY when the evidence model says review is not required (STEP 5).
+      const status: ReviewStatus = evidence.reviewRequired ? "pending" : "approved";
       return {
         originalName: r.originalName,
         canonicalName: r.canonicalName,
@@ -74,7 +93,10 @@ export async function POST(req: Request) {
         barcode: r.barcode,
         confidence: r.confidence,
         source: r.source,
+        evidence,
         mergedCount: r.mergedCount,
+        sourceRows: r.sourceRows ?? [],
+        variantWarning: r.variantWarning,
         sku: skus[i],
         stock: r.stock,
         dailySales: r.dailySales,
@@ -86,9 +108,10 @@ export async function POST(req: Request) {
 
     const payload: RecognizeResponse = {
       products,
-      highConfidenceCount: products.filter((p) => p.confidence >= 0.9).length,
-      needsReviewCount: products.filter((p) => p.confidence < 0.9).length,
+      highConfidenceCount: products.filter((p) => !p.evidence?.reviewRequired).length,
+      needsReviewCount: products.filter((p) => p.evidence?.reviewRequired).length,
       aiUsed,
+      mergedRowCount: Math.max(0, rows.length - products.length),
     };
     return NextResponse.json(payload);
   } catch (err) {

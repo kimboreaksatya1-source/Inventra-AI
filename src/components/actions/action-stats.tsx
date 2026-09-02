@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ListChecks, ShieldCheck, TrendingUp } from "lucide-react";
+import { CheckCircle2, Info, ListChecks, ShieldCheck, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
@@ -12,20 +12,22 @@ export function ActionStats({ totals }: { totals: ActionCenterTotals }) {
       <ProgressStat
         icon={<ShieldCheck className="size-5" />}
         accent="teal"
-        label="Revenue Protected"
+        label="At-Risk Revenue Addressed"
         value={formatCurrency(totals.revenueProtected)}
         of={totals.revenueProtected + totals.revenueAtStake}
         done={totals.revenueProtected}
-        hint={`${formatCurrency(totals.revenueAtStake)} still at stake`}
+        hint={`${formatCurrency(totals.revenueAtStake)} still open · projected 30-day exposure on completed reorders`}
+        note="Projection. Sum of the 30-day Revenue-at-Risk on reorder actions you have completed. Cash-flow and forecast actions are shown per-card and not added here."
       />
       <ProgressStat
         icon={<TrendingUp className="size-5" />}
         accent="emerald"
-        label="Opportunities Captured"
+        label="Modelled Upside Captured"
         value={formatCurrency(totals.opportunitiesCaptured)}
         of={totals.opportunitiesCaptured + totals.opportunityAvailable}
         done={totals.opportunitiesCaptured}
-        hint={`${formatCurrency(totals.opportunityAvailable)} available`}
+        hint={`${formatCurrency(totals.opportunityAvailable)} available · modelled ~25%-more-orders margin`}
+        note="Projection. Modelled margin upside from completed opportunity actions (assumes ~25% more orders)."
       />
       <PlainStat
         icon={<ListChecks className="size-5" />}
@@ -58,19 +60,28 @@ function Shell({
   accent,
   label,
   value,
+  note,
   children,
 }: {
   icon: React.ReactNode;
   accent: keyof typeof ACCENT;
   label: string;
   value: string;
+  note?: string;
   children?: React.ReactNode;
 }) {
   return (
     <Card className="gap-0 p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+          <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {label}
+            {note && (
+              <span tabIndex={0} title={note} aria-label={`${label}: ${note}`} className="cursor-help text-muted-foreground/70">
+                <Info className="size-3" />
+              </span>
+            )}
+          </p>
           <p className="mt-1.5 text-2xl font-bold tracking-tight tabular-nums">{value}</p>
         </div>
         <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl ring-1", ACCENT[accent])}>
@@ -90,6 +101,7 @@ function ProgressStat({
   of,
   done,
   hint,
+  note,
 }: {
   icon: React.ReactNode;
   accent: keyof typeof ACCENT;
@@ -98,10 +110,11 @@ function ProgressStat({
   of: number;
   done: number;
   hint: string;
+  note?: string;
 }) {
   const pct = of > 0 ? Math.round((done / of) * 100) : 0;
   return (
-    <Shell icon={icon} accent={accent} label={label} value={value}>
+    <Shell icon={icon} accent={accent} label={label} value={value} note={note}>
       <div className="mt-3">
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
           <div

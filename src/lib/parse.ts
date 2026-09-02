@@ -55,6 +55,9 @@ export interface ParsedWorkbook {
   fileName: string;
   headers: string[];
   rows: unknown[][]; // data rows only, aligned to `headers`
+  rowNumbers: number[]; // 1-based source spreadsheet row for rows[i]
+  blankRowNumbers: number[]; // data rows skipped because every cell was empty
+  totalDataRows: number; // rows below the header in the file (incl. blank)
 }
 
 /** Parse a spreadsheet into its raw header row + data rows — no mapping, no validation. */
@@ -90,14 +93,28 @@ export async function parseWorkbook(file: File): Promise<ParsedWorkbook> {
   const headers = (matrix[0] as unknown[]).map((c) => String(c ?? "").trim());
   const width = headers.length;
   const rows: unknown[][] = [];
+  const rowNumbers: number[] = [];
+  const blankRowNumbers: number[] = [];
   for (let i = 1; i < matrix.length; i++) {
     const row = matrix[i] as unknown[];
-    if (row.every((c) => c === null || String(c).trim() === "")) continue;
+    const srcRow = i + 1; // header is spreadsheet row 1
+    if (row.every((c) => c === null || String(c).trim() === "")) {
+      blankRowNumbers.push(srcRow);
+      continue;
+    }
     const padded = Array.from({ length: width }, (_, j) => row[j] ?? null);
     rows.push(padded);
+    rowNumbers.push(srcRow);
   }
   if (rows.length === 0) throw new ParseError("No product rows found in the file.");
-  return { fileName: file.name, headers, rows };
+  return {
+    fileName: file.name,
+    headers,
+    rows,
+    rowNumbers,
+    blankRowNumbers,
+    totalDataRows: matrix.length - 1,
+  };
 }
 
 /** Parse a File into raw rows, mapping arbitrary header names to canonical fields. */

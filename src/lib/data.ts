@@ -2,6 +2,7 @@
 import { db } from "./db";
 import type { RawProduct, RawSale } from "./inventory";
 import type { AnalysisInput } from "./analysis";
+import type { SalesStat } from "./types";
 
 export interface LoadedData {
   user: { id: string; name: string; businessName: string; email: string };
@@ -93,4 +94,43 @@ export async function loadAnalysisInputs(): Promise<{
   products: AnalysisInput[];
 }> {
   return loadProductsLite();
+}
+
+/**
+ * Per-product day-to-day sales variability, from the Sale table when it exists.
+ * User imports have no Sale history (we never synthesise one), so this is empty
+ * for imported catalogues — the forecast layer treats that as "stability unknown".
+ */
+export async function loadSalesStats(): Promise<Map<string, SalesStat>> {
+  const user = await db.user.findFirst({ orderBy: { createdAt: "asc" } });
+  const out = new Map<string, SalesStat>();
+  if (!user) return out;
+
+  const rows = await db.sale.findMany({
+    where: { product: { userId: user.id } },
+    select: { productId: true, quantity: true, date: true },
+  });
+  if (rows.length === 0) return out;
+
+  const byProduct = new Map<string, Map<string, number>>();
+  for (const r of rows) {
+    const day = r.date.toISOString().slice(0, 10);
+    let m = byProduct.get(r.productId);
+    if (!m) byProduct.set(r.productId, (m = new Map()));
+    m.set(day, (m.get(day) ?? 0) + r.quantity);
+  }
+
+  for (const [productId, dayMap] of byProduct) {
+    const vals = [...dayMap.values()];
+    const days = vals.length;
+    if (days < 5) {
+      out.set(productId, { days });
+      continue;
+    }
+    const mean = vals.reduce((s, v) => s + v, 0) / days;
+    const variance = vals.reduce((s, v) => s + (v - mean) ** 2, 0) / days;
+    const cv = mean > 0 ? Math.sqrt(variance) / mean : undefined;
+    out.set(productId, { cv, days });
+  }
+  return out;
 }

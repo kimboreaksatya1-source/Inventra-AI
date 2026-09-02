@@ -3,7 +3,8 @@
 // and a deterministic fallback that never calls the model.
 
 import { AI_MODEL, getAIClient } from "./ai";
-import { suggestedOrderQuantity } from "./inventory";
+import { findEvidence, renderEvidence, renderEvidenceList } from "./copilot-evidence";
+import { shortLabel } from "./product-label";
 import type {
   CopilotContext,
   CopilotInsightCards,
@@ -11,6 +12,9 @@ import type {
   CopilotMessage,
   CopilotReorderItem,
   CopilotStructured,
+  EvidenceBlock,
+  ProcurementResult,
+  ProcurementRow,
 } from "./types";
 
 export { parseStructuredTail, stripStreamingTail } from "./copilot-parse";
@@ -20,7 +24,15 @@ export { parseStructuredTail, stripStreamingTail } from "./copilot-parse";
 const OUTPUT_CONTRACT = `
 FORMAT — respond in GitHub-flavored Markdown:
 - Start with a short bold title line (e.g. **Reorder Recommendations**).
-- Then the structured answer. For reorder questions use a numbered list where each product shows: Reason, Suggested Quantity, Revenue Protection ($), Confidence (%).
+- For every product recommendation, warning or risk statement, structure it as:
+  **<product name (SKU)>**
+  _DATA_ — the actual values (stock, daily sales, days of cover, cost, revenue at risk …)
+  _RULE_ — the rule that flagged it (the threshold / formula, in words)
+  _CONCLUSION_ — what to do, with the number (e.g. "Order 150 units — (21 × 8) − 18 = 150")
+  _Confidence: High | Medium | Low_ — one line on why
+  Take DATA and the formula verbatim from the EVIDENCE section of the BUSINESS SUMMARY.
+- Do NOT give generic advice ("run a promotion", "add shelf space", "bundle products") unless you
+  name the product and cite the numbers that justify it. If the evidence can't answer, say what's missing.
 - ALWAYS finish the prose with exactly these two lines:
   **Recommended Next Action:** <one concrete step>
   **Expected Business Impact:** <the $ / operational outcome>
@@ -51,6 +63,8 @@ Every product line carries a VELOCITY class (fast / medium / slow mover), its DA
 - Talk in FMCG terms: days of cover, cartons/units to order, category mix, promo and clearance tactics, shelf priority.
 Rules:
 - Use ONLY the numbers, product names and facts in the BUSINESS SUMMARY. Never invent products or figures.
+- EVERY recommendation must trace to an EVIDENCE block: state its DATA, the RULE, then the CONCLUSION.
+  If a figure is not in the EVIDENCE or the summary, do not state it. Never estimate a missing value.
 - Each product shows the owner's ORIGINAL name, then in [brackets] a canonical English name + brand. Match/reason on the canonical name, but ALWAYS write the ORIGINAL name (with its SKU) back to the owner — e.g. "កូកាកូឡា 330ml [canonical: Coca-Cola Original 330ml] (SKU BEV-001)" → you write "កូកាកូឡា 330ml (SKU BEV-001)". Never translate or shorten it.
 - Be specific and decisive, like a category manager briefing a buyer. No fluff, no apologies.
 - If the data cannot answer the question, say what is missing.
@@ -98,9 +112,9 @@ export async function* streamCopilotReply(
 
 /* --------------------------- deterministic ----------------------------- */
 
-type Intent = "why" | "reorder" | "risk" | "overstock" | "cashflow" | "opportunity" | "summary" | "general";
+export type Intent = "why" | "reorder" | "risk" | "overstock" | "cashflow" | "opportunity" | "summary" | "general";
 
-function classify(message: string): Intent {
+export function classify(message: string): Intent {
   const m = message.toLowerCase();
   if (/^\s*why\b|\bwhy (is|are|should|does|do|would|was)\b|explain (why|the|this|how)|how did you|how is .* (calculated|derived)|marked (critical|slow|fast)/.test(m))
     return "why";
@@ -115,22 +129,42 @@ function classify(message: string): Intent {
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
-function derivedReorder(context: CopilotContext, km: boolean): CopilotReorderItem[] {
-  return context.criticalProducts.slice(0, 5).map((p) => {
-    const est = Math.max(1, Math.round(p.revenueAtRisk / 10));
-    const qty = suggestedOrderQuantity(est, Math.max(0, Math.round(p.daysRemaining)));
+/**
+ * Reorder line items — read straight from the Procurement Engine's plan.
+ * Nothing is recalculated here: quantity and revenue-protected come from
+ * `buildProcurement`, the single source of truth. Each item carries the DATA /
+ * RULE / formula behind it plus a confidence label from the evidence model.
+ */
+function derivedReorder(
+  plan: ProcurementRow[],
+  evidence: EvidenceBlock[],
+  km: boolean
+): CopilotReorderItem[] {
+  const byId = new Map(evidence.map((e) => [e.productId, e]));
+  return plan.slice(0, 5).map((r) => {
+    const cover = Number.isFinite(r.daysRemaining) ? Math.round(r.daysRemaining * 10) / 10 : null;
+    const reason =
+      cover === null
+        ? r.reason
+        : km
+        ? cover < 3
+          ? `ស្តុកនឹងអស់ក្នុងរយៈពេល ${cover} ថ្ងៃ`
+          : `នៅសល់ត្រឹម ${cover} ថ្ងៃ`
+        : cover < 3
+        ? `Stockout expected within ${cover} days`
+        : `Only ${cover} days of cover left`;
+    const ev = byId.get(r.id);
     return {
-      product: p.name,
-      reason: km
-        ? p.daysRemaining < 3
-          ? `ស្តុកនឹងអស់ក្នុងរយៈពេល ${p.daysRemaining} ថ្ងៃ`
-          : `នៅសល់ត្រឹម ${p.daysRemaining} ថ្ងៃ`
-        : p.daysRemaining < 3
-        ? `Stockout expected within ${p.daysRemaining} days`
-        : `Only ${p.daysRemaining} days of cover left`,
-      suggestedQuantity: Math.max(qty, est * 7),
-      revenueProtection: p.revenueAtRisk,
-      confidence: p.daysRemaining < 3 ? 90 : 82,
+      product: shortLabel(r),
+      reason,
+      suggestedQuantity: r.suggestedQuantity,
+      revenueProtection: r.revenueProtected,
+      confidence:
+        r.priority === "Critical" ? 90 : r.priority === "High" ? 82 : r.priority === "Medium" ? 74 : 66,
+      confidenceLabel: ev?.confidence ?? "High",
+      evidence: ev?.data,
+      rule: ev?.rule,
+      formula: ev?.formula ?? r.explanation.formula,
     };
   });
 }
@@ -145,8 +179,9 @@ const CLOSERS = {
 export function buildDeterministicReply(
   context: CopilotContext,
   userMessage: string,
-  language: CopilotLanguage
-): CopilotStructured & { content: string } {
+  language: CopilotLanguage,
+  procurement?: Pick<ProcurementResult, "plan" | "kpis"> | null
+): CopilotStructured & { content: string; blocked?: boolean } {
   const km = language === "km";
   const close = CLOSERS[language];
 
@@ -159,12 +194,52 @@ export function buildDeterministicReply(
           "Upload your product file on the Upload page.",
           "Unlocks full analysis, risk scoring and reorder guidance."
         );
-    return { content, insightCards: null, reorder: [] };
+    return { content, insightCards: null, reorder: [], blocked: true };
   }
 
   const intent = classify(userMessage);
-  const reorder = derivedReorder(context, km);
-  const totalProtect = reorder.reduce((s, r) => s + r.revenueProtection, 0);
+  const dq = context.dataQuality;
+
+  // Missing daily-sales data → every sales-derived answer would be guesswork.
+  const salesDependent =
+    intent === "reorder" ||
+    intent === "risk" ||
+    intent === "opportunity" ||
+    intent === "cashflow" ||
+    intent === "overstock" ||
+    intent === "summary";
+  if (dq && !dq.hasSalesData && salesDependent) {
+    const content = km
+      ? "ខ្ញុំមិនអាចផ្ដល់ការណែនាំនេះបានទេ ព្រោះមិនមានទិន្នន័យការលក់ប្រចាំថ្ងៃ។ ការវិភាគស្តុក និងតម្លៃស្តុកនៅតែមាន ប៉ុន្តែ ការណែនាំបញ្ជាទិញ ការវាយតម្លៃហានិភ័យ និងលំហូរសាច់ប្រាក់ ត្រូវការទិន្នន័យការលក់។" +
+        close("នាំចូលជួរ 'ការលក់ប្រចាំថ្ងៃ' នៅទំព័រ Upload។", "បើកដំណើរការការណែនាំបញ្ជាទិញ ការវាយតម្លៃហានិភ័យ និងលំហូរសាច់ប្រាក់។")
+      : "I can't answer that — no daily-sales data was imported. Inventory analysis and stock value still work, but reorder planning, revenue-at-risk, velocity, the business summary and cash-flow risk all need sales figures. Nothing here is estimated." +
+        close(
+          "Import a daily-sales column on the Upload page.",
+          "Unlocks the purchase plan, risk scoring and cash-flow analysis."
+        );
+    return { content, insightCards: null, reorder: [], blocked: true };
+  }
+
+  // Cash-flow answers depend on cost prices — without them every $ figure would be 0/guessed.
+  if (dq && !dq.hasCostData && intent === "cashflow") {
+    const content = km
+      ? "ខ្ញុំមិនអាចវិភាគលំហូរសាច់ប្រាក់បានទេ ព្រោះមិនមានតម្លៃដើម។ តម្លៃស្តុក ប្រាក់ចំណេញ និងដើមទុនជាប់ ត្រូវការតម្លៃដើម ហើយ Inventra មិនប៉ាន់ស្មានវាទេ។" +
+        close("នាំចូលជួរ 'តម្លៃដើម' នៅទំព័រ Upload។", "បើកដំណើរការការវិភាគលំហូរសាច់ប្រាក់។")
+      : "I can't analyse cash flow — no cost prices were imported. Inventory value, margins and locked capital all need cost prices, and Inventra does not estimate them." +
+        close("Import a cost-price column on the Upload page.", "Unlocks the cash-flow analysis.");
+    return { content, insightCards: null, reorder: [], blocked: true };
+  }
+
+  const plan = procurement?.plan ?? [];
+  const evidence = context.evidence ?? [];
+  const reorderEv = evidence.filter((e) => e.topic === "reorder");
+  const criticalEv = evidence.filter((e) => e.topic === "critical");
+  const overstockEv = evidence.filter((e) => e.topic === "overstock");
+  const opportunityEv = evidence.filter((e) => e.topic === "opportunity");
+  const reorder = derivedReorder(plan, evidence, km);
+  const totalProtect =
+    procurement?.kpis.revenueProtected ?? reorder.reduce((s, r) => s + r.revenueProtection, 0);
+  const productsToReorder = procurement?.kpis.productsToReorder ?? reorder.length;
   const topCash = context.overstockProducts.reduce((s, p) => s + p.inventoryValue, 0);
   const firstCritical = context.criticalProducts[0]?.name ?? "your most critical item";
 
@@ -174,21 +249,32 @@ export function buildDeterministicReply(
 
   switch (intent) {
     case "overstock": {
-      const lines = context.overstockProducts.map(
-        (p) => `- **${p.name}** — ${usd(p.inventoryValue)} ${km ? "ជាប់ក្នុងស្តុក" : "tied up"}`
-      );
+      const blocks = overstockEv.slice(0, 4);
+      const firstOver = blocks[0]?.subject ?? context.overstockProducts[0]?.name ?? "your slowest mover";
       content =
         (km ? "**ស្តុកលើស និងទំនិញលក់យឺត**\n\n" : "**Overstock & Slow Movers**\n\n") +
-        (lines.join("\n") || (km ? "- គ្មាន" : "- none")) +
+        (blocks.length
+          ? renderEvidenceList(blocks, km)
+          : km
+          ? "គ្មានទំនិញលើសស្តុកទេ។"
+          : "Nothing is overstocked right now.") +
         close(
-          km ? "បញ្ចុះតម្លៃ ឬរួមផ្សំទំនិញលក់យឺតកំពូល ៣ ក្នុងសប្តាហ៍នេះ។" : "Discount or bundle the top 3 slow movers this week.",
-          km ? `រំដោះប្រហែល ${usd(topCash)} នៃដើមទុនបង្វិល។` : `Frees up roughly ${usd(topCash)} of working capital.`
+          km
+            ? `ចាប់ផ្តើមជាមួយ ${firstOver} — អនុវត្តតាមសេចក្តីសន្និដ្ឋានខាងលើសម្រាប់ទំនិញនីមួយៗ។`
+            : `Start with ${firstOver} — follow the CONCLUSION line for each product above.`,
+          topCash > 0
+            ? km
+              ? `រំដោះប្រហែល ${usd(topCash)} នៃដើមទុនបង្វិល។`
+              : `Frees up roughly ${usd(topCash)} of working capital.`
+            : km
+            ? `រំដោះដើមទុនដែលជាប់ក្នុងស្តុកលក់យឺត។`
+            : `Frees the capital trapped in slow stock (import cost prices to size it).`
         );
       cards = {
-        revenueImpact: `${usd(topCash)} recoverable`,
-        inventoryImpact: `${context.overstockProducts.length} products overstocked`,
+        revenueImpact: topCash > 0 ? `${usd(topCash)} recoverable` : "Capital in slow stock",
+        inventoryImpact: `${overstockEv.length || context.overstockProducts.length} products flagged Reduce`,
         riskLevel: "MEDIUM",
-        recommendedAction: km ? "ធ្វើការបញ្ចុះតម្លៃ" : "Run a clearance promotion",
+        recommendedAction: blocks.length ? `Clear ${firstOver.split(" (SKU")[0]}` : "No action needed",
       };
       break;
     }
@@ -219,25 +305,30 @@ export function buildDeterministicReply(
       break;
     }
     case "opportunity": {
-      const items = context.opportunities.length
-        ? context.opportunities.map(
-            (o) => `- **${o.title}** — ${km ? "ផលរំពឹងទុក" : "expected impact"} ${usd(o.expectedRevenueImpact)}`
-          )
-        : context.topSellers
-            .slice(0, 3)
-            .map((p) => `- **${km ? "ពង្រីក" : "Grow"} ${p.name}** — ${usd(p.weeklyRevenue)}/wk`);
-      const upside = context.opportunities.reduce((s, o) => s + o.expectedRevenueImpact, 0) || 120;
+      const blocks = opportunityEv.slice(0, 3);
+      // Only quote a dollar figure the analysis engine actually produced — never a placeholder.
+      const upside = context.opportunities.reduce((s, o) => s + o.expectedRevenueImpact, 0);
       content =
         (km ? "**ឱកាសរីកចម្រើន**\n\n" : "**Growth Opportunities**\n\n") +
-        items.join("\n") +
+        (blocks.length
+          ? renderEvidenceList(blocks, km)
+          : km
+          ? "មិនមានឱកាសរីកចម្រើនច្បាស់លាស់ពីទិន្នន័យបច្ចុប្បន្ន — ទំនិញលក់ដាច់របស់អ្នកសុទ្ធតែមានស្តុកគ្រប់គ្រាន់រួចហើយ។"
+          : "No clear growth plays in the current data — your fast movers are already well-stocked or margin data is missing.") +
         close(
           km
-            ? `បង្កើនការបញ្ជាទិញទំនិញលក់ដាច់ប្រហែល ២៥% និងបន្ថែមកន្លែងតាំងលក់។`
-            : "Increase orders on your top sellers by ~25% and give them more shelf space.",
-          km ? `+${usd(upside)} នៃប្រាក់ចំណេញបន្ថែមក្នុងមួយខែ។` : `+${usd(upside)} of additional monthly margin.`
+            ? "សម្រាប់ទំនិញនីមួយៗខាងលើ បង្កើនការបញ្ជាទិញតាមចំនួនក្នុងសេចក្តីសន្និដ្ឋាន។"
+            : "For each product above, raise the order by the amount in its CONCLUSION line.",
+          upside > 0
+            ? km
+              ? `+${usd(upside)} នៃប្រាក់ចំណេញបន្ថែមក្នុងមួយខែ (ការប៉ាន់ស្មាន)។`
+              : `+${usd(upside)} of additional monthly margin (modelled).`
+            : km
+            ? `ការលក់កាន់តែច្រើនពីទំនិញលក់ដាច់ដែលមានស្រាប់។`
+            : `More sales from sellers you already stock.`
         );
       cards = {
-        revenueImpact: `+${usd(upside)} potential`,
+        revenueImpact: upside > 0 ? `+${usd(upside)} potential (modelled)` : "Upside on top sellers",
         inventoryImpact: km ? "បង្កើនការបញ្ជាទិញទំនិញលក់ដាច់" : "Increase fast-seller orders",
         riskLevel: "LOW",
         recommendedAction: km ? "ពង្រីកទំនិញលក់ដាច់" : "Scale up top sellers",
@@ -270,28 +361,52 @@ export function buildDeterministicReply(
     }
     case "risk": {
       attachReorder = true;
-      const lines = context.criticalProducts.map(
-        (p) =>
-          `- **${p.name}** — ${p.daysRemaining} ${km ? "ថ្ងៃទៀត" : "days left"}, ${usd(p.revenueAtRisk)} ${
-            km ? "មានហានិភ័យ" : "at risk"
-          }`
-      );
+      const blocks = criticalEv.slice(0, 5);
       content =
         (km ? "**កន្លែងដែលអ្នកកំពុងបាត់បង់ចំណូល**\n\n" : "**Where You're Losing Revenue**\n\n") +
-        (lines.join("\n") || (km ? "- គ្មានហានិភ័យបន្ទាន់" : "- no immediate risks")) +
+        (blocks.length
+          ? renderEvidenceList(blocks, km)
+          : km
+          ? "គ្មានទំនិញណាដែលមានហានិភ័យអស់ស្តុកបន្ទាន់ទេ។"
+          : "No products are at immediate stockout risk.") +
         close(
           km ? `បញ្ជាទិញ ${firstCritical} ជាមុនគេ។` : `Place reorders above, starting with ${firstCritical}.`,
           km ? `ការពារ ${usd(totalProtect)} នៃចំណូលក្នុង ៣០ ថ្ងៃ។` : `Protects ${usd(totalProtect)} of revenue over the next 30 days.`
         );
       cards = {
         revenueImpact: `${usd(totalProtect)} at risk`,
-        inventoryImpact: `${context.criticalProducts.length} products short`,
+        inventoryImpact: `${criticalEv.length || context.criticalProducts.length} products short`,
         riskLevel: context.criticalProducts.some((p) => p.daysRemaining < 3) ? "CRITICAL" : "HIGH",
         recommendedAction: `Reorder ${firstCritical}`,
       };
       break;
     }
     case "why": {
+      // Did the owner name a specific product? Answer with THAT product's evidence.
+      const named = findEvidence(evidence, userMessage);
+      if (named) {
+        content =
+          (km ? `**មូលហេតុ — ${named.subject}**\n\n` : `**Why — ${named.subject}**\n\n`) +
+          renderEvidence(named, km) +
+          close(
+            named.topic === "reorder"
+              ? km
+                ? `បញ្ជាទិញតាមចំនួនក្នុងសេចក្តីសន្និដ្ឋាន។`
+                : `Order the quantity in the CONCLUSION line.`
+              : km
+              ? `អនុវត្តតាមសេចក្តីសន្និដ្ឋានខាងលើ។`
+              : `Act on the CONCLUSION above.`,
+            km ? `រាល់តួលេខមកពីទិន្នន័យនាំចូលរបស់អ្នក។` : `Every number here comes from your imported data.`
+          );
+        cards = {
+          revenueImpact: `${usd(context.revenueAtRisk)} at risk`,
+          inventoryImpact: `${named.subject.split(" (SKU")[0]}`,
+          riskLevel:
+            named.topic === "critical" ? "CRITICAL" : named.topic === "reorder" ? "HIGH" : "MEDIUM",
+          recommendedAction: named.conclusion.split(".")[0],
+        };
+        break;
+      }
       const c0 = context.criticalProducts[0];
       const body = km
         ? [
@@ -341,21 +456,16 @@ export function buildDeterministicReply(
     case "reorder":
     default: {
       attachReorder = true;
-      const lines = reorder.length
-        ? reorder.map(
-            (r, i) =>
-              km
-                ? `${i + 1}. **${r.product}** — ${r.reason}. បរិមាណណែនាំ **${r.suggestedQuantity}**, ការពារ **${usd(
-                    r.revenueProtection
-                  )}** (ជឿជាក់ ${r.confidence}%)`
-                : `${i + 1}. **${r.product}** — ${r.reason}\n   - Suggested Quantity: ${r.suggestedQuantity} units\n   - Revenue Protection: ${usd(
-                    r.revenueProtection
-                  )}\n   - Confidence: ${r.confidence}%`
-          )
-        : [km ? "- គ្មានទំនិញត្រូវបញ្ជាទិញបន្ទាន់ទេ។" : "- Nothing needs reordering right now."];
+      const blocks = reorderEv.slice(0, 5);
+      const lines = blocks.length
+        ? renderEvidenceList(blocks, km)
+        : km
+        ? "គ្មានទំនិញត្រូវបញ្ជាទិញបន្ទាន់ទេ — គ្រប់ទំនិញនៅលើគោលដៅគ្របដណ្តប់។"
+        : "Nothing needs reordering right now — every product is above its coverage target.";
       content =
         (km ? "**ការណែនាំបញ្ជាទិញ**\n\n" : "**Reorder Recommendations**\n\n") +
-        lines.join("\n") +
+        lines +
+        "\n" +
         (reorder.length
           ? close(
               km ? `បញ្ជាទិញ ${reorder[0].product} ថ្ងៃនេះ។` : `Place the order for ${reorder[0].product} today.`,
@@ -367,7 +477,7 @@ export function buildDeterministicReply(
             ));
       cards = {
         revenueImpact: `${usd(totalProtect)} protected`,
-        inventoryImpact: `${reorder.length} products to reorder`,
+        inventoryImpact: `${productsToReorder} products to reorder`,
         riskLevel: reorder.some((r) => r.confidence >= 90) ? "CRITICAL" : reorder.length ? "HIGH" : "LOW",
         recommendedAction: reorder.length ? `Order ${reorder[0].product}` : "No action needed",
       };

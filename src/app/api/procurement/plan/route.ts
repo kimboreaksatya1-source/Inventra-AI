@@ -6,6 +6,8 @@ import {
   buildProcurement,
   summarizeProcurement,
 } from "@/lib/procurement";
+import { buildForecastEvidence } from "@/lib/forecast-evidence";
+import { loadSalesStats } from "@/lib/data";
 import type { ProcurementPlanResponse } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +25,12 @@ export async function POST() {
     if (!snap) return NextResponse.json({ error: "No business data" }, { status: 409 });
 
     const result = buildProcurement(snap.analysis);
+    const noCost = !snap.analysis.dataQuality?.hasCostData;
+    const costCaveat = noCost
+      ? " No cost prices were imported, so purchase cost is shown as “n/a” — it is not estimated."
+      : "";
 
-    let summary = buildDeterministicPurchaseSummary(result);
+    let summary = buildDeterministicPurchaseSummary(result) + costCaveat;
     let source: "ai" | "deterministic" = "deterministic";
 
     if (isAIConfigured() && result.plan.length > 0) {
@@ -35,7 +41,14 @@ export async function POST() {
           temperature: 0.4,
           messages: [
             { role: "system", content: SYSTEM },
-            { role: "user", content: summarizeProcurement(result) },
+            {
+              role: "user",
+              content:
+                summarizeProcurement(result) +
+                (noCost
+                  ? "\n\nNOTE: no cost prices were imported. Do NOT state a purchase cost or estimate one — say cost is unavailable."
+                  : ""),
+            },
           ],
         });
         const text = completion.choices[0]?.message?.content?.trim();
@@ -51,6 +64,8 @@ export async function POST() {
     return NextResponse.json({
       plan: result.plan,
       kpis: result.kpis,
+      dataQuality: snap.analysis.dataQuality,
+      forecast: buildForecastEvidence(snap.analysis, result, await loadSalesStats()),
       summary,
       source,
     } satisfies ProcurementPlanResponse);

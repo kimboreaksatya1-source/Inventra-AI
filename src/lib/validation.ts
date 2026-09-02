@@ -73,10 +73,10 @@ export function validateRows(rows: RawRow[]): RowValidation[] {
 export const importRowSchema = z.object({
   name: z.string().min(1).max(200),
   category: z.string().min(1).max(120),
-  stock: z.number().int().min(0),
-  dailySales: z.number().min(0),
-  sellingPrice: z.number().positive(),
-  costPrice: z.number().min(0),
+  stock: z.number().int().min(0).max(100_000_000),
+  dailySales: z.number().min(0).max(1_000_000),
+  sellingPrice: z.number().positive().max(10_000_000),
+  costPrice: z.number().min(0).max(10_000_000),
 });
 
 export const importPayloadSchema = z.object({

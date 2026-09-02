@@ -105,7 +105,11 @@ export function exportBriefPdf(brief: BusinessBrief, business: string) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       y = ensureSpace(doc, y, 18, margin);
-      doc.text(`Expected revenue impact: ${money(o.expectedRevenueImpact)}`, margin, y);
+      doc.text(
+        `Modelled margin upside (~25% more orders): ${money(o.expectedRevenueImpact)}`,
+        margin,
+        y
+      );
       y += 20;
     });
   }

@@ -24,8 +24,10 @@ import { KpiCard } from "@/components/shared/kpi-card";
 import { KpiCardSkeleton, TableSkeleton } from "@/components/shared/skeletons";
 import { RecommendationChip, VelocityChip } from "@/components/shared/fmcg-chips";
 import { EmptyState } from "@/components/shared/empty-state";
+import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
+import { KPI } from "@/lib/kpi-glossary";
 import { useCashflow } from "@/lib/queries";
 
 export function CashflowClient() {
@@ -71,6 +73,10 @@ export function CashflowClient() {
     );
   }
 
+  if (!dataAvailability(data.dataQuality, "cashflow").available) {
+    return <DataRequiredState dq={data.dataQuality} feature="cashflow" />;
+  }
+
   const k = data.kpis;
   const total = k.totalInventoryValue || 1;
   const seg = [
@@ -81,38 +87,46 @@ export function CashflowClient() {
 
   return (
     <div className="space-y-6">
+      <DataQualityBanner dq={data.dataQuality} />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <KpiCard
-          label="Total Inventory Value"
+          label={KPI.totalInventoryValue.label}
           value={formatCurrency(k.totalInventoryValue)}
           icon={Wallet}
           accent="charcoal"
+          hint="at cost price"
+          note={KPI.totalInventoryValue.note}
         />
         <KpiCard
           label="Cash Locked in Slow Moving"
           value={formatCurrency(k.slowMovingValue)}
           icon={Lock}
           accent="amber"
+          hint="cost of stock with slow velocity"
         />
         <KpiCard
-          label="Cash Locked %"
+          label={KPI.cashLockedPct.label}
           value={`${Math.round(k.cashLockedPct * 100)}%`}
           icon={Percent}
           accent="amber"
-          hint={`${formatCurrency(k.cashLocked)} slow + dead`}
+          hint={`${formatCurrency(k.cashLocked)} slow + dead, of inventory value`}
+          note={KPI.cashLockedPct.note}
         />
         <KpiCard
-          label="Revenue at Risk"
+          label={KPI.revenueAtRisk.label}
           value={formatCurrency(k.revenueAtRisk)}
           icon={TrendingDown}
           accent="red"
+          hint="stockout exposure, next 30 days"
+          note={`${KPI.revenueAtRisk.note} Shown here for context — it is separate from capital locked in stock.`}
         />
         <KpiCard
-          label="Working Capital Health"
+          label={KPI.workingCapitalHealth.label}
           value={`${k.workingCapitalHealth}/100`}
           icon={Coins}
           accent={k.workingCapitalHealth >= 70 ? "emerald" : k.workingCapitalHealth >= 55 ? "amber" : "red"}
-          hint={k.workingCapitalLabel}
+          hint={`${k.workingCapitalLabel} · ${KPI.workingCapitalHealthShort}`}
+          note={KPI.workingCapitalHealth.note}
         />
       </div>
 
