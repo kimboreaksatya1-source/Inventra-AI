@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { bustActionStates } from "@/lib/action-state";
+import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ key: string }> }
 ) {
+  const userId = await getSessionUserId();
+  if (!userId) return unauthorized();
   const { key } = await params;
   const actionKey = decodeURIComponent(key);
   const parsed = patchSchema.safeParse(await req.json().catch(() => null));
@@ -26,8 +29,9 @@ export async function PATCH(
 
   try {
     const row = await db.actionState.upsert({
-      where: { actionKey },
+      where: { userId_actionKey: { userId, actionKey } },
       create: {
+        userId,
         actionKey,
         status,
         note: note ?? null,
@@ -41,7 +45,7 @@ export async function PATCH(
         ...(category !== undefined ? { category } : {}),
       },
     });
-    bustActionStates();
+    bustActionStates(userId);
     return NextResponse.json({
       ok: true,
       state: { actionKey: row.actionKey, status: row.status, note: row.note },

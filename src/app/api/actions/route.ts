@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActionStates } from "@/lib/action-state";
 import { getSnapshot } from "@/lib/snapshot";
+import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
 import type {
   ActionCenterPayload,
   ActionStatus,
@@ -20,7 +21,9 @@ const EMPTY_GROUPS = (): Record<Priority, BusinessAction[]> => ({
 
 export async function GET() {
   try {
-    const [snap, states] = await Promise.all([getSnapshot(), getActionStates()]);
+    const userId = await getSessionUserId();
+    if (!userId) return unauthorized();
+    const [snap, states] = await Promise.all([getSnapshot(userId), getActionStates(userId)]);
     const stateByKey = new Map(states.map((s) => [s.actionKey, s]));
 
     if (!snap) {

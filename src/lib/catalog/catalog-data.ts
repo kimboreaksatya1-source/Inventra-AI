@@ -4,25 +4,13 @@ import { db } from "../db";
 import { getSnapshot } from "../snapshot";
 import type { CatalogPayload, CatalogProduct } from "../types";
 
-export async function loadCatalog(): Promise<CatalogPayload> {
-  const user = await db.user.findFirst({ orderBy: { createdAt: "asc" } });
-  if (!user) {
-    return {
-      hasData: false,
-      products: [],
-      productCount: 0,
-      categoryCount: 0,
-      categories: [],
-      brands: [],
-    };
-  }
-
+export async function loadCatalog(userId: string): Promise<CatalogPayload> {
   const [rows, snap] = await Promise.all([
     db.product.findMany({
-      where: { userId: user.id },
+      where: { userId },
       orderBy: [{ category: "asc" }, { name: "asc" }],
     }),
-    getSnapshot().catch(() => null),
+    getSnapshot(userId).catch(() => null),
   ]);
 
   const fmcgById = new Map(

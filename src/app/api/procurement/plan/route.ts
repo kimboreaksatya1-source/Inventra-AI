@@ -8,6 +8,7 @@ import {
 } from "@/lib/procurement";
 import { buildForecastEvidence } from "@/lib/forecast-evidence";
 import { loadSalesStats } from "@/lib/data";
+import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
 import type { ProcurementPlanResponse } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,9 @@ Khmer names in Khmer, never translate. Plain prose, no lists, no headings.`;
 
 export async function POST() {
   try {
-    const snap = await getSnapshot();
+    const userId = await getSessionUserId();
+    if (!userId) return unauthorized();
+    const snap = await getSnapshot(userId);
     if (!snap) return NextResponse.json({ error: "No business data" }, { status: 409 });
 
     const result = buildProcurement(snap.analysis);
@@ -65,7 +68,7 @@ export async function POST() {
       plan: result.plan,
       kpis: result.kpis,
       dataQuality: snap.analysis.dataQuality,
-      forecast: buildForecastEvidence(snap.analysis, result, await loadSalesStats()),
+      forecast: buildForecastEvidence(snap.analysis, result, await loadSalesStats(userId)),
       summary,
       source,
     } satisfies ProcurementPlanResponse);

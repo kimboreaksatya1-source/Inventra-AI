@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
 import type { ChatSessionSummary, CopilotLanguage } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    const userId = await getSessionUserId();
+    if (!userId) return unauthorized();
     const sessions = await db.chatSession.findMany({
+      where: { userId },
       orderBy: { updatedAt: "desc" },
       include: { _count: { select: { messages: true } } },
     });
@@ -32,6 +36,8 @@ const createSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const userId = await getSessionUserId();
+    if (!userId) return unauthorized();
     const body = await req.json().catch(() => ({}));
     const parsed = createSchema.safeParse(body);
     if (!parsed.success) {
@@ -39,6 +45,7 @@ export async function POST(req: Request) {
     }
     const session = await db.chatSession.create({
       data: {
+        userId,
         language: parsed.data.language,
         ...(parsed.data.title ? { title: parsed.data.title } : {}),
       },

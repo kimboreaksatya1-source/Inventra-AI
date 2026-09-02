@@ -2,9 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { FlowNav } from "./flow-nav";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { UserMenu } from "@/components/auth/user-menu";
+import { auth } from "@/auth";
 import { cn } from "@/lib/utils";
 
-export function AppShell({
+export async function AppShell({
   children,
   /** Full-bleed content: no max-width, no padding, no footer (for the Copilot workspace). */
   bleed = false,
@@ -12,6 +14,7 @@ export function AppShell({
   children: React.ReactNode;
   bleed?: boolean;
 }) {
+  const session = await auth();
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -30,8 +33,9 @@ export function AppShell({
             </span>
           </Link>
           <FlowNav />
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <ThemeToggle />
+            {session?.user ? <UserMenu user={session.user} /> : null}
           </div>
         </div>
       </header>

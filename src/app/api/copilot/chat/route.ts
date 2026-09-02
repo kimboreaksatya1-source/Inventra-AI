@@ -12,6 +12,7 @@ import {
 } from "@/lib/copilot";
 import { STREAM_SEP as SEP } from "@/lib/copilot/parse";
 import { checkGrounding, type GroundingOptions } from "@/lib/copilot/grounding";
+import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
 import type {
   CopilotInsightCards,
   CopilotReorderItem,
@@ -33,14 +34,17 @@ function sleep(ms: number) {
 }
 
 export async function POST(req: Request) {
+  const userId = await getSessionUserId();
+  if (!userId) return unauthorized();
+
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return Response.json({ error: "Invalid request" }, { status: 422 });
   }
   const { sessionId, message, language } = parsed.data;
 
-  const session = await db.chatSession.findUnique({
-    where: { id: sessionId },
+  const session = await db.chatSession.findFirst({
+    where: { id: sessionId, userId },
     include: { messages: { orderBy: { createdAt: "asc" } } },
   });
   if (!session) {
@@ -57,7 +61,7 @@ export async function POST(req: Request) {
     data: { sessionId, role: "user", content: message, language },
   });
 
-  const snap = await getSnapshot();
+  const snap = await getSnapshot(userId);
   const EMPTY_CONTEXT: CopilotContext = {
     business: "Your Business",
     hasData: false,

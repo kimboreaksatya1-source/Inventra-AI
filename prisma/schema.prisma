@@ -11,16 +11,67 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-/// A business owner / shop account
+/// A business owner / shop account. Created by Auth.js on first Google sign-in.
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String
-  businessName String
-  avatarUrl   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  products    Product[]
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  businessName  String?
+  emailVerified DateTime?
+  image         String?
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  products      Product[]
+  chatSessions  ChatSession[]
+  importBatches ImportBatch[]
+  scenarios     Scenario[]
+  actionStates  ActionState[]
+  snapshot      Snapshot?
+}
+
+/// Auth.js — a linked OAuth account (Google).
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+/// Auth.js — a database session (unused with the JWT strategy, but the adapter requires the model).
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Auth.js — email verification token (unused with OAuth-only, but the adapter requires the model).
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 /// A product / SKU in the store catalog
@@ -50,6 +101,8 @@ model Product {
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   sales          Sale[]
   recommendations Recommendation[]
+
+  @@index([userId])
 }
 
 /// A sales transaction line (one product, a quantity sold on a given day)
@@ -82,13 +135,15 @@ model Recommendation {
 /// A Copilot conversation thread
 model ChatSession {
   id        String        @id @default(cuid())
+  userId    String
   title     String        @default("New conversation")
   language  String        @default("en") // en | km
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages  ChatMessage[]
 
-  @@index([updatedAt])
+  @@index([userId, updatedAt])
 }
 
 /// A single Copilot message (user or assistant), with structured payload
@@ -109,26 +164,32 @@ model ChatMessage {
 /// One business-data import batch (CSV / Excel upload)
 model ImportBatch {
   id        String   @id @default(cuid())
+  userId    String
   fileName  String
   rowCount  Int
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 /// A saved what-if scenario from the Scenario Simulator
 model Scenario {
   id        String   @id @default(cuid())
+  userId    String
   name      String
   params    Json     // ScenarioParams
   result    Json     // SimulationResult
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
-/// Precomputed analysis + AI outputs — one singleton row, rebuilt on data change.
+/// Precomputed analysis + AI outputs — one row per user, rebuilt on data change.
 model Snapshot {
   id              String   @id @default(cuid())
-  key             String   @unique @default("singleton")
+  userId          String   @unique
   dataHash        String   @default("")
   business        String   @default("")
   productCount    Int      @default(0)
@@ -143,18 +204,22 @@ model Snapshot {
   aiStale         Boolean  @default(true)
   computedAt      DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 /// Per-action status for the AI Action Center (keyed by a stable action identity)
 model ActionState {
   id          String   @id @default(cuid())
-  actionKey   String   @unique
+  userId      String
+  actionKey   String
   status      String   @default("open") // open | saved | completed | dismissed
   note        String?
   impactValue Float    @default(0)
   category    String   @default("")
   updatedAt   DateTime @updatedAt
   createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([status])
+  @@unique([userId, actionKey])
+  @@index([userId, status])
 }

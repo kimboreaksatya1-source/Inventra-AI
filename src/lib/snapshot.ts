@@ -1,4 +1,4 @@
-// Inventra AI — precomputed pipeline snapshot.
+// Inventra AI — precomputed pipeline snapshot, one row per user.
 // The analysis / brief / action-drafts / copilot-context are computed once on data
 // change and served from here. AI narration is refreshed in the background.
 
@@ -20,7 +20,6 @@ import type {
   InventoryAnalysis,
 } from "./types";
 
-const KEY = "singleton";
 const MEM_TTL = 5 * 60_000;
 /** Bump when the shape of analysis/brief/context changes so stale rows rebuild. */
 const SNAPSHOT_VERSION = "fmcg-6";
@@ -39,8 +38,8 @@ export interface Snapshot {
   aiStale: boolean;
 }
 
-let mem: { snap: Snapshot; at: number } | null = null;
-let aiInFlight = false;
+const mem = new Map<string, { snap: Snapshot; at: number }>();
+const aiInFlight = new Set<string>();
 
 function dataHash(products: { id: string; stock: number; dailySales: number; sellingPrice: number; costPrice: number; name: string }[]): string {
   let h = 2166136261;
@@ -82,36 +81,40 @@ function rowToSnapshot(row: {
   };
 }
 
-/** Fast read: memory → DB row → rebuild. Returns null only when there is no data at all. */
-export async function getSnapshot(): Promise<Snapshot | null> {
-  if (mem && Date.now() - mem.at < MEM_TTL) return mem.snap;
+/** Fast read: memory → DB row → rebuild. Returns null only when the user has no data at all. */
+export async function getSnapshot(userId: string): Promise<Snapshot | null> {
+  const cached = mem.get(userId);
+  if (cached && Date.now() - cached.at < MEM_TTL) return cached.snap;
 
   const [row, count] = await Promise.all([
-    db.snapshot.findUnique({ where: { key: KEY } }),
-    db.product.count(),
+    db.snapshot.findUnique({ where: { userId } }),
+    db.product.count({ where: { userId } }),
   ]);
 
   if (count === 0) {
-    mem = null;
+    mem.delete(userId);
     return null;
   }
   const versionOk = row?.dataHash?.startsWith(`${SNAPSHOT_VERSION}:`) ?? false;
   if (row && row.productCount === count && versionOk) {
     const snap = rowToSnapshot(row);
-    mem = { snap, at: Date.now() };
-    if (snap.aiStale) void refreshSnapshotAI();
+    mem.set(userId, { snap, at: Date.now() });
+    if (snap.aiStale) void refreshSnapshotAI(userId);
     return snap;
   }
-  return rebuildSnapshot();
+  return rebuildSnapshot(userId);
 }
 
-/** Pure compute + persist. Fires the background AI refresh unless `refreshAI: false`. */
-export async function rebuildSnapshot(opts?: { refreshAI?: boolean }): Promise<Snapshot | null> {
+/** Pure compute + persist for one user. Fires the background AI refresh unless `refreshAI: false`. */
+export async function rebuildSnapshot(
+  userId: string,
+  opts?: { refreshAI?: boolean }
+): Promise<Snapshot | null> {
   const wantAI = opts?.refreshAI !== false;
-  const { business, products } = await loadProductsLite();
+  const { business, products } = await loadProductsLite(userId);
   if (products.length === 0) {
-    mem = null;
-    await db.snapshot.deleteMany();
+    mem.delete(userId);
+    await db.snapshot.deleteMany({ where: { userId } });
     return null;
   }
 
@@ -136,42 +139,29 @@ export async function rebuildSnapshot(opts?: { refreshAI?: boolean }): Promise<S
     aiStale: true,
   };
 
+  const common = {
+    dataHash: dataHash(products),
+    business,
+    productCount: products.length,
+    analysis: analysis as never,
+    brief: brief as never,
+    briefSource: "deterministic",
+    actionDrafts: drafts as never,
+    actionsBriefing,
+    briefingSource: "deterministic",
+    copilotContext: context as never,
+    promptBlock,
+    aiStale: true,
+  };
+
   await db.snapshot.upsert({
-    where: { key: KEY },
-    create: {
-      key: KEY,
-      dataHash: dataHash(products),
-      business,
-      productCount: products.length,
-      analysis: analysis as never,
-      brief: brief as never,
-      briefSource: "deterministic",
-      actionDrafts: drafts as never,
-      actionsBriefing,
-      briefingSource: "deterministic",
-      copilotContext: context as never,
-      promptBlock,
-      aiStale: true,
-    },
-    update: {
-      dataHash: dataHash(products),
-      business,
-      productCount: products.length,
-      analysis: analysis as never,
-      brief: brief as never,
-      briefSource: "deterministic",
-      actionDrafts: drafts as never,
-      actionsBriefing,
-      briefingSource: "deterministic",
-      copilotContext: context as never,
-      promptBlock,
-      aiStale: true,
-      computedAt: new Date(),
-    },
+    where: { userId },
+    create: { userId, ...common },
+    update: { ...common, computedAt: new Date() },
   });
 
-  mem = { snap, at: Date.now() };
-  if (wantAI) void refreshSnapshotAI();
+  mem.set(userId, { snap, at: Date.now() });
+  if (wantAI) void refreshSnapshotAI(userId);
   return snap;
 }
 
@@ -181,12 +171,12 @@ out), the single headline dollar figure, and a forward-looking close (e.g. slow 
 Refer to each product by the exact name and SKU in the summary — keep Khmer names in Khmer, never
 translate. No lists, no headings, plain prose.`;
 
-/** Background: generate the AI brief + AI action briefing, persist, refresh memory. */
-export async function refreshSnapshotAI(): Promise<void> {
-  if (aiInFlight || !isAIConfigured()) return;
-  aiInFlight = true;
+/** Background: generate the AI brief + AI action briefing for one user, persist, refresh memory. */
+export async function refreshSnapshotAI(userId: string): Promise<void> {
+  if (aiInFlight.has(userId) || !isAIConfigured()) return;
+  aiInFlight.add(userId);
   try {
-    const row = await db.snapshot.findUnique({ where: { key: KEY } });
+    const row = await db.snapshot.findUnique({ where: { userId } });
     if (!row) return;
     const snap = rowToSnapshot(row);
 
@@ -209,7 +199,7 @@ export async function refreshSnapshotAI(): Promise<void> {
       briefingResult.status === "fulfilled" && briefingResult.value ? "ai" : "deterministic";
 
     const updated = await db.snapshot.update({
-      where: { key: KEY },
+      where: { userId },
       data: {
         brief: brief as never,
         briefSource,
@@ -218,11 +208,11 @@ export async function refreshSnapshotAI(): Promise<void> {
         aiStale: false,
       },
     });
-    mem = { snap: rowToSnapshot(updated), at: Date.now() };
+    mem.set(userId, { snap: rowToSnapshot(updated), at: Date.now() });
   } catch (err) {
     console.error("[snapshot.refreshSnapshotAI] error", err);
   } finally {
-    aiInFlight = false;
+    aiInFlight.delete(userId);
   }
 }
 
@@ -251,11 +241,11 @@ async function generateActionsBriefing(snap: Snapshot): Promise<string> {
   }
 }
 
-/** Clear cache + row so the next read rebuilds. Call after any product-data write. */
-export async function invalidateSnapshot(): Promise<void> {
-  mem = null;
+/** Clear cache + row for one user so the next read rebuilds. Call after any product-data write. */
+export async function invalidateSnapshot(userId: string): Promise<void> {
+  mem.delete(userId);
   try {
-    await db.snapshot.deleteMany();
+    await db.snapshot.deleteMany({ where: { userId } });
   } catch (err) {
     console.error("[snapshot.invalidateSnapshot] error", err);
   }

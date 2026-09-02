@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
 import type { Prisma } from "@prisma/client";
 import type { SavedScenario } from "@/lib/types";
 
@@ -8,7 +9,9 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const rows = await db.scenario.findMany({ orderBy: { createdAt: "desc" }, take: 50 });
+    const userId = await getSessionUserId();
+    if (!userId) return unauthorized();
+    const rows = await db.scenario.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 50 });
     const scenarios: SavedScenario[] = rows.map((r) => ({
       id: r.id,
       name: r.name,
@@ -30,6 +33,8 @@ const createSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const userId = await getSessionUserId();
+  if (!userId) return unauthorized();
   const parsed = createSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request" }, { status: 422 });
@@ -37,6 +42,7 @@ export async function POST(req: Request) {
   try {
     const row = await db.scenario.create({
       data: {
+        userId,
         name: parsed.data.name,
         params: parsed.data.params as Prisma.InputJsonValue,
         result: parsed.data.result as Prisma.InputJsonValue,

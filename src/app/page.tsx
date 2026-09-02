@@ -13,6 +13,7 @@ import { latestImport } from "@/lib/import";
 import { getSnapshot } from "@/lib/snapshot";
 import { formatCurrency } from "@/lib/format";
 import { KPI } from "@/lib/kpi-glossary";
+import { requireAuth } from "@/lib/auth-helpers";
 
 export const dynamic = "force-dynamic";
 
@@ -24,10 +25,11 @@ const QUESTIONS = [
 ];
 
 export default async function HomePage() {
+  const user = await requireAuth();
   let hasData = false;
   let summary: Awaited<ReturnType<typeof getSummary>> | null = null;
   try {
-    summary = await getSummary();
+    summary = await getSummary(user.id);
     hasData = summary.totalProducts > 0;
   } catch {
     hasData = false;
@@ -137,8 +139,8 @@ export default async function HomePage() {
   );
 }
 
-async function getSummary() {
-  const [snap, lastImport] = await Promise.all([getSnapshot(), latestImport()]);
+async function getSummary(userId: string) {
+  const [snap, lastImport] = await Promise.all([getSnapshot(userId), latestImport(userId)]);
   return {
     healthScore: snap?.analysis.healthScore ?? 0,
     totalProducts: snap?.analysis.summary.totalProducts ?? 0,

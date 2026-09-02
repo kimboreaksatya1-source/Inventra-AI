@@ -38,11 +38,12 @@ cp .env.example .env
 # Fill in:
 #   DATABASE_URL   – Postgres pooler URL (port 6543, ?pgbouncer=true)
 #   DIRECT_URL     – Postgres direct/session URL (port 5432) for migrations
+#   AUTH_SECRET / AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET – Google OAuth (required)
 #   DEEPSEEK_API_KEY – optional
 
-bun run db:push        # sync schema
+bun run db:migrate     # apply migrations
 bun run db:generate    # generate Prisma client
-bun run dev            # http://localhost:3000
+bun run dev            # http://localhost:3000  → sign in with Google
 ```
 
 Try it with [`samples/products-sample.csv`](samples/products-sample.csv).
@@ -61,14 +62,17 @@ Try it with [`samples/products-sample.csv`](samples/products-sample.csv).
 ```
 deploy/            Caddyfile (self-hosted / standalone deployment)
 docs/              project report, founder cheat sheet, work log, design/ decks
-prisma/            schema
+prisma/            schema + migrations
 samples/           products-sample.csv
-scripts/           seed.ts — demo catalog
 src/
+  auth.ts          Auth.js v5 entrypoint (Prisma adapter, Node runtime)
+  auth.config.ts   edge-safe auth config (providers, callbacks) — used by middleware
+  middleware.ts    route protection — everything but /login + /api/auth requires a session
   app/             App Router pages + api/ route handlers
-  components/       feature UI (upload/, brief/, revenue-risk/, copilot/, …) + ui/ (shadcn)
+  components/       feature UI (upload/, brief/, revenue-risk/, copilot/, auth/, …) + ui/ (shadcn)
   hooks/
   lib/
+    auth-helpers.ts requireAuth() / getSessionUserId() guards
     analysis.ts    the engine (days remaining, revenue at risk, health score)
     brief.ts       AI brief + deterministic fallback
     validation.ts  Zod + row validation
@@ -86,5 +90,5 @@ src/
 | `bun run dev` | Dev server (webpack) on port 3000 |
 | `bun run build` | Production build |
 | `bun run lint` | ESLint |
-| `bun run db:push` / `db:generate` | Prisma schema sync / client |
-| `bun run scripts/seed.ts` | Seed a demo catalog |
+| `bun run db:migrate` / `db:generate` | Prisma migrations / client |
+| `bun run db:reset` | Drop + replay migrations (dev only) |

@@ -8,6 +8,7 @@ import {
   simulateScenario,
   summarizeForPrompt,
 } from "@/lib/simulator";
+import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
 import type { AnalysisInput } from "@/lib/analysis";
 import type { SimulationExplanation } from "@/lib/types";
 
@@ -52,6 +53,8 @@ function toInputs(snap: NonNullable<Awaited<ReturnType<typeof getSnapshot>>>): A
 }
 
 export async function POST(req: Request) {
+  const userId = await getSessionUserId();
+  if (!userId) return unauthorized();
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request" }, { status: 422 });
@@ -59,7 +62,7 @@ export async function POST(req: Request) {
   const params = normalizeParams(parsed.data.params);
 
   try {
-    const snap = await getSnapshot();
+    const snap = await getSnapshot(userId);
     if (!snap || snap.analysis.products.length === 0) {
       return NextResponse.json({ error: "No business data" }, { status: 409 });
     }
@@ -91,7 +94,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("[/api/simulator/explain] error", err);
     try {
-      const snap = await getSnapshot();
+      const snap = await getSnapshot(userId);
       if (snap) {
         const result = simulateScenario(toInputs(snap), params);
         return NextResponse.json({

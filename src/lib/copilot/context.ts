@@ -2,9 +2,6 @@
 // Assembles the owner's real business data into (a) a structured object for the
 // right-hand panel and (b) a compact plaintext block injected into every AI request.
 
-import { loadProductsLite } from "../data";
-import { analyzeInventory } from "../analysis";
-import { buildDeterministicBrief } from "../brief";
 import { buildProcurement } from "../procurement";
 import { buildCashflow } from "../cashflow";
 import { buildEvidence, evidenceForPrompt } from "./evidence";
@@ -18,18 +15,6 @@ function usd(n: number): string {
 
 function days(n: number): string {
   return Number.isFinite(n) ? `${n.toFixed(1)}` : "30+";
-}
-
-/** DB-loading wrapper — kept as a fallback; hot routes use buildCopilotContextFrom + the snapshot. */
-export async function buildCopilotContext(): Promise<{
-  context: CopilotContext;
-  promptBlock: string;
-}> {
-  const { business, products } = await loadProductsLite();
-  if (products.length === 0) return emptyContext(business);
-  const analysis = analyzeInventory(products, business);
-  const brief = buildDeterministicBrief(analysis);
-  return buildCopilotContextFrom(analysis, brief, business);
 }
 
 function emptyContext(business: string): { context: CopilotContext; promptBlock: string } {

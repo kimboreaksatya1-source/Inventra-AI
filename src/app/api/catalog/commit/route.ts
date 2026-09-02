@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { commitCatalog } from "@/lib/import";
+import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
 import type { ReviewProduct } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +46,8 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const userId = await getSessionUserId();
+  if (!userId) return unauthorized();
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request", issues: parsed.error.issues }, { status: 422 });
@@ -56,7 +59,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await commitCatalog(parsed.data.fileName, parsed.data.products as ReviewProduct[]);
+    const result = await commitCatalog(userId, parsed.data.fileName, parsed.data.products as ReviewProduct[]);
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     console.error("[/api/catalog/commit] error", err);

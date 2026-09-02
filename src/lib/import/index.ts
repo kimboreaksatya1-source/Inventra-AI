@@ -2,28 +2,17 @@
 // Persists the user's imported product rows exactly as reviewed. It does NOT
 // synthesize a sales history: the analysis engine works from Product.dailySales
 // directly, and inventing per-day Sale rows the user never provided would be
-// fabricated business data. Seed/demo data is populated separately (mock-data.ts).
+// fabricated business data.
 
 import { db } from "../db";
 import { invalidateSnapshot, rebuildSnapshot } from "../snapshot";
 import type { ImportPayload } from "../validation";
 import type { ReviewProduct } from "../types";
 
-const OWNER_EMAIL = "owner@inventra.local";
-
 /** Non-finite / out-of-range → a safe integer inside [lo, hi]. */
 function clampInt(n: number, lo: number, hi: number): number {
   if (!Number.isFinite(n)) return lo;
   return Math.min(hi, Math.max(lo, Math.round(n)));
-}
-
-/** Single-tenant: reuse the existing account, or create the default owner. */
-async function resolveOwner() {
-  const existing = await db.user.findFirst({ orderBy: { createdAt: "asc" } });
-  if (existing) return existing;
-  return db.user.create({
-    data: { email: OWNER_EMAIL, name: "Owner", businessName: "My Business" },
-  });
 }
 
 export interface CommitResult {
@@ -32,89 +21,94 @@ export interface CommitResult {
   business: string;
 }
 
-export async function commitImport(payload: ImportPayload): Promise<CommitResult> {
-  const user = await resolveOwner();
+export async function commitImport(
+  userId: string,
+  payload: ImportPayload
+): Promise<CommitResult> {
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error("User not found");
 
-  // Replace the catalog — Product cascade removes Sale + Recommendation rows.
-  await db.product.deleteMany({ where: { userId: user.id } });
+  // Replace the catalog atomically — a mid-commit failure must never leave the
+  // user with a deleted catalog and no rows.
+  const [, created, batch] = await db.$transaction([
+    db.product.deleteMany({ where: { userId } }),
+    db.product.createManyAndReturn({
+      data: payload.rows.map((r) => ({
+        userId,
+        name: r.name,
+        category: r.category,
+        stockQuantity: clampInt(r.stock, 0, 100_000_000),
+        dailySales: Number.isFinite(r.dailySales) ? Math.min(Math.max(0, r.dailySales), 1_000_000) : 0,
+        sellingPrice: Math.min(Math.max(0.01, r.sellingPrice), 10_000_000),
+        costPrice: Number.isFinite(r.costPrice) ? Math.min(Math.max(0, r.costPrice), 10_000_000) : 0,
+        reorderPoint: clampInt((Number.isFinite(r.dailySales) ? r.dailySales : 0) * 7, 1, 100_000_000),
+        unit: "unit",
+      })),
+      select: { id: true },
+    }),
+    db.importBatch.create({
+      data: { userId, fileName: payload.fileName, rowCount: payload.rows.length },
+    }),
+  ]);
 
-  const created = await db.product.createManyAndReturn({
-    data: payload.rows.map((r) => ({
-      userId: user.id,
-      name: r.name,
-      category: r.category,
-      stockQuantity: clampInt(r.stock, 0, 100_000_000),
-      dailySales: Number.isFinite(r.dailySales) ? Math.min(Math.max(0, r.dailySales), 1_000_000) : 0,
-      sellingPrice: Math.min(r.sellingPrice, 10_000_000),
-      costPrice: Number.isFinite(r.costPrice) ? Math.min(Math.max(0, r.costPrice), 10_000_000) : 0,
-      reorderPoint: clampInt((Number.isFinite(r.dailySales) ? r.dailySales : 0) * 7, 1, 100_000_000),
-      unit: "unit",
-    })),
-    select: { id: true, dailySales: true },
-  });
+  await invalidateSnapshot(userId);
+  await rebuildSnapshot(userId);
 
-  const batch = await db.importBatch.create({
-    data: { fileName: payload.fileName, rowCount: created.length },
-  });
-
-  await invalidateSnapshot();
-  await rebuildSnapshot();
-
-  return { imported: created.length, batchId: batch.id, business: user.businessName };
+  return { imported: created.length, batchId: batch.id, business: user.businessName ?? "Your Business" };
 }
 
-export async function latestImport() {
-  return db.importBatch.findFirst({ orderBy: { createdAt: "desc" } });
+export async function latestImport(userId: string) {
+  return db.importBatch.findFirst({ where: { userId }, orderBy: { createdAt: "desc" } });
 }
 
 /** Commit reviewed catalog products (Phase 5 import flow). */
 export async function commitCatalog(
+  userId: string,
   fileName: string,
   products: ReviewProduct[]
 ): Promise<CommitResult> {
   const keep = products.filter((p) => p.status !== "ignored");
 
-  const user = await resolveOwner();
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error("User not found");
 
-  await db.product.deleteMany({ where: { userId: user.id } });
+  const [, created, batch] = await db.$transaction([
+    db.product.deleteMany({ where: { userId } }),
+    db.product.createManyAndReturn({
+      data: keep.map((p) => ({
+        userId,
+        name: p.originalName, // never overwrite the uploaded name
+        canonicalName: p.canonicalName || p.originalName,
+        aliases: p.aliases ?? [],
+        brand: p.brand || null,
+        category: p.category || "Other",
+        sku: p.sku,
+        productCode: p.productCode ?? p.sku,
+        barcode: p.barcode ?? null,
+        confidenceScore: Math.round(p.confidence * 100) / 100,
+        isAutoGenerated: p.source !== "manual",
+        // Transparency: keep how this product was recognised, for the catalog + audit.
+        recognitionMethod: p.evidence?.method ?? (p.source === "manual" ? "manual" : ""),
+        recognitionReason:
+          p.evidence?.reason ??
+          (p.source === "manual" ? "Entered / edited by hand during review." : ""),
+        // Clamp to a DB-safe range — a bad import can never overflow the column or crash the commit.
+        stockQuantity: clampInt(p.stock, 0, 100_000_000),
+        // Missing sales / cost are stored as 0 and NEVER estimated. Downstream
+        // features that need them are disabled, not fed a fabricated number.
+        dailySales: Number.isFinite(p.dailySales) && p.dailySales > 0 ? Math.min(p.dailySales, 1_000_000) : 0,
+        sellingPrice: Number.isFinite(p.sellingPrice) && p.sellingPrice > 0 ? Math.min(p.sellingPrice, 10_000_000) : 0.01,
+        costPrice: Number.isFinite(p.costPrice) && p.costPrice > 0 ? Math.min(p.costPrice, 10_000_000) : 0,
+        reorderPoint: clampInt((Number.isFinite(p.dailySales) ? p.dailySales : 0) * 7, 1, 100_000_000),
+        unit: "unit",
+      })),
+      select: { id: true },
+    }),
+    db.importBatch.create({ data: { userId, fileName, rowCount: keep.length } }),
+  ]);
 
-  const created = await db.product.createManyAndReturn({
-    data: keep.map((p) => ({
-      userId: user.id,
-      name: p.originalName, // never overwrite the uploaded name
-      canonicalName: p.canonicalName || p.originalName,
-      aliases: p.aliases ?? [],
-      brand: p.brand || null,
-      category: p.category || "Other",
-      sku: p.sku,
-      productCode: p.productCode ?? p.sku,
-      barcode: p.barcode ?? null,
-      confidenceScore: Math.round(p.confidence * 100) / 100,
-      isAutoGenerated: p.source !== "manual",
-      // Transparency: keep how this product was recognised, for the catalog + audit.
-      recognitionMethod: p.evidence?.method ?? (p.source === "manual" ? "manual" : ""),
-      recognitionReason:
-        p.evidence?.reason ??
-        (p.source === "manual" ? "Entered / edited by hand during review." : ""),
-      // Clamp to a DB-safe range — a bad import can never overflow the column or crash the commit.
-      stockQuantity: clampInt(p.stock, 0, 100_000_000),
-      // Missing sales / cost are stored as 0 and NEVER estimated. Downstream
-      // features that need them are disabled, not fed a fabricated number.
-      dailySales: Number.isFinite(p.dailySales) && p.dailySales > 0 ? Math.min(p.dailySales, 1_000_000) : 0,
-      sellingPrice: Number.isFinite(p.sellingPrice) && p.sellingPrice > 0 ? Math.min(p.sellingPrice, 10_000_000) : 0.01,
-      costPrice: Number.isFinite(p.costPrice) && p.costPrice > 0 ? Math.min(p.costPrice, 10_000_000) : 0,
-      reorderPoint: clampInt((Number.isFinite(p.dailySales) ? p.dailySales : 0) * 7, 1, 100_000_000),
-      unit: "unit",
-    })),
-    select: { id: true, dailySales: true },
-  });
+  await invalidateSnapshot(userId);
+  await rebuildSnapshot(userId);
 
-  const batch = await db.importBatch.create({
-    data: { fileName, rowCount: created.length },
-  });
-
-  await invalidateSnapshot();
-  await rebuildSnapshot();
-
-  return { imported: created.length, batchId: batch.id, business: user.businessName };
+  return { imported: created.length, batchId: batch.id, business: user.businessName ?? "Your Business" };
 }

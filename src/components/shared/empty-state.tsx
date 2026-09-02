@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Sparkles, CheckCircle2, BellOff, Inbox } from "lucide-react";
+import { Sparkles, CheckCircle2, BellOff, Inbox, type LucideIcon } from "lucide-react";
 
 export function EmptyState({
   icon: Icon = Inbox,
@@ -11,7 +11,7 @@ export function EmptyState({
   tone = "neutral",
   className,
 }: {
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: LucideIcon;
   title: string;
   description?: string;
   action?: React.ReactNode;

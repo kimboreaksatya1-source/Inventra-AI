@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { confidenceLabel, mergeDuplicates, recognizeProducts } from "@/lib/catalog/recognize";
 import { assignSkus } from "@/lib/catalog/sku";
+import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
 import type { RecognitionEvidence, RecognizeResponse, ReviewProduct, ReviewStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
+  if (!(await getSessionUserId())) return unauthorized();
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request", issues: parsed.error.issues }, { status: 422 });
