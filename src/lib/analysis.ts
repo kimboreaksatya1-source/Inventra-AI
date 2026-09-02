@@ -153,8 +153,8 @@ function clamp(n: number): number {
 }
 
 export function healthLabel(score: number): string {
-  if (score >= 85) return "Excellent";
-  if (score >= 70) return "Healthy";
+  if (score >= 85) return "Strong";
+  if (score >= 70) return "Stable";
   if (score >= 55) return "Needs Attention";
   if (score > 0) return "At Risk";
   return "No Data";
@@ -261,6 +261,11 @@ export function analyzeInventory(
     Math.round(analyzed.reduce((s, p) => s + p.estimatedRevenueAtRisk, 0) * 100) / 100;
   const totalInventoryValue =
     Math.round(analyzed.reduce((s, p) => s + p.inventoryValue, 0) * 100) / 100;
+  const dailyGrossMargin =
+    Math.round(analyzed.reduce((s, p) => s + Math.max(0, p.unitMargin) * p.dailySales, 0) * 100) / 100;
+  const weeklyGrossMargin = dailyGrossMargin * 7;
+  const grossMarginPct =
+    totalWeekly > 0 ? Math.round((weeklyGrossMargin / totalWeekly) * 100) : 0;
 
   const summaryBase = {
     totalProducts: analyzed.length,
@@ -278,6 +283,8 @@ export function analyzeInventory(
     monitorCount: count((p) => p.recommendation === "Monitor"),
     opportunityCount: count((p) => p.recommendation === "Opportunity"),
     totalWeeklyRevenue: Math.round(totalWeekly),
+    dailyGrossMargin,
+    grossMarginPct,
   };
 
   const summary: AnalysisSummary = {

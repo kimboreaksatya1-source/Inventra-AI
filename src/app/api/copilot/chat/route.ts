@@ -7,6 +7,7 @@ import type { CopilotContext } from "@/lib/types";
 import {
   buildDeterministicReply,
   buildMessages,
+  classify,
   parseStructuredTail,
   streamCopilotReply,
 } from "@/lib/copilot";
@@ -33,6 +34,13 @@ function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+/**
+ * Intents where the deterministic answer is authoritative and must never vary:
+ * the core SME questions. Answered without calling the model at all — instant,
+ * identical every time, works offline.
+ */
+const DETERMINISTIC_INTENTS = new Set(["reorder", "bestsellers", "stopordering", "profit"]);
+
 export async function POST(req: Request) {
   const userId = await getSessionUserId();
   if (!userId) return unauthorized();
@@ -42,6 +50,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid request" }, { status: 422 });
   }
   const { sessionId, message, language } = parsed.data;
+  const isKm = language === "km";
 
   const session = await db.chatSession.findFirst({
     where: { id: sessionId, userId },
@@ -123,7 +132,14 @@ export async function POST(req: Request) {
       };
 
       try {
-        if (fb.blocked || !isAIConfigured()) {
+        // Khmer answers and the core SME questions always use the deterministic
+        // engine: instant, identical every time, correct, and works offline.
+        const useDeterministic =
+          fb.blocked ||
+          !isAIConfigured() ||
+          isKm ||
+          DETERMINISTIC_INTENTS.has(classify(message));
+        if (useDeterministic) {
           await streamDeterministic();
         } else {
           let full = "";
@@ -153,10 +169,9 @@ export async function POST(req: Request) {
               "[/api/copilot/chat] ungrounded reply replaced —",
               [...g1.reasons, ...g2.reasons].join("; ")
             );
-            const noteText =
-              language === "km"
-                ? "\n\n_ខ្ញុំកំពុងជំនួសចម្លើយខាងលើដោយតួលេខផ្ទាល់ពីទិន្នន័យរបស់អ្នក៖_\n\n"
-                : "\n\n_Replacing the above with the figures straight from your data:_\n\n";
+            const noteText = isKm
+              ? "\n\n_ខ្ញុំកំពុងជំនួសចម្លើយខាងលើដោយតួលេខផ្ទាល់ពីទិន្នន័យរបស់អ្នក៖_\n\n"
+              : "\n\n_Replacing the above with the figures straight from your data:_\n\n";
             send(noteText + fb.content);
             cleanText = fb.content;
             insightCards = fb.insightCards;

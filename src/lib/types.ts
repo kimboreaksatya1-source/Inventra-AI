@@ -278,6 +278,10 @@ export interface AnalysisSummary {
   monitorCount: number;
   opportunityCount: number;
   totalWeeklyRevenue: number;
+  /** Σ(dailySales × unitMargin) — estimated gross margin per day at current velocity. */
+  dailyGrossMargin: number;
+  /** Blended gross-margin % of revenue across the catalog. */
+  grossMarginPct: number;
 }
 
 /**
@@ -512,11 +516,14 @@ export interface CopilotContext {
   revenueAtRisk: number;
   inventoryValue: number;
   dataQuality?: DataQuality;
-  criticalProducts: { name: string; contextName?: string; daysRemaining: number; revenueAtRisk: number }[];
-  overstockProducts: { name: string; contextName?: string; daysRemaining: number; inventoryValue: number }[];
+  revenueAtRiskMargin?: number; // margin portion of revenueAtRisk
+  dailyGrossMargin?: number;
+  grossMarginPct?: number;
+  criticalProducts: { name: string; contextName?: string; daysRemaining: number; revenueAtRisk: number; suggestedQuantity?: number; dailySales?: number; stock?: number }[];
+  overstockProducts: { name: string; contextName?: string; daysRemaining: number; inventoryValue: number; velocity?: string; dailySales?: number; pauseWeeks?: number }[];
   recommendedActions: RecommendedAction[];
   opportunities: { title: string; expectedRevenueImpact: number }[];
-  topSellers: { name: string; contextName?: string; dailySales: number; weeklyRevenue: number }[];
+  topSellers: { name: string; contextName?: string; dailySales: number; weeklyRevenue: number; velocity?: string; unitsPerWeek?: number }[];
   velocityMix?: { fast: number; medium: number; slow: number };
   recommendationMix?: { reorder: number; reduce: number; monitor: number; opportunity: number };
   categoryMix?: { category: string; weeklyRevenue: number; atRisk: number }[];
@@ -692,9 +699,12 @@ export interface BusinessAction {
   priority: Priority;
   category: ActionCategory;
   recommendation: string;
-  reason: string;
+  reason: string; // one joined sentence — used for the AI prompt
+  reasons: string[]; // display bullets ("84 units left", "Selling 42/day", …)
+  triggeredBy: string; // the exact rule + threshold that fired ("Why you're seeing this")
   expectedImpact: string;
   impactValue: number; // $ — positive = revenue protected / opportunity captured
+  marginImpact?: number; // $ — the margin portion of impactValue, when known
   confidence: number; // 0..100
   source: ActionSource[];
   productId?: string;

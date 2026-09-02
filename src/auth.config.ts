@@ -11,6 +11,10 @@ export const authConfig = {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      // Google verifies email ownership, so it is safe to attach a Google sign-in
+      // to a User row that already exists for that address — this lets us
+      // pre-seed the demo account and have it "just work" when the founder signs in.
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   pages: {

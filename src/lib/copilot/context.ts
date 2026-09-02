@@ -58,16 +58,37 @@ export function buildCopilotContextFrom(
       revenueAtRisk: Math.round(p.estimatedRevenueAtRisk),
     }));
 
+  const ovrTarget = (v: string) => (v === "Fast" ? 21 : v === "Medium" ? 30 : 45);
   const overstockProducts = analysis.products
-    .filter((p) => p.overstockRisk !== "Low" || p.recommendation === "Reduce")
-    .sort((a, b) => b.inventoryValue - a.inventoryValue)
-    .slice(0, 6)
+    .filter(
+      (p) =>
+        (p.dailySales === 0 && p.stock > 0) ||
+        (Number.isFinite(p.daysRemaining) && p.daysRemaining > ovrTarget(p.velocity) * 3)
+    )
     .map((p) => ({
-      name: shortLabel(p),
-      contextName: contextLabel(p),
-      daysRemaining: Number.isFinite(p.daysRemaining) ? Math.round(p.daysRemaining) : 999,
-      inventoryValue: Math.round(p.inventoryValue),
-    }));
+      p,
+      severity:
+        p.inventoryValue *
+        (p.dailySales === 0 ? 6 : Math.min(6, p.daysRemaining / ovrTarget(p.velocity))),
+    }))
+    .sort((a, b) => b.severity - a.severity)
+    .slice(0, 6)
+    .map(({ p }) => {
+      const coverDays = Number.isFinite(p.daysRemaining) ? Math.round(p.daysRemaining) : 999;
+      const target = ovrTarget(p.velocity);
+      return {
+        name: shortLabel(p),
+        contextName: contextLabel(p),
+        daysRemaining: coverDays,
+        inventoryValue: Math.round(p.inventoryValue),
+        velocity: p.dailySales === 0 ? "None" : p.velocity,
+        dailySales: Math.round(p.dailySales * 100) / 100,
+        pauseWeeks:
+          p.dailySales === 0
+            ? 8
+            : Math.max(2, Math.min(12, Math.round((coverDays - target) / 7))),
+      };
+    });
 
   const topSellers = [...analysis.products]
     .filter((p) => p.dailySales > 0)
@@ -78,6 +99,8 @@ export function buildCopilotContextFrom(
       contextName: contextLabel(p),
       dailySales: p.dailySales,
       weeklyRevenue: Math.round(p.dailySales * 7 * p.sellingPrice),
+      velocity: p.velocity,
+      unitsPerWeek: Math.round(p.dailySales * 7),
     }));
 
   const opportunities = brief.revenueOpportunities.map((o) => ({
@@ -100,6 +123,8 @@ export function buildCopilotContextFrom(
     healthLabel: s.healthLabel,
     revenueAtRisk: Math.round(s.totalRevenueAtRisk),
     inventoryValue: Math.round(s.totalInventoryValue),
+    dailyGrossMargin: Math.round(s.dailyGrossMargin),
+    grossMarginPct: s.grossMarginPct,
     dataQuality: dq,
     criticalProducts,
     overstockProducts,

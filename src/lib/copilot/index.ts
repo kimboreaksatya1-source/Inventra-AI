@@ -113,18 +113,50 @@ export async function* streamCopilotReply(
 
 /* --------------------------- deterministic ----------------------------- */
 
-export type Intent = "why" | "reorder" | "risk" | "overstock" | "cashflow" | "opportunity" | "summary" | "general";
+export type Intent =
+  | "why"
+  | "reorder"
+  | "risk"
+  | "overstock"
+  | "stopordering"
+  | "bestsellers"
+  | "profit"
+  | "cashflow"
+  | "opportunity"
+  | "summary"
+  | "general";
 
 export function classify(message: string): Intent {
-  const m = message.toLowerCase();
+  // Normalise so Khmer keyword matching is not defeated by NFC/NFD differences
+  // between the client's text and the regex literals in this file.
+  const m = message.normalize("NFC").toLowerCase();
+
+  // Khmer keyword routing first — dedicated, order-independent, so a Khmer
+  // question always lands on the right deterministic answer.
+  if (/ឈប់\s*(បញ្ជាទិញ|ទិញ|ការបញ្ជាទិញ)|មិនគួរ\s*(បញ្ជាទិញ|ទិញ)|ផ្អាកការបញ្ជាទិញ|មិនត្រូវទិញ/.test(m)) return "stopordering";
+  if (/លក់ដាច់|លក់ល្អ|ដាច់ជាងគេ|លក់ច្រើនជាងគេ|លក់បានច្រើន/.test(m)) return "bestsellers";
+  if (/ប្រាក់ចំណេញ|ចំណេញ|កម្រៃ|រកបានប៉ុន្មាន|ចំណូលសុទ្ធ/.test(m)) return "profit";
+  if (/ស្តុកលើស|លក់យឺត|ស្តុកស្លាប់/.test(m)) return "overstock";
+  if (/ហានិភ័យ|អស់ស្តុក|បាត់បង់ចំណូល|ប្រឈម/.test(m)) return "risk";
+  if (/(ហេតុអ្វី|មូលហេតុ)/.test(m)) return "why";
+  if (/សង្ខេប|ស្ថានភាពអាជីវកម្ម/.test(m)) return "summary";
+  if (/បញ្ជាទិញ|គួរទិញ|ត្រូវទិញ|បន្ថែមស្តុក|ត្រូវការទិញ/.test(m)) return "reorder";
+
   if (/^\s*why\b|\bwhy (is|are|should|does|do|would|was)\b|explain (why|the|this|how)|how did you|how is .* (calculated|derived)|marked (critical|slow|fast)/.test(m))
     return "why";
-  if (/(reorder|re-order|restock|order this week|what.*buy|purchase)/.test(m)) return "reorder";
-  if (/(overstock|slow.?mov|dead stock|reduce inventory|too much)/.test(m)) return "overstock";
-  if (/(cash ?flow|working capital|free up cash|tied up)/.test(m)) return "cashflow";
-  if (/(opportunit|grow|growth|upside|increase sales)/.test(m)) return "opportunity";
-  if (/(summary|overview|how are we|where.*stand|state of)/.test(m)) return "summary";
-  if (/(risk|losing revenue|revenue.*risk|stockout|run out|most risky)/.test(m)) return "risk";
+  // "what should I stop ordering / stop buying / pause" — check before generic reorder
+  if (/(stop (ordering|order|buying|buy|stocking|restocking)|should i stop|what.*not.*order|pause (ordering|orders?)|order less|ឈប់(បញ្ជាទិញ|ទិញ)|មិនគួរ(បញ្ជាទិញ|ទិញ)|ផ្អាកការបញ្ជាទិញ)/.test(m))
+    return "stopordering";
+  if (/(best.?sell|top.?sell|sell(ing)? (the )?(best|most)|fastest.?mov|highest.?sell|which.*sell.*(best|most)|top products?|លក់ដាច់|លក់ដាច់បំផុត|លក់ល្អ(បំផុត)?|ដាច់ជាងគេ)/.test(m))
+    return "bestsellers";
+  if (/(profit|margin|how much (did|money).*(make|made|earn)|earnings?|net income|gross|ប្រាក់ចំណេញ|ចំណេញ|កម្រៃ|រកបានប៉ុន្មាន)/.test(m))
+    return "profit";
+  if (/(reorder|re-order|restock|order today|order this week|what.*buy|purchase|what.*reorder|បញ្ជាទិញ|គួរទិញ|ត្រូវទិញ|បន្ថែមស្តុក)/.test(m)) return "reorder";
+  if (/(overstock|slow.?mov|dead stock|reduce inventory|too much|ស្តុកលើស|លក់យឺត|ស្តុកស្លាប់)/.test(m)) return "overstock";
+  if (/(cash ?flow|working capital|free up cash|tied up|លំហូរសាច់ប្រាក់|ដើមទុន(ជាប់)?)/.test(m)) return "cashflow";
+  if (/(opportunit|grow|growth|upside|increase sales|ឱកាស|រីកចម្រើន)/.test(m)) return "opportunity";
+  if (/(summary|overview|how are we|where.*stand|state of|សង្ខេប|ស្ថានភាព(អាជីវកម្ម)?|ទូទៅ)/.test(m)) return "summary";
+  if (/(risk|losing revenue|revenue.*risk|stockout|run out|most risky|ហានិភ័យ|អស់ស្តុក|បាត់បង់ចំណូល)/.test(m)) return "risk";
   return "general";
 }
 
@@ -208,6 +240,8 @@ export function buildDeterministicReply(
     intent === "opportunity" ||
     intent === "cashflow" ||
     intent === "overstock" ||
+    intent === "stopordering" ||
+    intent === "bestsellers" ||
     intent === "summary";
   if (dq && !dq.hasSalesData && salesDependent) {
     const content = km
@@ -221,8 +255,8 @@ export function buildDeterministicReply(
     return { content, insightCards: null, reorder: [], blocked: true };
   }
 
-  // Cash-flow answers depend on cost prices — without them every $ figure would be 0/guessed.
-  if (dq && !dq.hasCostData && intent === "cashflow") {
+  // Cash-flow / profit answers depend on cost prices — without them every $ figure would be 0/guessed.
+  if (dq && !dq.hasCostData && (intent === "cashflow" || intent === "profit")) {
     const content = km
       ? "ខ្ញុំមិនអាចវិភាគលំហូរសាច់ប្រាក់បានទេ ព្រោះមិនមានតម្លៃដើម។ តម្លៃស្តុក ប្រាក់ចំណេញ និងដើមទុនជាប់ ត្រូវការតម្លៃដើម ហើយ Inventra មិនប៉ាន់ស្មានវាទេ។" +
         close("នាំចូលជួរ 'តម្លៃដើម' នៅទំព័រ Upload។", "បើកដំណើរការការវិភាគលំហូរសាច់ប្រាក់។")
@@ -276,6 +310,124 @@ export function buildDeterministicReply(
         inventoryImpact: `${overstockEv.length || context.overstockProducts.length} products flagged Reduce`,
         riskLevel: "MEDIUM",
         recommendedAction: blocks.length ? `Clear ${firstOver.split(" (SKU")[0]}` : "No action needed",
+      };
+      break;
+    }
+    case "bestsellers": {
+      const sellers = context.topSellers.slice(0, 5);
+      content =
+        (km ? "**ទំនិញលក់ដាច់បំផុត**\n\n" : "**Your Best Sellers**\n\n") +
+        (sellers.length === 0
+          ? km
+            ? "គ្មានទិន្នន័យការលក់គ្រប់គ្រាន់ដើម្បីដាក់ចំណាត់ថ្នាក់ទេ។"
+            : "Not enough sales data to rank your products."
+          : sellers
+              .map((p, i) => {
+                const rate = Math.round(p.dailySales * 10) / 10;
+                return km
+                  ? `**${i + 1}. ${p.name}**\n_DATA_ — លក់ ${rate} ក្នុងមួយថ្ងៃ (~${p.unitsPerWeek ?? Math.round(rate * 7)} ក្នុងមួយសប្តាហ៍), ចំណូល ${usd(
+                      p.weeklyRevenue
+                    )}/សប្តាហ៍${p.velocity ? `, ថ្នាក់ល្បឿន៖ ${p.velocity}` : ""}`
+                  : `**${i + 1}. ${p.name}**\n_DATA_ — sells ${rate}/day (~${p.unitsPerWeek ?? Math.round(rate * 7)}/week), ${usd(
+                      p.weeklyRevenue
+                    )}/week in revenue${p.velocity ? `, ${p.velocity.toLowerCase()} mover` : ""}`;
+              })
+              .join("\n\n")) +
+        (km
+          ? "\n\n_ចំណាត់ថ្នាក់តាមចំណូលប្រចាំសប្តាហ៍ (ការលក់ប្រចាំថ្ងៃ × តម្លៃលក់)។_"
+          : "\n\n_Ranked by weekly revenue (daily sales × selling price) — the products that actually drive your turnover._") +
+        close(
+          sellers.length
+            ? km
+              ? `កុំឲ្យ ${sellers[0].name} អស់ស្តុកជាដាច់ខាត។`
+              : `Never let ${sellers[0].name} stock out — protect it first every reorder cycle.`
+            : km
+            ? "នាំចូលទិន្នន័យការលក់ដើម្បីមើលចំណាត់ថ្នាក់។"
+            : "Import daily-sales data to rank your catalog.",
+          km ? "ការផ្តោតលើទំនិញទាំងនេះការពារចំណូលភាគច្រើនរបស់អ្នក។" : "These few products carry most of your revenue — guard their availability."
+        );
+      cards = {
+        revenueImpact: sellers.length ? `${usd(sellers.reduce((s, p) => s + p.weeklyRevenue, 0))}/week from top 5` : "n/a",
+        inventoryImpact: sellers.length ? `Led by ${sellers[0].name.split(" (SKU")[0]}` : "No data",
+        riskLevel: "LOW",
+        recommendedAction: sellers.length ? `Prioritise ${sellers[0].name.split(" (SKU")[0]}` : "Import sales data",
+      };
+      break;
+    }
+    case "stopordering": {
+      const over = context.overstockProducts.slice(0, 4);
+      const freeable = over.reduce((s, p) => s + p.inventoryValue, 0);
+      content =
+        (km ? "**អ្វីដែលអ្នកគួរឈប់បញ្ជាទិញ**\n\n" : "**What to Stop Ordering**\n\n") +
+        (over.length === 0
+          ? km
+            ? "គ្មានទំនិញលើសស្តុកឬលក់មិនដាច់ទេ — ការបញ្ជាទិញរបស់អ្នកមានតុល្យភាព។"
+            : "Nothing is overstocked right now — your ordering is well balanced."
+          : over
+              .map((p) => {
+                const dead = (p.dailySales ?? 0) === 0;
+                return km
+                  ? `**ឈប់បញ្ជាទិញ ${p.name}**\n_DATA_ — ${
+                      dead ? "គ្មានការលក់ថ្មីៗ" : `នៅសល់ស្តុក ${p.daysRemaining} ថ្ងៃ ក្នុងអត្រា ${p.dailySales}/ថ្ងៃ`
+                    }; ដើមទុនជាប់ ${usd(p.inventoryValue)}\n_CONCLUSION_ — ផ្អាកការបញ្ជាទិញប្រហែល ${p.pauseWeeks ?? 4} សប្តាហ៍`
+                  : `**Stop ordering ${p.name}**\n_DATA_ — ${
+                      dead ? "no recent sales" : `${p.daysRemaining} days of stock at ${p.dailySales}/day`
+                    }; ${usd(p.inventoryValue)} of cash locked in it\n_CONCLUSION_ — pause ordering for about ${p.pauseWeeks ?? 4} weeks`;
+              })
+              .join("\n\n")) +
+        close(
+          over.length
+            ? km
+              ? `ចាប់ផ្តើមជាមួយ ${over[0].name} — ផ្អាក ${over[0].pauseWeeks ?? 4} សប្តាហ៍។`
+              : `Start with ${over[0].name} — pause it for ~${over[0].pauseWeeks ?? 4} weeks.`
+            : km
+            ? "រក្សាល្បឿនការបញ្ជាទិញបច្ចុប្បន្ន។"
+            : "Keep your current ordering cadence.",
+          over.length
+            ? km
+              ? `រំដោះប្រហែល ${usd(freeable)} នៃសាច់ប្រាក់សម្រាប់ទំនិញលក់ដាច់។`
+              : `Frees roughly ${usd(freeable)} of cash to put behind your fast movers.`
+            : km
+            ? "គ្មានសាច់ប្រាក់ជាប់ក្នុងស្តុកលើសទេ។"
+            : "No cash is currently trapped in excess stock."
+        );
+      cards = {
+        revenueImpact: over.length ? `${usd(freeable)} to free up` : "Balanced",
+        inventoryImpact: `${over.length} product${over.length === 1 ? "" : "s"} to pause`,
+        riskLevel: "MEDIUM",
+        recommendedAction: over.length ? `Pause ${over[0].name.split(" (SKU")[0]}` : "No action needed",
+      };
+      break;
+    }
+    case "profit": {
+      const daily = context.dailyGrossMargin ?? 0;
+      const pct = context.grossMarginPct ?? 0;
+      const monthly = Math.round(daily * 30);
+      content =
+        (km ? "**ប្រាក់ចំណេញដុល (ប៉ាន់ស្មាន)**\n\n" : "**Estimated Gross Margin**\n\n") +
+        (km
+          ? `តាមអត្រាលក់បច្ចុប្បន្ន កាតាឡុករបស់អ្នករកបានប្រហែល **${usd(daily)}/ថ្ងៃ** នៃប្រាក់ចំណេញដុល (~**${usd(
+              monthly
+            )}/ខែ**), គិតជា **${pct}%** នៃចំណូល។`
+          : `At your current sales rate, your catalog earns roughly **${usd(daily)}/day** in gross margin (~**${usd(
+              monthly
+            )}/month**) — about **${pct}%** of revenue.`) +
+        (km
+          ? `\n\n_នេះជាការប៉ាន់ស្មានពី (តម្លៃលក់ − តម្លៃដើម) × ការលក់ប្រចាំថ្ងៃ។ វាមិនរាប់បញ្ចូលថ្លៃដើមប្រតិបត្តិការ ឬការបញ្ចុះតម្លៃទេ។_`
+          : `\n\n_This is modelled from (selling price − cost price) × daily sales. It excludes operating costs, discounts and shrinkage — it's a directional estimate, not your bank balance._`) +
+        close(
+          km
+            ? "ការពារទំនិញលក់ដាច់ដែលមានប្រាក់ចំណេញខ្ពស់កុំឲ្យអស់ស្តុក ហើយកាត់បន្ថយស្តុកលើសដែលមិនរកប្រាក់ចំណេញ។"
+            : "Protect your high-margin fast movers from stockouts, and cut the overstock that isn't earning.",
+          km
+            ? `រក្សាប្រាក់ចំណេញ ${usd(monthly)}/ខែ ដោយធានាបាននូវស្តុកទំនិញសំខាន់ៗ។`
+            : `Sustains ~${usd(monthly)}/month of margin by keeping the right products in stock.`
+        );
+      cards = {
+        revenueImpact: `${usd(daily)}/day gross margin`,
+        inventoryImpact: `${pct}% blended margin`,
+        riskLevel: pct > 0 && pct < 15 ? "HIGH" : "LOW",
+        recommendedAction: "Protect high-margin movers",
       };
       break;
     }

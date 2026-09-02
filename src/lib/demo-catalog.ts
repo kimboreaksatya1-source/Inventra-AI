@@ -1,6 +1,6 @@
 // Inventra AI — the demo catalog, mirrored from samples/inventra-demo.csv.
-// Embedded so the one-click "Load demo data" action works in every runtime
-// (dev, standalone build) with no filesystem access.
+// Embedded so the one-click "Load demo data" action and the seed script work in
+// every runtime (dev, standalone build) with no filesystem access.
 
 import type { ImportRow } from "./types";
 
@@ -34,7 +34,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Red Bull 250ml",
     "category": "Beverage",
-    "stock": 60,
+    "stock": 58,
     "dailySales": 26,
     "sellingPrice": 1,
     "costPrice": 0.7
@@ -42,7 +42,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Vital Drinking Water 500ml",
     "category": "Water",
-    "stock": 150,
+    "stock": 430,
     "dailySales": 60,
     "sellingPrice": 0.25,
     "costPrice": 0.14
@@ -58,7 +58,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Dasani Water 600ml",
     "category": "Water",
-    "stock": 3200,
+    "stock": 1500,
     "dailySales": 9,
     "sellingPrice": 0.3,
     "costPrice": 0.19
@@ -66,7 +66,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "MAMA Instant Noodles Pork",
     "category": "Instant Noodles",
-    "stock": 120,
+    "stock": 470,
     "dailySales": 38,
     "sellingPrice": 0.3,
     "costPrice": 0.19
@@ -74,7 +74,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "MAMA Instant Noodles Shrimp",
     "category": "Instant Noodles",
-    "stock": 64,
+    "stock": 60,
     "dailySales": 22,
     "sellingPrice": 0.3,
     "costPrice": 0.19
@@ -90,7 +90,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Nescafe 3-in-1 Sachet",
     "category": "Coffee & Tea",
-    "stock": 240,
+    "stock": 940,
     "dailySales": 55,
     "sellingPrice": 0.22,
     "costPrice": 0.14
@@ -98,7 +98,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Nescafe Gold Jar 100g",
     "category": "Coffee & Tea",
-    "stock": 44,
+    "stock": 120,
     "dailySales": 3.5,
     "sellingPrice": 7.5,
     "costPrice": 5.8
@@ -114,7 +114,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Lay's Classic 40g",
     "category": "Snacks",
-    "stock": 160,
+    "stock": 320,
     "dailySales": 24,
     "sellingPrice": 0.75,
     "costPrice": 0.5
@@ -122,7 +122,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Pringles Original 107g",
     "category": "Snacks",
-    "stock": 52,
+    "stock": 120,
     "dailySales": 6,
     "sellingPrice": 2.5,
     "costPrice": 1.8
@@ -130,7 +130,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Oishi Prawn Crackers 60g",
     "category": "Snacks",
-    "stock": 970,
+    "stock": 540,
     "dailySales": 1.5,
     "sellingPrice": 0.6,
     "costPrice": 0.4
@@ -138,7 +138,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Snickers 50g",
     "category": "Confectionery",
-    "stock": 96,
+    "stock": 300,
     "dailySales": 18,
     "sellingPrice": 0.7,
     "costPrice": 0.47
@@ -146,7 +146,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "KitKat 4-Finger",
     "category": "Confectionery",
-    "stock": 120,
+    "stock": 240,
     "dailySales": 13,
     "sellingPrice": 0.8,
     "costPrice": 0.55
@@ -154,7 +154,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Mentos Mint Roll",
     "category": "Confectionery",
-    "stock": 1300,
+    "stock": 700,
     "dailySales": 0.6,
     "sellingPrice": 0.35,
     "costPrice": 0.22
@@ -162,7 +162,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Dutch Lady UHT Milk 1L",
     "category": "Dairy",
-    "stock": 58,
+    "stock": 52,
     "dailySales": 15,
     "sellingPrice": 1.6,
     "costPrice": 1.2
@@ -170,7 +170,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Nestle Bear Brand 140ml",
     "category": "Dairy",
-    "stock": 140,
+    "stock": 340,
     "dailySales": 17,
     "sellingPrice": 0.65,
     "costPrice": 0.45
@@ -178,7 +178,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Anchor Butter 227g",
     "category": "Dairy",
-    "stock": 26,
+    "stock": 60,
     "dailySales": 2,
     "sellingPrice": 4.2,
     "costPrice": 3.3
@@ -186,7 +186,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Cooking Oil 1L Pouch",
     "category": "Cooking",
-    "stock": 150,
+    "stock": 340,
     "dailySales": 9,
     "sellingPrice": 2.4,
     "costPrice": 1.95
@@ -194,7 +194,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Cooking Oil 5L Jerrycan",
     "category": "Cooking",
-    "stock": 22,
+    "stock": 90,
     "dailySales": 3,
     "sellingPrice": 10.5,
     "costPrice": 8.8
@@ -226,7 +226,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Jasmine Rice 5kg",
     "category": "Canned & Packaged",
-    "stock": 175,
+    "stock": 320,
     "dailySales": 9,
     "sellingPrice": 6.5,
     "costPrice": 5.2
@@ -234,7 +234,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Canned Sardines 155g",
     "category": "Canned & Packaged",
-    "stock": 880,
+    "stock": 240,
     "dailySales": 0.7,
     "sellingPrice": 0.95,
     "costPrice": 0.65
@@ -242,7 +242,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Sunsilk Shampoo Sachet 5ml",
     "category": "Personal Care",
-    "stock": 300,
+    "stock": 1200,
     "dailySales": 70,
     "sellingPrice": 0.12,
     "costPrice": 0.07
@@ -250,7 +250,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Head & Shoulders 170ml",
     "category": "Personal Care",
-    "stock": 50,
+    "stock": 120,
     "dailySales": 4,
     "sellingPrice": 3.6,
     "costPrice": 2.7
@@ -258,7 +258,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Colgate Toothpaste 150g",
     "category": "Personal Care",
-    "stock": 110,
+    "stock": 260,
     "dailySales": 6,
     "sellingPrice": 1.8,
     "costPrice": 1.25
@@ -274,7 +274,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Whisper Sanitary Pads 8s",
     "category": "Personal Care",
-    "stock": 64,
+    "stock": 150,
     "dailySales": 5,
     "sellingPrice": 1.4,
     "costPrice": 0.98
@@ -282,7 +282,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Pampers Diapers M 4s",
     "category": "Baby Care",
-    "stock": 30,
+    "stock": 42,
     "dailySales": 5,
     "sellingPrice": 2.8,
     "costPrice": 2.1
@@ -290,7 +290,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Dettol Antiseptic 250ml",
     "category": "Household",
-    "stock": 90,
+    "stock": 140,
     "dailySales": 0.4,
     "sellingPrice": 3.2,
     "costPrice": 2.4
@@ -298,7 +298,7 @@ export const DEMO_CATALOG: ImportRow[] = [
   {
     "name": "Downy Fabric Softener Sachet",
     "category": "Household",
-    "stock": 2600,
+    "stock": 900,
     "dailySales": 1.2,
     "sellingPrice": 0.2,
     "costPrice": 0.12

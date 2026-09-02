@@ -58,7 +58,23 @@ export function ActionCard({
       <div className="mt-2.5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="font-semibold">{action.recommendation}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{action.reason}</p>
+          {action.reasons?.length ? (
+            <ul className="mt-1.5 space-y-0.5 text-sm text-muted-foreground">
+              {action.reasons.map((r, i) => (
+                <li key={i} className="flex items-start gap-1.5">
+                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-muted-foreground/50" />
+                  {r}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">{action.reason}</p>
+          )}
+          {action.triggeredBy && (
+            <p className="mt-1.5 text-[11px] text-muted-foreground/80">
+              <span className="font-medium">Why you&apos;re seeing this:</span> {action.triggeredBy}
+            </p>
+          )}
         </div>
         <div className="shrink-0 sm:w-40 sm:text-right">
           <p

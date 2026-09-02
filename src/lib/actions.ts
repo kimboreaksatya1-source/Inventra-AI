@@ -26,6 +26,7 @@ const PROC_PRIORITY: Record<ProcurementRow["priority"], Priority> = {
 };
 
 const usd = (n: number) => money(n);
+const round1 = (n: number) => Math.round(n * 10) / 10;
 
 function slug(s: string): string {
   return s
@@ -70,16 +71,35 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
         : p.riskLevel === "High"
         ? "HIGH"
         : "MEDIUM";
-    const days = Number.isFinite(p.daysRemaining) ? p.daysRemaining.toFixed(1) : "30+";
+    const coverDays = Number.isFinite(p.daysRemaining) ? Math.max(0, Math.round(p.daysRemaining)) : null;
+    const marginPortion = p.sellingPrice > 0 ? Math.max(0, p.unitMargin) / p.sellingPrice : 0;
+    const marginImpact = Math.round(p.estimatedRevenueAtRisk * marginPortion);
+    const reasons = [
+      `${p.stock} units in stock`,
+      `Selling ${round1(p.dailySales)}/day`,
+      coverDays !== null ? `Out in ~${coverDays} day${coverDays === 1 ? "" : "s"}` : "Comfortable cover for now",
+      qty > 0 ? `Suggested order: ${qty} units` : null,
+    ].filter(Boolean) as string[];
     drafts.push({
       key: `reorder:${p.id}`,
       priority,
       category: "reorder",
       recommendation: `Reorder ${shortLabel(p)}${qty > 0 ? ` — ${qty} units` : ""}`,
-      reason: `${days} days of stock left at ${p.dailySales}/day. ${usd(p.estimatedRevenueAtRisk)} of sales is exposed if it runs out.`,
-      expectedImpact: `Protect ${usd(p.estimatedRevenueAtRisk)} of revenue`,
+      reason: `${coverDays ?? "30+"} days of stock left at ${round1(p.dailySales)}/day. ${usd(p.estimatedRevenueAtRisk)} of sales is exposed if it runs out.`,
+      reasons,
+      triggeredBy:
+        p.riskLevel === "Critical"
+          ? `Stock coverage (${coverDays ?? "?"}d) is below the 3-day critical threshold`
+          : p.riskLevel === "High"
+          ? `Stock coverage (${coverDays ?? "?"}d) is below the 7-day warning threshold`
+          : `${usd(p.estimatedRevenueAtRisk)} of revenue is at risk — above the $25 attention threshold`,
+      expectedImpact:
+        marginImpact > 0
+          ? `Protect ${usd(p.estimatedRevenueAtRisk)} sales / ~${usd(marginImpact)} margin`
+          : `Protect ${usd(p.estimatedRevenueAtRisk)} of sales`,
       impactValue: Math.round(p.estimatedRevenueAtRisk),
-      confidence: priority === "CRITICAL" ? 92 : priority === "HIGH" ? 85 : 72,
+      marginImpact,
+      confidence: priority === "CRITICAL" ? 90 : priority === "HIGH" ? 80 : 68,
       source: qty > 0 ? ["Analysis", "Revenue Risk", "Procurement"] : ["Analysis", "Revenue Risk"],
       productId: p.id,
     });
@@ -94,35 +114,65 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       category: "opportunity",
       recommendation: o.recommendedAction || o.title,
       reason: o.observation,
+      reasons: [o.observation, `Modelled upside ~${usd(impact)}/month`].filter(Boolean),
+      triggeredBy: "A fast-moving, healthy-margin product with room to grow orders",
       expectedImpact: `Modelled margin upside ${usd(impact)} (~25% more orders)`,
       impactValue: impact,
-      confidence: 65,
+      confidence: 60,
       source: ["Business Brief"],
     });
   }
 
-  /* 3 — cash flow: dead / overstock capital (Analysis) */
-  const deadStock = analysis.products
+  /* 3 — overstock / dead stock: "what should I stop ordering" (survey's #1 loss).
+     Only genuinely stuck stock — a fast mover a few days over target is not a
+     "stop ordering" call. Rank by capital locked × how far over target it is. */
+  const overTarget = (p: (typeof analysis.products)[number]) =>
+    p.velocity === "Fast" ? 21 : p.velocity === "Medium" ? 30 : 45;
+  const overstock = analysis.products
     .filter(
       (p) =>
         (p.dailySales === 0 && p.stock > 0) ||
-        (Number.isFinite(p.daysRemaining) && p.daysRemaining > 45)
+        (Number.isFinite(p.daysRemaining) && p.daysRemaining > overTarget(p) * 3)
     )
-    .sort((a, b) => b.inventoryValue - a.inventoryValue)
-    .slice(0, 2);
-  for (const p of deadStock) {
+    .map((p) => ({
+      p,
+      severity:
+        p.inventoryValue *
+        (p.dailySales === 0 ? 6 : Math.min(6, p.daysRemaining / overTarget(p))),
+    }))
+    .sort((a, b) => b.severity - a.severity)
+    .slice(0, 4)
+    .map((x) => x.p);
+  for (const p of overstock) {
+    const dead = p.dailySales === 0;
+    const coverDays = Number.isFinite(p.daysRemaining) ? Math.round(p.daysRemaining) : null;
+    const target = p.velocity === "Fast" ? 21 : p.velocity === "Medium" ? 30 : 45;
+    const pauseWeeks =
+      dead || coverDays === null ? 8 : Math.max(3, Math.min(12, Math.round((coverDays - target) / 7)));
+    const locked = Math.round(p.inventoryValue);
+    const priority: Priority = locked >= 500 ? "HIGH" : locked >= 150 ? "MEDIUM" : "LOW";
+    const months = coverDays !== null ? Math.round(coverDays / 30) : null;
     drafts.push({
-      key: `cashflow:${p.id}`,
-      priority: "LOW",
+      key: `overstock:${p.id}`,
+      priority,
       category: "cashflow",
-      recommendation: `Discount or bundle ${shortLabel(p)}`,
-      reason:
-        p.dailySales === 0
-          ? `No recent sales — ${usd(p.inventoryValue)} of capital is tied up in ${shortLabel(p)}.`
-          : `${Math.round(p.daysRemaining)} days of cover — ${usd(p.inventoryValue)} of capital is sitting idle.`,
-      expectedImpact: `Free up ${usd(p.inventoryValue)} of working capital`,
-      impactValue: Math.round(p.inventoryValue),
-      confidence: 60,
+      recommendation: `Stop ordering ${shortLabel(p)}`,
+      reason: dead
+        ? `No recent sales — ${usd(locked)} of capital is frozen in ${shortLabel(p)}.`
+        : `${coverDays} days of stock at ${round1(p.dailySales)}/day — ${usd(locked)} of capital is sitting idle.`,
+      reasons: [
+        dead
+          ? "No sales in the imported period"
+          : `${months && months >= 2 ? `~${months} months` : `${coverDays} days`} of stock on hand`,
+        dead ? "Dead stock — nothing moving" : `Only selling ${round1(p.dailySales)}/day`,
+        `${usd(locked)} of cash locked in it`,
+      ],
+      triggeredBy: dead
+        ? "Zero sales with stock still on hand — flagged as dead stock"
+        : `${coverDays} days of cover is more than 3× the ${target}-day target for a ${p.velocity.toLowerCase()} mover`,
+      expectedImpact: `Free ${usd(locked)} of working capital · pause ordering ~${pauseWeeks} weeks`,
+      impactValue: locked,
+      confidence: dead ? 78 : 66,
       source: ["Analysis"],
       productId: p.id,
     });
@@ -145,6 +195,8 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       category: "scenario",
       recommendation: `Pre-order ${shortLabel(r)} before demand climbs`,
       reason: `If demand rises 20%, ${shortLabel(r)}'s stockout probability jumps to ${r.stockoutProbability}% and cover drops to ${r.coverAfter} days. Roughly ${usd(atRisk)} of sales would be at risk.`,
+      reasons: [`Stockout probability ${r.stockoutProbability}% if demand rises 20%`, `Cover drops to ${r.coverAfter} days`],
+      triggeredBy: "Demand-growth scenario (+20%) run by the Simulator",
       expectedImpact: `Protect ${usd(atRisk)} against a demand spike`,
       impactValue: atRisk,
       confidence: 58,
@@ -166,6 +218,8 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
       category: "scenario",
       recommendation: `Bring the ${shortLabel(r)} order forward ~10 days`,
       reason: `A 10-day supplier delay would leave ${shortLabel(r)} short — stockout probability ${r.stockoutProbability}%. Order early or line up a backup supplier.`,
+      reasons: [`10-day supplier delay → stockout probability ${r.stockoutProbability}%`, "Order early or line up a backup supplier"],
+      triggeredBy: "Supplier-delay scenario (10 days) run by the Simulator",
       expectedImpact: `Protect ${usd(atRisk)} from supply disruption`,
       impactValue: atRisk,
       confidence: 55,
@@ -174,12 +228,16 @@ export function generateActions({ products, analysis, brief }: GenerateActionsIn
     });
   }
 
-  return dedupe(drafts).sort(
-    (a, b) =>
-      PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] ||
-      b.impactValue - a.impactValue ||
-      b.confidence - a.confidence
-  );
+  return dedupe(drafts)
+    // Speculative "what-if" actions read as unfinished — keep them out of the
+    // Action Center and the dashboard. The Simulator page still runs them live.
+    .filter((d) => d.category !== "scenario")
+    .sort(
+      (a, b) =>
+        PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] ||
+        b.impactValue - a.impactValue ||
+        b.confidence - a.confidence
+    );
 }
 
 function dedupe(drafts: Draft[]): Draft[] {
@@ -200,6 +258,9 @@ function dedupe(drafts: Draft[]): Draft[] {
           ? d.impactValue
           : existing.impactValue,
       reason: d.reason.length > existing.reason.length ? d.reason : existing.reason,
+      reasons: d.reasons.length >= existing.reasons.length ? d.reasons : existing.reasons,
+      triggeredBy: existing.triggeredBy || d.triggeredBy,
+      marginImpact: Math.max(existing.marginImpact ?? 0, d.marginImpact ?? 0) || undefined,
       source: Array.from(new Set([...existing.source, ...d.source])),
     });
   }

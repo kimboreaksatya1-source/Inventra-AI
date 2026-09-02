@@ -22,7 +22,7 @@ import type {
 
 const MEM_TTL = 5 * 60_000;
 /** Bump when the shape of analysis/brief/context changes so stale rows rebuild. */
-const SNAPSHOT_VERSION = "fmcg-7";
+const SNAPSHOT_VERSION = "fmcg-8";
 
 export interface Snapshot {
   business: string;
