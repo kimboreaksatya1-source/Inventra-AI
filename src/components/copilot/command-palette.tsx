@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { CornerDownLeft, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { CopilotCommand } from "@/lib/copilot-commands";
+import type { CopilotCommand } from "@/lib/copilot/commands";
 
 export interface PaletteEntry {
   cmd: CopilotCommand;

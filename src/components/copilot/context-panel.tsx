@@ -7,7 +7,7 @@ import { PriorityBadge } from "@/components/shared/badges";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { useCopilotContext } from "@/lib/copilot-queries";
+import { useCopilotContext } from "@/lib/queries/copilot";
 import type { CopilotLanguage } from "@/lib/types";
 
 export function ContextPanel({ language }: { language: CopilotLanguage }) {

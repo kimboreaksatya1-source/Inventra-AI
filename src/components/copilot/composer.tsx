@@ -4,12 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUp, Slash, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
-import { useCopilotContext } from "@/lib/copilot-queries";
+import { useCopilotContext } from "@/lib/queries/copilot";
 import {
   filterCommands,
   suggestedCommands,
   type CopilotCommand,
-} from "@/lib/copilot-commands";
+} from "@/lib/copilot/commands";
 import type { CopilotLanguage } from "@/lib/types";
 import { CommandPalette, type PaletteEntry } from "./command-palette";
 

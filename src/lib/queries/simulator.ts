@@ -6,7 +6,7 @@ import type {
   ScenarioParams,
   SimulationExplanation,
   SimulationResult,
-} from "./types";
+} from "../types";
 
 async function getJSON<T>(url: string): Promise<T> {
   const res = await fetch(url);

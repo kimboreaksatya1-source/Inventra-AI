@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSaveScenario } from "@/lib/simulator-queries";
+import { useSaveScenario } from "@/lib/queries/simulator";
 import { describeParams } from "./describe-params";
 import type { ScenarioParams, SimulationResult } from "@/lib/types";
 

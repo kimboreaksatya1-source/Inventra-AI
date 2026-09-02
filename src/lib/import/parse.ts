@@ -2,8 +2,8 @@
 // Feeds validation.ts which turns raw rows into import-ready products.
 
 import * as XLSX from "xlsx";
-import type { ParsePreview, RawRow } from "./types";
-import { validateRows } from "./validation";
+import type { ParsePreview, RawRow } from "../types";
+import { validateRows } from "../validation";
 
 export const ACCEPTED_EXTENSIONS = [".csv", ".xlsx", ".xls"];
 export const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB

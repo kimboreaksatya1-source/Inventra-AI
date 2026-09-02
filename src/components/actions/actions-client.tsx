@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
-import { useActionCenter, useUpdateAction } from "@/lib/actions-queries";
+import { useActionCenter, useUpdateAction } from "@/lib/queries/actions";
 import type { ActionStatus, BusinessAction, Priority, ResolvedAction } from "@/lib/types";
 import { ActionStats } from "./action-stats";
 import { AiBriefing } from "./ai-briefing";

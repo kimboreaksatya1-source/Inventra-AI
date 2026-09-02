@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { STREAM_SEP, stripStreamingTail } from "@/lib/copilot-parse";
-import { useSessionMessages } from "@/lib/copilot-queries";
+import { STREAM_SEP, stripStreamingTail } from "@/lib/copilot/parse";
+import { useSessionMessages } from "@/lib/queries/copilot";
 import type {
   CopilotLanguage,
   CopilotMessage,

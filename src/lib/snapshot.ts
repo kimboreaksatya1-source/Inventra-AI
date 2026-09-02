@@ -11,7 +11,7 @@ import {
   generateActions,
   summarizeActions,
 } from "./actions";
-import { buildCopilotContextFrom } from "./copilot-context";
+import { buildCopilotContextFrom } from "./copilot/context";
 import { AI_MODEL, getAIClient, isAIConfigured } from "./ai";
 import type {
   BusinessAction,

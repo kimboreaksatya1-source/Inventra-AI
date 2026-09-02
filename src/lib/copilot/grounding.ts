@@ -4,7 +4,7 @@
 // (c) didn't contradict the procurement plan. On any clear violation the chat
 // route replaces the reply with the deterministic evidence-based one.
 
-import type { EvidenceBlock } from "./types";
+import type { EvidenceBlock } from "../types";
 
 const GENERIC_ADVICE = [
   "run a promotion",

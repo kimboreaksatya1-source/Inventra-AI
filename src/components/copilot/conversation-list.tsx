@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { useDeleteSession, useSessions } from "@/lib/copilot-queries";
+import { useDeleteSession, useSessions } from "@/lib/queries/copilot";
 import type { CopilotLanguage } from "@/lib/types";
 
 export function ConversationList({

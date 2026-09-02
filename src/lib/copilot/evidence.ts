@@ -3,7 +3,7 @@
 // Every Copilot recommendation must trace to one of these; nothing here is
 // invented — every value comes from the imported data or a documented formula.
 
-import { shortLabel } from "./product-label";
+import { shortLabel } from "../product-label";
 import type {
   EvidenceBlock,
   EvidenceConfidence,
@@ -12,7 +12,7 @@ import type {
   ProcurementRow,
   ProductAnalysis,
   ProductVelocity,
-} from "./types";
+} from "../types";
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
 const cover = (n: number) => (Number.isFinite(n) ? `${Math.round(n * 10) / 10} days` : "30+ days (no recent sales)");

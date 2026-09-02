@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { cn } from "@/lib/utils";
 import { formatCurrency, relativeTime } from "@/lib/format";
-import { useDeleteScenario, useScenarios } from "@/lib/simulator-queries";
+import { useDeleteScenario, useScenarios } from "@/lib/queries/simulator";
 import { describeParams } from "./describe-params";
 import type { SavedScenario } from "@/lib/types";
 

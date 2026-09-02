@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
 import { KPI } from "@/lib/kpi-glossary";
 import { useProcurement, useGeneratePurchasePlan } from "@/lib/queries";
-import { exportPurchasePlanPdf } from "@/lib/purchase-plan-pdf";
+import { exportPurchasePlanPdf } from "@/lib/pdf/purchase-plan";
 import type { Priority, ProcurementPlanResponse, ProcurementRow } from "@/lib/types";
 
 const PRIORITY_MAP: Record<ProcurementRow["priority"], Priority> = {

@@ -2,9 +2,9 @@
 // System prompts (en/km), message assembly, streaming, structured-tail parsing,
 // and a deterministic fallback that never calls the model.
 
-import { AI_MODEL, getAIClient } from "./ai";
-import { findEvidence, renderEvidence, renderEvidenceList } from "./copilot-evidence";
-import { shortLabel } from "./product-label";
+import { AI_MODEL, getAIClient } from "../ai";
+import { findEvidence, renderEvidence, renderEvidenceList } from "./evidence";
+import { shortLabel } from "../product-label";
 import type {
   CopilotContext,
   CopilotInsightCards,
@@ -15,9 +15,9 @@ import type {
   EvidenceBlock,
   ProcurementResult,
   ProcurementRow,
-} from "./types";
+} from "../types";
 
-export { parseStructuredTail, stripStreamingTail } from "./copilot-parse";
+export { parseStructuredTail, stripStreamingTail } from "./parse";
 
 /* ------------------------------- prompts -------------------------------- */
 

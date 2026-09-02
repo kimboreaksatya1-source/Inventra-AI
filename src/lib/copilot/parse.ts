@@ -2,7 +2,7 @@
 // No `openai` import here so this is safe to use on the client.
 
 import { z } from "zod";
-import type { CopilotInsightCards, CopilotReorderItem, Priority } from "./types";
+import type { CopilotInsightCards, CopilotReorderItem, Priority } from "../types";
 
 /** ASCII record-separator (U+001E) framing the trailing JSON meta line in the chat stream. */
 export const STREAM_SEP = String.fromCharCode(0x1e);

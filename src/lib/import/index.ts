@@ -4,10 +4,10 @@
 // directly, and inventing per-day Sale rows the user never provided would be
 // fabricated business data. Seed/demo data is populated separately (mock-data.ts).
 
-import { db } from "./db";
-import { invalidateSnapshot, rebuildSnapshot } from "./snapshot";
-import type { ImportPayload } from "./validation";
-import type { ReviewProduct } from "./types";
+import { db } from "../db";
+import { invalidateSnapshot, rebuildSnapshot } from "../snapshot";
+import type { ImportPayload } from "../validation";
+import type { ReviewProduct } from "../types";
 
 const OWNER_EMAIL = "owner@inventra.local";
 

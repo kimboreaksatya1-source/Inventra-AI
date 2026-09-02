@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ActionCenterPayload, ActionStatus, BusinessAction } from "./types";
+import type { ActionCenterPayload, ActionStatus, BusinessAction } from "../types";
 
 export function useActionCenter() {
   return useQuery({

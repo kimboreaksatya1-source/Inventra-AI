@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AlertTriangle, ChevronDown, CheckCircle2, Layers, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { reasonLabel, statusLabel } from "@/lib/import-audit";
+import { reasonLabel, statusLabel } from "@/lib/import/audit";
 import type { ImportAudit, ImportRowStatus } from "@/lib/types";
 
 function Stat({ label, value, tone }: { label: string; value: number; tone: string }) {

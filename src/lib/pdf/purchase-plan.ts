@@ -2,7 +2,7 @@
 
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import type { ProcurementPlanResponse } from "./types";
+import type { ProcurementPlanResponse } from "../types";
 
 const TEAL: [number, number, number] = [15, 118, 110]; // #0F766E
 const CHARCOAL: [number, number, number] = [17, 24, 39]; // #111827

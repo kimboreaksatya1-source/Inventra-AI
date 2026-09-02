@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { useAnalysis } from "@/lib/queries";
-import { useScenarios, useScenarioExplanation } from "@/lib/simulator-queries";
+import { useScenarios, useScenarioExplanation } from "@/lib/queries/simulator";
 import {
   DEFAULT_PARAMS,
   isDefaultParams,

@@ -7,7 +7,7 @@ import type {
   ImportAuditRow,
   ImportRowStatus,
   RecognizeResponse,
-} from "./types";
+} from "../types";
 
 const RANK: Record<ImportRowStatus, number> = { imported: 0, warning: 1, merged: 2, skipped: 3 };
 

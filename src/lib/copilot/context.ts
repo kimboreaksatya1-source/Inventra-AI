@@ -2,15 +2,15 @@
 // Assembles the owner's real business data into (a) a structured object for the
 // right-hand panel and (b) a compact plaintext block injected into every AI request.
 
-import { loadProductsLite } from "./data";
-import { analyzeInventory } from "./analysis";
-import { buildDeterministicBrief } from "./brief";
-import { buildProcurement } from "./procurement";
-import { buildCashflow } from "./cashflow";
-import { buildEvidence, evidenceForPrompt } from "./copilot-evidence";
-import { buildForecastEvidence, forecastEvidenceForPrompt } from "./forecast-evidence";
-import { contextLabel, shortLabel } from "./product-label";
-import type { BusinessBrief, CopilotContext, InventoryAnalysis } from "./types";
+import { loadProductsLite } from "../data";
+import { analyzeInventory } from "../analysis";
+import { buildDeterministicBrief } from "../brief";
+import { buildProcurement } from "../procurement";
+import { buildCashflow } from "../cashflow";
+import { buildEvidence, evidenceForPrompt } from "./evidence";
+import { buildForecastEvidence, forecastEvidenceForPrompt } from "../forecast-evidence";
+import { contextLabel, shortLabel } from "../product-label";
+import type { BusinessBrief, CopilotContext, InventoryAnalysis } from "../types";
 
 function usd(n: number): string {
   return `$${Math.round(n).toLocaleString()}`;

@@ -1,7 +1,7 @@
 // Inventra AI — Copilot slash-command registry.
 // Each command expands to a natural-language prompt sent to the Copilot.
 
-import type { CopilotContext } from "./types";
+import type { CopilotContext } from "../types";
 
 export interface CopilotCommand {
   id: string; // "/reorder"

@@ -10,8 +10,8 @@ import {
   parseStructuredTail,
   streamCopilotReply,
 } from "@/lib/copilot";
-import { STREAM_SEP as SEP } from "@/lib/copilot-parse";
-import { checkGrounding, type GroundingOptions } from "@/lib/copilot-grounding";
+import { STREAM_SEP as SEP } from "@/lib/copilot/parse";
+import { checkGrounding, type GroundingOptions } from "@/lib/copilot/grounding";
 import type {
   CopilotInsightCards,
   CopilotReorderItem,

@@ -9,7 +9,7 @@ import {
   useCreateSession,
   useSessions,
   useSetSessionLanguage,
-} from "@/lib/copilot-queries";
+} from "@/lib/queries/copilot";
 import { useCopilotChat } from "@/hooks/use-copilot-chat";
 import type { CopilotLanguage } from "@/lib/types";
 import { ConversationList } from "./conversation-list";

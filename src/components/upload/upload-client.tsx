@@ -13,9 +13,9 @@ import { ImportStepper, type ImportStage } from "./import-stepper";
 import { ColumnMappingStep } from "./column-mapping-step";
 import { RecognitionReview } from "./recognition-review";
 import { ImportSummaryBar, ImportDetails } from "./import-audit";
-import { parseWorkbook, ParseError, type ParsedWorkbook } from "@/lib/parse";
+import { parseWorkbook, ParseError, type ParsedWorkbook } from "@/lib/import/parse";
 import { applyMapping, detectColumnMapping } from "@/lib/catalog/column-mapping";
-import { buildImportAudit, reasonLabel } from "@/lib/import-audit";
+import { buildImportAudit, reasonLabel } from "@/lib/import/audit";
 import type {
   ColumnMapping,
   ImportAudit,

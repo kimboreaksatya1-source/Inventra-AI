@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { FileSpreadsheet, UploadCloud } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ACCEPTED_EXTENSIONS, isAcceptedFile } from "@/lib/parse";
+import { ACCEPTED_EXTENSIONS, isAcceptedFile } from "@/lib/import/parse";
 
 export function Dropzone({
   onFile,
