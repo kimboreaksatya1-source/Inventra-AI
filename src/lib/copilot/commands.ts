@@ -1,6 +1,7 @@
 // Inventra AI — Copilot slash-command registry.
 // Each command expands to a natural-language prompt sent to the Copilot.
 
+import { money } from "../format";
 import type { CopilotContext } from "../types";
 
 export interface CopilotCommand {
@@ -172,7 +173,7 @@ export function filterCommands(query: string): CopilotCommand[] {
 }
 
 function usd(n: number): string {
-  return `$${Math.round(n).toLocaleString()}`;
+  return money(n);
 }
 
 export interface SuggestedCommand {

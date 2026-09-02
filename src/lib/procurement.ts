@@ -1,6 +1,7 @@
 // Inventra AI — Procurement Intelligence. Pure derivation of the analysis snapshot.
 // "What should I buy next, how much, and why." Every quantity is fully explainable.
 
+import { money } from "./format";
 import { LEAD_TIME_DAYS } from "./fmcg-rules";
 import type {
   InventoryAnalysis,
@@ -232,7 +233,7 @@ export function buildProcurement(analysis: InventoryAnalysis): ProcurementResult
   };
 }
 
-const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
+const usd = (n: number) => money(n);
 
 /** Compact text block for the AI purchase-plan narration + deterministic fallback. */
 export function summarizeProcurement(r: ProcurementResult): string {

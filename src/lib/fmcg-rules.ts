@@ -41,7 +41,11 @@ export function classifyVelocities<T extends VProduct>(products: T[]): Map<strin
       continue;
     }
     const pct = n <= 1 ? 1 : (rankOf.get(p.id)! + 1) / n;
-    out.set(p.id, pct >= 0.7 ? "Fast" : pct >= 0.35 ? "Medium" : "Slow");
+    // Relative placement, with an absolute Medium floor: an item selling >= 1.5
+    // units/day is a steady mover, not "slow", even when the catalog has many
+    // faster lines that push its percentile down.
+    const relative = pct >= 0.7 ? "Fast" : pct >= 0.35 ? "Medium" : "Slow";
+    out.set(p.id, relative === "Slow" && p.dailySales >= 1.5 ? "Medium" : relative);
   }
   return out;
 }

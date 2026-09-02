@@ -30,7 +30,7 @@ const STEPS = [
 export function FlowNav() {
   const pathname = usePathname();
   return (
-    <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-thin">
+    <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto scrollbar-thin [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {STEPS.map((step) => {
         const active = pathname === step.href;
         const Icon = step.icon;
@@ -46,7 +46,7 @@ export function FlowNav() {
             )}
           >
             <Icon className="size-4 shrink-0" />
-            <span className="hidden md:inline">{step.label}</span>
+            <span className="hidden lg:inline">{step.label}</span>
           </Link>
         );
       })}

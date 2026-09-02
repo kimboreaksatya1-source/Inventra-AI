@@ -1,10 +1,11 @@
 // Inventra AI — Cash Flow Intelligence. Pure derivation of the analysis snapshot.
 // "Where is my working capital tied up?"
 
+import { money } from "./format";
 import { healthLabel } from "./analysis";
 import type { CapitalConsumer, CashflowResult, InventoryAnalysis } from "./types";
 
-const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
+const usd = (n: number) => money(n);
 
 function clamp(n: number): number {
   return Math.max(0, Math.min(100, n));

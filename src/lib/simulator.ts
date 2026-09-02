@@ -2,6 +2,7 @@
 // Pure functions, shared by client (instant what-if) and server (AI explanation).
 // Runs a hypothetical scenario against the owner's real products.
 
+import { money } from "./format";
 import type { AnalysisInput } from "./analysis";
 import { contextLabel, shortLabel } from "./product-label";
 import type {
@@ -242,7 +243,7 @@ export function simulateScenario(
 }
 
 function formatUsd(n: number): string {
-  return `$${Math.round(n).toLocaleString()}`;
+  return money(n);
 }
 
 /** Compact scenario summary for the AI explanation prompt. */

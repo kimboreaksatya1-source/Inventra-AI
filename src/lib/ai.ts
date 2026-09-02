@@ -11,7 +11,14 @@ function getAI(): OpenAI {
   if (!client) {
     const apiKey = process.env.DEEPSEEK_API_KEY;
     if (!apiKey) throw new Error("DEEPSEEK_API_KEY is not set");
-    client = new OpenAI({ apiKey, baseURL: "https://api.deepseek.com" });
+    // Fail fast so every AI feature falls back to its deterministic path instead
+    // of hanging a request (or a live demo) on a slow / unreachable provider.
+    client = new OpenAI({
+      apiKey,
+      baseURL: "https://api.deepseek.com",
+      timeout: 30_000,
+      maxRetries: 1,
+    });
   }
   return client;
 }

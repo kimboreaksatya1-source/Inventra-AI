@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Boxes, CheckCircle2, FileText, ListChecks, RotateCcw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ const STEP_LABELS: { id: Step; label: string }[] = [
 
 export function UploadClient() {
   const qc = useQueryClient();
+  const router = useRouter();
   const [step, setStep] = useState<Step>("upload");
   const [stage, setStage] = useState<ImportStage>("parse");
   const [error, setError] = useState<string | null>(null);
@@ -130,7 +132,10 @@ export function UploadClient() {
   async function runImport() {
     if (!workbook || !review) return;
     const keep = review.products.filter((p) => p.status !== "ignored");
-    if (keep.length === 0) return;
+    if (keep.length === 0) {
+      setError("Every product is set to “ignore” — keep at least one to import.");
+      return;
+    }
     setStep("importing");
     setStage("validate");
     setBusy(true);
@@ -164,6 +169,9 @@ export function UploadClient() {
       setStage("done");
       setStep("done");
       qc.invalidateQueries();
+      // The dashboard / brief / catalog pages are server-rendered — refresh their
+      // RSC payloads so they reflect the new catalog immediately.
+      router.refresh();
       toast.success(`${data.imported} products in your catalog`);
     } catch (e) {
       setStep("review");

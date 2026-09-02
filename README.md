@@ -46,7 +46,7 @@ bun run db:generate    # generate Prisma client
 bun run dev            # http://localhost:3000  → sign in with Google
 ```
 
-Try it with [`samples/products-sample.csv`](samples/products-sample.csv).
+Try it with [`samples/inventra-demo.csv`](samples/inventra-demo.csv) — a 38-SKU Cambodian mini-mart catalog with a realistic risk / overstock spread.
 
 ## Analysis engine
 
@@ -63,11 +63,11 @@ Try it with [`samples/products-sample.csv`](samples/products-sample.csv).
 deploy/            Caddyfile (self-hosted / standalone deployment)
 docs/              project report, founder cheat sheet, work log, design/ decks
 prisma/            schema + migrations
-samples/           products-sample.csv
+samples/           inventra-demo.csv (demo catalog) + products-sample.csv
 src/
   auth.ts          Auth.js v5 entrypoint (Prisma adapter, Node runtime)
   auth.config.ts   edge-safe auth config (providers, callbacks) — used by middleware
-  middleware.ts    route protection — everything but /login + /api/auth requires a session
+  proxy.ts         route protection — everything but /login + /api/auth requires a session
   app/             App Router pages + api/ route handlers
   components/       feature UI (upload/, brief/, revenue-risk/, copilot/, auth/, …) + ui/ (shadcn)
   hooks/

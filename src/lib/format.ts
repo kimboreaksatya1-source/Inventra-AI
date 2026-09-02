@@ -1,5 +1,21 @@
 // Number, currency & date formatting helpers
 
+/**
+ * Whole-dollar for readable aggregates, but keeps cents for small non-round
+ * values so sub-dollar unit prices ($0.35) and precise figures ($15.75) don't
+ * collapse to "$0" / "$16". Used by the analysis engine, Copilot evidence,
+ * procurement and cash-flow strings.
+ */
+export function money(n: number): string {
+  const v = Number.isFinite(n) ? n : 0;
+  const rounded = Math.round(v * 100) / 100;
+  const decimals = Math.abs(rounded) < 100 && !Number.isInteger(rounded) ? 2 : 0;
+  return `$${rounded.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })}`;
+}
+
 export function formatCurrency(
   value: number,
   opts: { compact?: boolean; decimals?: number } = {}

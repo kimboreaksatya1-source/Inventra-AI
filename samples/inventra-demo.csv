@@ -1,0 +1,39 @@
+Product,Category,Stock,DailySales,SellingPrice,CostPrice
+Coca-Cola 330ml Can,Beverage,84,42,0.60,0.42
+Pepsi 330ml Can,Beverage,510,30,0.55,0.38
+Sprite 1.5L,Beverage,190,11,1.20,0.85
+Red Bull 250ml,Beverage,60,26,1.00,0.70
+Vital Drinking Water 500ml,Water,150,60,0.25,0.14
+Vital Drinking Water 1.5L,Water,900,18,0.45,0.28
+Dasani Water 600ml,Water,3200,9,0.30,0.19
+MAMA Instant Noodles Pork,Instant Noodles,120,38,0.30,0.19
+MAMA Instant Noodles Shrimp,Instant Noodles,64,22,0.30,0.19
+YumYum Instant Noodles Chicken,Instant Noodles,1450,0.8,0.28,0.18
+Nescafe 3-in-1 Sachet,Coffee & Tea,240,55,0.22,0.14
+Nescafe Gold Jar 100g,Coffee & Tea,44,3.5,7.50,5.80
+Lipton Yellow Label 25s,Coffee & Tea,88,3,2.40,1.70
+Lay's Classic 40g,Snacks,160,24,0.75,0.50
+Pringles Original 107g,Snacks,52,6,2.50,1.80
+Oishi Prawn Crackers 60g,Snacks,970,1.5,0.60,0.40
+Snickers 50g,Confectionery,96,18,0.70,0.47
+KitKat 4-Finger,Confectionery,120,13,0.80,0.55
+Mentos Mint Roll,Confectionery,1300,0.6,0.35,0.22
+Dutch Lady UHT Milk 1L,Dairy,58,15,1.60,1.20
+Nestle Bear Brand 140ml,Dairy,140,17,0.65,0.45
+Anchor Butter 227g,Dairy,26,2,4.20,3.30
+Cooking Oil 1L Pouch,Cooking,150,9,2.40,1.95
+Cooking Oil 5L Jerrycan,Cooking,22,3,10.50,8.80
+Fish Sauce 700ml,Cooking,240,7,1.30,0.95
+Soy Sauce 500ml,Cooking,300,5,0.90,0.60
+Jasmine Rice 25kg,Canned & Packaged,34,4,22.00,18.50
+Jasmine Rice 5kg,Canned & Packaged,175,9,6.50,5.20
+Canned Sardines 155g,Canned & Packaged,880,0.7,0.95,0.65
+Sunsilk Shampoo Sachet 5ml,Personal Care,300,70,0.12,0.07
+Head & Shoulders 170ml,Personal Care,50,4,3.60,2.70
+Colgate Toothpaste 150g,Personal Care,110,6,1.80,1.25
+Lifebuoy Soap Bar 100g,Personal Care,420,14,0.55,0.36
+Whisper Sanitary Pads 8s,Personal Care,64,5,1.40,0.98
+Pampers Diapers M 4s,Baby Care,30,5,2.80,2.10
+Dettol Antiseptic 250ml,Household,90,0.4,3.20,2.40
+Downy Fabric Softener Sachet,Household,2600,1.2,0.20,0.12
+Scotch-Brite Sponge 2s,Household,220,4,0.75,0.45

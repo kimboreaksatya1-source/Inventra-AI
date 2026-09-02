@@ -2,6 +2,7 @@
 // System prompts (en/km), message assembly, streaming, structured-tail parsing,
 // and a deterministic fallback that never calls the model.
 
+import { money } from "../format";
 import { AI_MODEL, getAIClient } from "../ai";
 import { findEvidence, renderEvidence, renderEvidenceList } from "./evidence";
 import { shortLabel } from "../product-label";
@@ -127,7 +128,7 @@ export function classify(message: string): Intent {
   return "general";
 }
 
-const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
+const usd = (n: number) => money(n);
 
 /**
  * Reorder line items — read straight from the Procurement Engine's plan.

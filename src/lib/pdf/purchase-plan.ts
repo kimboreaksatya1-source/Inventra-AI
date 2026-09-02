@@ -1,5 +1,6 @@
 // Inventra AI — client-side PDF export of the Purchase Plan.
 
+import { money } from "../format";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { ProcurementPlanResponse } from "../types";
@@ -7,10 +8,6 @@ import type { ProcurementPlanResponse } from "../types";
 const TEAL: [number, number, number] = [15, 118, 110]; // #0F766E
 const CHARCOAL: [number, number, number] = [17, 24, 39]; // #111827
 const MUTED: [number, number, number] = [100, 116, 139];
-
-function money(n: number): string {
-  return `$${Math.round(n).toLocaleString()}`;
-}
 
 /** jsPDF core fonts are Latin-1 only — swap the math glyphs for ASCII. */
 function ascii(s: string): string {

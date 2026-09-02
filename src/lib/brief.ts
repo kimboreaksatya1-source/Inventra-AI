@@ -2,6 +2,7 @@
 // Builds an executive consulting brief from the analysis. Uses DeepSeek when a
 // key is configured; always falls back to a deterministic brief.
 
+import { money } from "./format";
 import { AI_MODEL, getAIClient, isAIConfigured } from "./ai";
 import { healthLabel } from "./analysis";
 import { contextLabel, shortLabel } from "./product-label";
@@ -25,7 +26,7 @@ const PRIORITY_BY_RISK: Record<RiskLevel, Priority> = {
 };
 
 function usd(n: number): string {
-  return `$${Math.round(n).toLocaleString()}`;
+  return money(n);
 }
 
 function roundDays(n: number): number {

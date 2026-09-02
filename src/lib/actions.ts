@@ -2,6 +2,7 @@
 // Pure. Merges the outputs of the Analysis, Revenue Risk, Brief and Simulator
 // engines into one de-duplicated, prioritized action list. No new analysis here.
 
+import { money } from "./format";
 import type { AnalysisInput } from "./analysis";
 import { buildProcurement } from "./procurement";
 import { shortLabel } from "./product-label";
@@ -24,7 +25,7 @@ const PROC_PRIORITY: Record<ProcurementRow["priority"], Priority> = {
   Low: "LOW",
 };
 
-const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
+const usd = (n: number) => money(n);
 
 function slug(s: string): string {
   return s

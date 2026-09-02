@@ -2,6 +2,7 @@
 // Assembles the owner's real business data into (a) a structured object for the
 // right-hand panel and (b) a compact plaintext block injected into every AI request.
 
+import { money } from "../format";
 import { buildProcurement } from "../procurement";
 import { buildCashflow } from "../cashflow";
 import { buildEvidence, evidenceForPrompt } from "./evidence";
@@ -10,7 +11,7 @@ import { contextLabel, shortLabel } from "../product-label";
 import type { BusinessBrief, CopilotContext, InventoryAnalysis } from "../types";
 
 function usd(n: number): string {
-  return `$${Math.round(n).toLocaleString()}`;
+  return money(n);
 }
 
 function days(n: number): string {

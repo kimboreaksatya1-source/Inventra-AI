@@ -3,6 +3,7 @@
 // threshold or formula. Everything here is derived read-only from the analysis,
 // the procurement result and (when it exists) sales-history variability.
 
+import { money } from "./format";
 import { LEAD_TIME_DAYS } from "./fmcg-rules";
 import { shortLabel } from "./product-label";
 import type {
@@ -17,7 +18,7 @@ import type {
   SalesStat,
 } from "./types";
 
-const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
+const usd = (n: number) => money(n);
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
 /* ------------------------------ stability ------------------------------ */

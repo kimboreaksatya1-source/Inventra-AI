@@ -3,6 +3,7 @@
 // Every Copilot recommendation must trace to one of these; nothing here is
 // invented — every value comes from the imported data or a documented formula.
 
+import { money } from "../format";
 import { shortLabel } from "../product-label";
 import type {
   EvidenceBlock,
@@ -14,7 +15,7 @@ import type {
   ProductVelocity,
 } from "../types";
 
-const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
+const usd = (n: number) => money(n);
 const cover = (n: number) => (Number.isFinite(n) ? `${Math.round(n * 10) / 10} days` : "30+ days (no recent sales)");
 
 const TOPIC_RANK: Record<EvidenceBlock["topic"], number> = {
