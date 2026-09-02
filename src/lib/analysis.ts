@@ -115,11 +115,14 @@ export function computeHealthScore(products: ProductAnalysis[]): {
   const n = products.length;
   const active = products.filter((p) => p.dailySales > 0);
 
-  // 1. Stockout risk (40%)
+  // 1. Stockout risk (40%). Only *selling* products can be at stockout risk, so
+  // the penalty is a share of the active catalog — a long tail of zero-sales SKUs
+  // must not dilute a real "half your movers are about to run out" signal.
+  const activeCount = Math.max(1, active.length);
   const critical = active.filter((p) => p.riskLevel === "Critical").length;
   const high = active.filter((p) => p.riskLevel === "High").length;
   const medium = active.filter((p) => p.riskLevel === "Medium").length;
-  const riskPenalty = (critical * 1 + high * 0.55 + medium * 0.2) / n;
+  const riskPenalty = (critical * 1 + high * 0.55 + medium * 0.2) / activeCount;
   const stockoutRisk = clamp(100 - riskPenalty * 130);
 
   // 2. Inventory balance (30%) — velocity-aware overstock, not a fixed day count.

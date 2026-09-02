@@ -9,6 +9,8 @@ import {
 import { AppShell } from "@/components/app/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PriorityBadge } from "@/components/shared/badges";
+import { LoadDemoButton } from "@/components/dashboard/load-demo-button";
 import { latestImport } from "@/lib/import";
 import { getSnapshot } from "@/lib/snapshot";
 import { formatCurrency } from "@/lib/format";
@@ -65,18 +67,53 @@ export default async function HomePage() {
             <div>
               <h2 className="text-lg font-semibold">Start by uploading your data</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                A CSV or Excel export with product, stock, daily sales and prices is all it takes.
+                A CSV or Excel export with product, stock, daily sales and prices is all it takes —
+                or load a sample catalog to explore Inventra now.
               </p>
             </div>
-            <Button asChild>
-              <Link href="/upload">
-                Upload business data
-                <ArrowRight className="size-4" />
-              </Link>
-            </Button>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild>
+                <Link href="/upload">
+                  Upload business data
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <LoadDemoButton />
+            </div>
           </Card>
         ) : (
           <div className="mt-8 space-y-4">
+            {summary && summary.actions.length > 0 && (
+              <Card className="gap-4 p-6">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-lg font-semibold">Top 3 recommended actions</h2>
+                  <Link
+                    href="/actions"
+                    className="text-xs font-medium text-teal-600 hover:underline dark:text-teal-400"
+                  >
+                    Open Action Center →
+                  </Link>
+                </div>
+                <ol className="space-y-2.5">
+                  {summary.actions.map((a, i) => (
+                    <li
+                      key={i}
+                      className="flex flex-col gap-1.5 rounded-lg border border-border p-3 sm:flex-row sm:items-start sm:gap-3"
+                    >
+                      <PriorityBadge priority={a.priority} className="shrink-0 self-start" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{a.action}</p>
+                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{a.reason}</p>
+                      </div>
+                      <span className="shrink-0 text-xs font-semibold text-teal-700 tabular-nums dark:text-teal-300">
+                        {a.expectedImpact}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </Card>
+            )}
+
             <Card className="gap-4 p-6">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-lg font-semibold">Your latest analysis</h2>
@@ -110,8 +147,24 @@ export default async function HomePage() {
                   value={summary?.hasSalesData ? formatCurrency(summary?.totalRevenueAtRisk ?? 0) : "n/a"}
                   hint={summary?.hasSalesData ? "projected, next 30 days" : "needs daily-sales data"}
                 />
+                <Stat
+                  label="Inventory Value"
+                  value={formatCurrency(summary?.inventoryValue ?? 0)}
+                  hint="stock on hand, at cost"
+                />
+                <Stat
+                  label="Cash Locked"
+                  value={summary?.hasCostData ? formatCurrency(summary?.cashLocked ?? 0) : "n/a"}
+                  hint={summary?.hasCostData ? "in slow / dead stock" : "needs cost-price data"}
+                />
+                <Stat
+                  label="Growth Opportunities"
+                  value={String(summary?.opportunityCount ?? 0)}
+                  hint="modelled upside plays"
+                />
               </div>
             </Card>
+
             <div className="flex flex-wrap gap-3">
               <Button asChild>
                 <Link href="/actions">
@@ -146,8 +199,13 @@ async function getSummary(userId: string) {
     totalProducts: snap?.analysis.summary.totalProducts ?? 0,
     atRiskWithinWeek: snap?.analysis.summary.atRiskWithinWeek ?? 0,
     totalRevenueAtRisk: snap?.analysis.summary.totalRevenueAtRisk ?? 0,
-    // Without imported daily sales the risk / health figures are not meaningful.
+    inventoryValue: snap?.analysis.summary.totalInventoryValue ?? 0,
+    cashLocked: snap?.copilotContext.cashflow?.cashLocked ?? 0,
+    opportunityCount: snap?.brief.revenueOpportunities.length ?? 0,
+    actions: (snap?.brief.recommendedActions ?? []).slice(0, 3),
+    // Without imported daily sales / cost prices the derived figures are not meaningful.
     hasSalesData: snap?.analysis.dataQuality?.hasSalesData ?? true,
+    hasCostData: snap?.analysis.dataQuality?.hasCostData ?? true,
     lastImport,
   };
 }
