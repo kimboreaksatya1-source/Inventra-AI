@@ -132,15 +132,16 @@ export async function POST(req: Request) {
       };
 
       try {
-        // The model writes the prose (in the SELECTED language — see
-        // buildSystemPrompt's language lock). The deterministic engine still
-        // owns: the no-data / missing-column guards (fb.blocked), the offline
-        // fallback (no AI key), the English core-SME shortcuts, the reorder
-        // figures, and the grounding-failure / network-error fallbacks below.
+        // Khmer answers and the core SME questions always use the deterministic
+        // engine: instant, identical every time, correct, and works offline.
+        // (Routing Khmer through the model tripped checkGrounding() too often and
+        // appended the deterministic fallback into the same stream — a confusing
+        // "second reply" that was half English. Reverted for demo stability.)
         const useDeterministic =
           fb.blocked ||
           !isAIConfigured() ||
-          (!isKm && DETERMINISTIC_INTENTS.has(classify(message)));
+          isKm ||
+          DETERMINISTIC_INTENTS.has(classify(message));
         if (useDeterministic) {
           await streamDeterministic();
         } else {
