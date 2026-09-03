@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FlowNav } from "./flow-nav";
-import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { UserMenu } from "@/components/auth/user-menu";
 import { auth } from "@/auth";
 import { cn } from "@/lib/utils";
@@ -34,7 +33,6 @@ export async function AppShell({
           </Link>
           <FlowNav />
           <div className="flex shrink-0 items-center gap-1.5">
-            <ThemeToggle />
             {session?.user ? <UserMenu user={session.user} /> : null}
           </div>
         </div>

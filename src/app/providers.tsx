@@ -22,7 +22,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        {/* Demo build: theme locked to light. `forcedTheme` makes next-themes
+            ignore any stored preference / system setting and keeps the `light`
+            class on <html>. Remove this prop to restore theme switching. */}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          forcedTheme="light"
+        >
           {children}
         </ThemeProvider>
       </QueryClientProvider>
