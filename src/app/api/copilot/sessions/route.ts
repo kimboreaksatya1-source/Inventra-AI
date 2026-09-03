@@ -10,19 +10,26 @@ export async function GET() {
   try {
     const userId = await getSessionUserId();
     if (!userId) return unauthorized();
-    const sessions = await db.chatSession.findMany({
-      where: { userId },
-      orderBy: { updatedAt: "desc" },
-      include: { _count: { select: { messages: true } } },
-    });
+    const [sessions, latestImport] = await Promise.all([
+      db.chatSession.findMany({
+        where: { userId },
+        orderBy: { updatedAt: "desc" },
+        include: { _count: { select: { messages: true } } },
+      }),
+      db.importBatch.findFirst({ where: { userId }, orderBy: { createdAt: "desc" } }),
+    ]);
     const payload: ChatSessionSummary[] = sessions.map((s) => ({
       id: s.id,
       title: s.title,
       language: s.language as CopilotLanguage,
+      createdAt: s.createdAt.toISOString(),
       updatedAt: s.updatedAt.toISOString(),
       messageCount: s._count.messages,
     }));
-    return NextResponse.json({ sessions: payload });
+    return NextResponse.json({
+      sessions: payload,
+      latestImportAt: latestImport?.createdAt.toISOString() ?? null,
+    });
   } catch (err) {
     console.error("[/api/copilot/sessions GET] error", err);
     return NextResponse.json({ error: "Failed to load conversations" }, { status: 500 });
@@ -55,6 +62,7 @@ export async function POST(req: Request) {
         id: session.id,
         title: session.title,
         language: session.language as CopilotLanguage,
+        createdAt: session.createdAt.toISOString(),
         updatedAt: session.updatedAt.toISOString(),
         messageCount: 0,
       } satisfies ChatSessionSummary,

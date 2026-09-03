@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 import {
   useCreateSession,
+  useLatestImportAt,
   useSessions,
   useSetSessionLanguage,
 } from "@/lib/queries/copilot";
+import { sessionPredatesImport } from "@/lib/copilot/session-freshness";
 import { useCopilotChat } from "@/hooks/use-copilot-chat";
 import type { CopilotLanguage } from "@/lib/types";
 import { ConversationList } from "./conversation-list";
@@ -17,6 +19,7 @@ import { ChatThread } from "./chat-thread";
 import { Composer } from "./composer";
 import { ContextPanel } from "./context-panel";
 import { LanguageToggle } from "./language-toggle";
+import { StaleDataNotice } from "./stale-data-notice";
 
 const LANG_KEY = "inventra.copilot.lang";
 
@@ -27,9 +30,14 @@ export function CopilotClient() {
   const [rightOpen, setRightOpen] = useState(false);
 
   const { data: sessions } = useSessions();
+  const { data: latestImportAt } = useLatestImportAt();
   const createSession = useCreateSession();
   const setSessionLang = useSetSessionLanguage();
   const chat = useCopilotChat({ sessionId: activeId, language });
+
+  const activeSession = sessions?.find((s) => s.id === activeId);
+  const activeIsStale =
+    !!activeSession && sessionPredatesImport(activeSession, latestImportAt);
 
   useEffect(() => {
     try {
@@ -159,6 +167,10 @@ export function CopilotClient() {
               {chat.error}
             </p>
           </div>
+        )}
+
+        {activeIsStale && activeId && (
+          <StaleDataNotice sessionId={activeId} onStartFresh={handleNew} />
         )}
 
         <Composer

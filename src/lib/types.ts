@@ -614,8 +614,16 @@ export interface ChatSessionSummary {
   id: string;
   title: string;
   language: CopilotLanguage;
+  createdAt: string;
   updatedAt: string;
   messageCount: number;
+}
+
+/** Sessions list + the timestamp of the user's most recent inventory import. */
+export interface ChatSessionsResponse {
+  sessions: ChatSessionSummary[];
+  /** ISO string, or null if the user has never imported. */
+  latestImportAt: string | null;
 }
 
 /** Trailing frame the chat stream emits after the prose. */

@@ -17,7 +17,8 @@ import { UpgradeCard } from "@/components/pricing/upgrade-card";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { useDeleteSession, useSessions } from "@/lib/queries/copilot";
+import { useDeleteSession, useLatestImportAt, useSessions } from "@/lib/queries/copilot";
+import { sessionPredatesImport } from "@/lib/copilot/session-freshness";
 import type { CopilotLanguage } from "@/lib/types";
 
 export function ConversationList({
@@ -34,6 +35,7 @@ export function ConversationList({
   onDeleted: (id: string) => void;
 }) {
   const { data: sessions, isLoading } = useSessions();
+  const { data: latestImportAt } = useLatestImportAt();
   const del = useDeleteSession();
 
   return (
@@ -73,8 +75,15 @@ export function ConversationList({
                 )}
               >
                 <p className="truncate text-sm font-medium">{s.title}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {relativeTime(s.updatedAt)} · {s.messageCount}
+                <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <span>
+                    {relativeTime(s.updatedAt)} · {s.messageCount}
+                  </span>
+                  {sessionPredatesImport(s, latestImportAt) && (
+                    <span className="rounded bg-amber-100 px-1 py-0.5 text-[9px] font-medium text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
+                      older data
+                    </span>
+                  )}
                 </p>
               </button>
               <AlertDialog>

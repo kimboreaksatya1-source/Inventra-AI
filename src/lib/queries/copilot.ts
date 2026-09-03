@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
+  ChatSessionsResponse,
   ChatSessionSummary,
   CopilotContext,
   CopilotLanguage,
@@ -28,8 +29,17 @@ export function useCopilotContext() {
 export function useSessions() {
   return useQuery({
     queryKey: ["copilot", "sessions"],
-    queryFn: () => getJSON<{ sessions: ChatSessionSummary[] }>("/api/copilot/sessions"),
+    queryFn: () => getJSON<ChatSessionsResponse>("/api/copilot/sessions"),
     select: (d) => d.sessions,
+  });
+}
+
+/** Timestamp of the user's most recent inventory import — same fetch as useSessions. */
+export function useLatestImportAt() {
+  return useQuery({
+    queryKey: ["copilot", "sessions"],
+    queryFn: () => getJSON<ChatSessionsResponse>("/api/copilot/sessions"),
+    select: (d) => d.latestImportAt,
   });
 }
 
