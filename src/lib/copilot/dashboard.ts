@@ -63,6 +63,12 @@ export function buildCopilotDashboard(
     roi,
   };
 
+  // Counts only — surfaced as "Inventra analyzed N products · M recommendations".
+  const rmix = context.recommendationMix;
+  const recommendations = rmix
+    ? rmix.reorder + rmix.reduce + rmix.opportunity
+    : context.recommendedActions.length;
+
   return {
     health: { score: context.healthScore, label: context.healthLabel },
     revenueAtRisk: Math.round(context.revenueAtRisk),
@@ -73,5 +79,6 @@ export function buildCopilotDashboard(
     coverage,
     revenueRisk,
     action,
+    analyzed: { products: context.productCount, recommendations },
   };
 }

@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Sparkles } from "lucide-react";
-import { t } from "@/lib/i18n";
 import { MessageBubble } from "./message-bubble";
-import { QuickActions } from "./quick-actions";
+import { CopilotBriefing } from "./copilot-briefing";
 import type { CopilotLanguage, CopilotMessage } from "@/lib/types";
+
+/** Lightweight "is this a why/explain question" check — keeps those answers full. */
+function isWhyQuestion(text: string): boolean {
+  return (
+    /\b(why|explain|how (did|is|does|do|come)|reason|breakdown)\b/i.test(text) ||
+    /ហេតុអ្វី|មូលហេតុ|ពន្យល់/.test(text)
+  );
+}
 
 export function ChatThread({
   messages,
@@ -38,17 +44,12 @@ export function ChatThread({
 
   if (messages.length === 0) {
     return (
-      <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-10">
-        <div className="mx-auto max-w-lg text-center">
-          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-300">
-            <Sparkles className="size-6" />
-          </div>
-          <h2 className="text-lg font-semibold">{t(language, "copilot.emptyTitle")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t(language, "copilot.emptyBody")}</p>
-          <div className="mt-5 flex flex-wrap justify-center gap-2">
-            <QuickActions language={language} disabled={isStreaming} onPick={onQuickAction} />
-          </div>
-        </div>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <CopilotBriefing
+          language={language}
+          disabled={isStreaming}
+          onQuickAction={onQuickAction}
+        />
       </div>
     );
   }
@@ -60,9 +61,16 @@ export function ChatThread({
       className="min-h-0 flex-1 overflow-y-auto scroll-smooth px-4 py-6 sm:px-6"
     >
       <div className="mx-auto max-w-4xl space-y-6">
-        {messages.map((m) => (
-          <MessageBubble key={m.id} message={m} language={language} />
-        ))}
+        {messages.map((m, i) => {
+          const prevUser =
+            m.role === "assistant"
+              ? messages.slice(0, i).reverse().find((x) => x.role === "user")
+              : undefined;
+          const concise = m.role === "assistant" && !isWhyQuestion(prevUser?.content ?? "");
+          return (
+            <MessageBubble key={m.id} message={m} language={language} concise={concise} />
+          );
+        })}
       </div>
     </div>
   );

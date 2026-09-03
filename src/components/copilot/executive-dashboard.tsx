@@ -39,6 +39,15 @@ export function ExecutiveDashboard({
 
   return (
     <div className="mt-1 space-y-3 rounded-2xl border border-border bg-card p-3.5 sm:p-4">
+      {/* ---- AI activity line ---- */}
+      <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <Activity className="size-3 text-teal-600 dark:text-teal-400" />
+        Inventra analyzed {d.analyzed.products} products
+        {d.analyzed.recommendations > 0
+          ? ` · ${d.analyzed.recommendations} recommendation${d.analyzed.recommendations === 1 ? "" : "s"}`
+          : ""}
+      </p>
+
       {/* ---- KPI strip ---- */}
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <Kpi

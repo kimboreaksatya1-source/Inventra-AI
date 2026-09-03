@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, FileText, RefreshCw } from "lucide-react";
+import { Activity, AlertCircle, FileText, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { formatCurrency } from "@/lib/format";
+import { PILOT_IMPACT } from "@/lib/pilot-impact";
 import { useBrief } from "@/lib/queries";
 import { BriefKpis } from "./brief-kpis";
 import { BriefCharts } from "./brief-charts";
@@ -85,6 +86,8 @@ export function BriefReport() {
         )} of revenue is at risk this month.`
       : `Inventory is balanced. ${formatCurrency(s.totalRevenueAtRisk)} of revenue is exposed, nothing critical.`;
 
+  const recCount = s.reorderCount + s.reduceCount + s.opportunityCount;
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Compact header */}
@@ -95,6 +98,11 @@ export function BriefReport() {
           </p>
           <p className="mt-1 max-w-2xl text-lg font-semibold leading-snug tracking-tight sm:text-xl">
             {headline}
+          </p>
+          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Activity className="size-3 text-teal-600" />
+            Inventra analyzed {s.totalProducts} products
+            {recCount > 0 ? ` and generated ${recCount} recommendations` : ""}
           </p>
         </div>
         <div className="flex shrink-0 gap-2 print:hidden">
@@ -128,6 +136,18 @@ export function BriefReport() {
         <SectionLabel>Do these first</SectionLabel>
         <RecommendedActions actions={brief.recommendedActions} />
       </div>
+
+      {PILOT_IMPACT && (
+        <p className="border-t border-border pt-4 text-center text-xs text-muted-foreground">
+          Inventra has analyzed{" "}
+          <span className="font-semibold text-foreground">{PILOT_IMPACT.businesses}</span>{" "}
+          {PILOT_IMPACT.businesses === 1 ? "business" : "businesses"} ·{" "}
+          <span className="font-semibold text-foreground">
+            {formatCurrency(PILOT_IMPACT.revenueProtectedUsd)}
+          </span>{" "}
+          of revenue protected to date
+        </p>
+      )}
     </div>
   );
 }

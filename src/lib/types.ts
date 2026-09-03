@@ -584,6 +584,8 @@ export interface CopilotDashboard {
   revenueRisk: { name: string; amount: number }[];
   /** roi = protectedRevenue ÷ estimatedPurchaseCost; null when cost is unknown. */
   action: { text: string; protectedRevenue: number; roi: number | null };
+  /** "Inventra analyzed N products · M recommendations" — counts only, from the context. */
+  analyzed: { products: number; recommendations: number };
 }
 
 /** Structured payload the assistant appends as a fenced JSON block. */

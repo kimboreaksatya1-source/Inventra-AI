@@ -14,10 +14,15 @@ import type { CopilotLanguage, CopilotMessage } from "@/lib/types";
 export function MessageBubble({
   message,
   language,
+  concise = false,
 }: {
   message: CopilotMessage;
   language: CopilotLanguage;
+  /** true = a data-backed, non-"why" answer: keep prose short, full text on demand. */
+  concise?: boolean;
 }) {
+  const [showFull, setShowFull] = useState(false);
+
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
@@ -29,6 +34,12 @@ export function MessageBubble({
   }
 
   const showTyping = message.streaming && !message.content;
+
+  // Concise mode: a data-backed, non-"why" answer whose prose is long — keep it
+  // short (dashboard is the answer), full text one tap away. Presentation only.
+  const canClamp =
+    concise && !!message.dashboard && !message.streaming && message.content.length > 220;
+  const clamp = canClamp && !showFull;
 
   return (
     <div className="flex gap-3">
@@ -54,7 +65,21 @@ export function MessageBubble({
                 message.error && "bg-red-50 dark:bg-red-950/30"
               )}
             >
-              <Markdown>{message.content || "…"}</Markdown>
+              <div className={cn(clamp && "relative max-h-24 overflow-hidden")}>
+                <Markdown>{message.content || "…"}</Markdown>
+                {clamp && (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-muted to-transparent" />
+                )}
+              </div>
+              {canClamp && (
+                <button
+                  type="button"
+                  onClick={() => setShowFull((v) => !v)}
+                  className="mt-1 text-xs font-medium text-teal-700 hover:underline dark:text-teal-400"
+                >
+                  {t(language, showFull ? "copilot.hideFull" : "copilot.showFull")}
+                </button>
+              )}
             </div>
 
             {message.reorder && message.reorder.length > 0 && (
