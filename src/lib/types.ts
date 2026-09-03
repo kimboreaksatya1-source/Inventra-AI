@@ -564,10 +564,34 @@ export interface CopilotReorderItem {
   formula?: string;
 }
 
+/**
+ * Visual-first executive briefing rendered ABOVE the (short) prose in every
+ * assistant reply. Every figure is lifted straight from the deterministic
+ * analysis / procurement engines — the model never produces or edits it.
+ */
+export interface CopilotDashboard {
+  health: { score: number; label: string };
+  revenueAtRisk: number;
+  criticalCount: number;
+  /** null when no cost prices were imported — never a fabricated 0. */
+  cashLocked: number | null;
+  inventoryValue: number | null;
+  /** Ranked, 3–5 items. */
+  priorities: { rank: number; title: string; impact: string }[];
+  /** Stock-coverage gauges for the most at-risk products (max 5). */
+  coverage: { name: string; days: number; targetDays: number }[];
+  /** Revenue exposed per at-risk product, largest first (max 5). */
+  revenueRisk: { name: string; amount: number }[];
+  /** roi = protectedRevenue ÷ estimatedPurchaseCost; null when cost is unknown. */
+  action: { text: string; protectedRevenue: number; roi: number | null };
+}
+
 /** Structured payload the assistant appends as a fenced JSON block. */
 export interface CopilotStructured {
   insightCards: CopilotInsightCards | null;
   reorder: CopilotReorderItem[];
+  /** Present whenever the business has data; null on the no-data / blocked replies. */
+  dashboard?: CopilotDashboard | null;
 }
 
 export interface CopilotMessage {
@@ -576,6 +600,7 @@ export interface CopilotMessage {
   content: string;
   insightCards?: CopilotInsightCards | null;
   reorder?: CopilotReorderItem[] | null;
+  dashboard?: CopilotDashboard | null;
   language: CopilotLanguage;
   createdAt: string;
   /** client-only: assistant bubble currently receiving a stream */
@@ -600,6 +625,7 @@ export interface CopilotStreamMeta {
   content: string; // final clean markdown (JSON tail removed)
   insightCards: CopilotInsightCards | null;
   reorder: CopilotReorderItem[];
+  dashboard: CopilotDashboard | null;
 }
 
 export interface CopilotStreamError {

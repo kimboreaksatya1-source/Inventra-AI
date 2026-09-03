@@ -146,10 +146,14 @@ export function ProcurementClient() {
     }
   }
 
+  const hasCost = !(data.dataQuality && !data.dataQuality.hasCostData);
+  const roi = hasCost && k.estimatedPurchaseCost > 0 ? k.revenueProtected / k.estimatedPurchaseCost : null;
+  const roiLabel = roi === null ? "n/a" : `${roi >= 10 ? Math.round(roi) : roi.toFixed(1)}×`;
+
   return (
     <div className="space-y-6">
       <DataQualityBanner dq={data.dataQuality} />
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
         <KpiCard
           label="Products to Reorder"
           value={String(k.productsToReorder)}
@@ -186,6 +190,18 @@ export function ProcurementClient() {
           accent="emerald"
           hint="projected 30-day exposure removed"
           note={KPI.revenueAtRiskCovered.note}
+        />
+        <KpiCard
+          label="Return on Order"
+          value={roiLabel}
+          icon={Sparkles}
+          accent="teal"
+          hint={
+            roi === null
+              ? "needs cost prices"
+              : `${formatCurrency(k.revenueProtected)} protected per ${formatCurrency(k.estimatedPurchaseCost)} spent`
+          }
+          note="Revenue at risk covered ÷ estimated purchase cost. Both figures are the ones shown in the cards to the left — this is their ratio, not a new calculation."
         />
       </div>
 

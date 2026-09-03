@@ -112,6 +112,7 @@ export function useCopilotChat({ sessionId, language }: Options) {
                     content: finalized.content,
                     insightCards: finalized.insightCards,
                     reorder: finalized.reorder,
+                    dashboard: finalized.dashboard,
                     streaming: false,
                   }
                 : x

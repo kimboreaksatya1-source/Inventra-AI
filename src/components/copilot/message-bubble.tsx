@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 import { Markdown } from "./markdown";
 import { InsightCards } from "./insight-cards";
+import { ExecutiveDashboard } from "./executive-dashboard";
 import { ReorderRecommendations } from "./reorder-recommendations";
 import { TypingIndicator } from "./typing-indicator";
 import type { CopilotLanguage, CopilotMessage } from "@/lib/types";
@@ -41,9 +42,15 @@ export function MessageBubble({
           </div>
         ) : (
           <>
+            {/* Visual briefing first — the dashboard is the summary. */}
+            {message.dashboard && (
+              <ExecutiveDashboard dashboard={message.dashboard} language={language} />
+            )}
+
             <div
               className={cn(
                 "rounded-2xl rounded-tl-sm bg-muted px-4 py-3",
+                message.dashboard && "mt-3",
                 message.error && "bg-red-50 dark:bg-red-950/30"
               )}
             >
@@ -53,7 +60,8 @@ export function MessageBubble({
             {message.reorder && message.reorder.length > 0 && (
               <ReorderRecommendations items={message.reorder} language={language} />
             )}
-            {message.insightCards && (
+            {/* InsightCards are redundant once the dashboard is shown. */}
+            {!message.dashboard && message.insightCards && (
               <InsightCards cards={message.insightCards} language={language} />
             )}
 

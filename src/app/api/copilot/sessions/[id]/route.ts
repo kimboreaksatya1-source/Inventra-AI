@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
+import { getSnapshot } from "@/lib/snapshot";
+import { buildProcurement } from "@/lib/procurement";
+import { buildCopilotDashboard } from "@/lib/copilot";
 import type {
   CopilotInsightCards,
   CopilotLanguage,
@@ -35,6 +38,26 @@ export async function GET(
       language: m.language as CopilotLanguage,
       createdAt: m.createdAt.toISOString(),
     }));
+
+    // The executive dashboard isn't persisted per-message — it's "where the
+    // business stands now". Rebuild it from the current snapshot and pin it to
+    // the latest assistant turn so a reopened conversation still leads with the
+    // visual briefing.
+    try {
+      const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+      if (lastAssistant) {
+        const snap = await getSnapshot(userId);
+        if (snap) {
+          lastAssistant.dashboard = buildCopilotDashboard(
+            snap.copilotContext,
+            buildProcurement(snap.analysis)
+          );
+        }
+      }
+    } catch (err) {
+      console.error("[/api/copilot/sessions/[id] GET] dashboard rebuild failed", err);
+    }
+
     return NextResponse.json({
       session: {
         id: session.id,

@@ -29,7 +29,7 @@ export function ActionCard({
   return (
     <div
       className={cn(
-        "rounded-xl border bg-card p-4 transition-opacity",
+        "rounded-xl border bg-card p-3.5 transition-opacity",
         saved ? "border-amber-300 dark:border-amber-800" : "border-border",
         pending && "opacity-50"
       )}
@@ -59,21 +59,12 @@ export function ActionCard({
         <div className="min-w-0">
           <p className="font-semibold">{action.recommendation}</p>
           {action.reasons?.length ? (
-            <ul className="mt-1.5 space-y-0.5 text-sm text-muted-foreground">
-              {action.reasons.map((r, i) => (
-                <li key={i} className="flex items-start gap-1.5">
-                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-muted-foreground/50" />
-                  {r}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-1 text-sm text-muted-foreground">{action.reason}</p>
-          )}
-          {action.triggeredBy && (
-            <p className="mt-1.5 text-[11px] text-muted-foreground/80">
-              <span className="font-medium">Why you&apos;re seeing this:</span> {action.triggeredBy}
+            <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">
+              {action.reasons.slice(0, 2).join(" · ")}
+              {action.reasons.length > 2 ? ` · +${action.reasons.length - 2} more` : ""}
             </p>
+          ) : (
+            <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{action.reason}</p>
           )}
         </div>
         <div className="shrink-0 sm:w-40 sm:text-right">

@@ -230,6 +230,8 @@ export async function POST(req: Request) {
         content: cleanText,
         insightCards,
         reorder,
+        // Deterministic, never model-authored — safe on every path.
+        dashboard: fb.dashboard ?? null,
       };
       send(`\n${SEP}${JSON.stringify(meta)}${SEP}`);
       controller.close();

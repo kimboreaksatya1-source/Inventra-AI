@@ -27,11 +27,20 @@ const STEPS = [
   { href: "/copilot", label: "Copilot", icon: Bot },
 ] as const;
 
+/**
+ * Demo mode — hides modules that aren't in the redesigned demo flow yet so
+ * judges don't land on them. The routes still exist and work directly by URL;
+ * flip DEMO_MODE to false (or clear DEMO_HIDDEN) to restore the full nav.
+ */
+const DEMO_MODE = true;
+const DEMO_HIDDEN = new Set<string>(["/simulator", "/procurement", "/cashflow"]);
+
 export function FlowNav() {
   const pathname = usePathname();
+  const steps = DEMO_MODE ? STEPS.filter((s) => !DEMO_HIDDEN.has(s.href)) : STEPS;
   return (
     <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto scrollbar-thin [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {STEPS.map((step) => {
+      {steps.map((step) => {
         const active = pathname === step.href;
         const Icon = step.icon;
         return (

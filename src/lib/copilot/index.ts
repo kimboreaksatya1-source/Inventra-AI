@@ -5,6 +5,7 @@
 import { money } from "../format";
 import { AI_MODEL, getAIClient } from "../ai";
 import { findEvidence, renderEvidence, renderEvidenceList } from "./evidence";
+import { buildCopilotDashboard } from "./dashboard";
 import { shortLabel } from "../product-label";
 import type {
   CopilotContext,
@@ -19,6 +20,7 @@ import type {
 } from "../types";
 
 export { parseStructuredTail, stripStreamingTail } from "./parse";
+export { buildCopilotDashboard } from "./dashboard";
 
 /* ------------------------------- prompts -------------------------------- */
 
@@ -44,6 +46,14 @@ const JSON_TAIL = `- After the prose, output ONE fenced \`\`\`json code block an
 
 // English: the analyst-style DATA / RULE / CONCLUSION breakdown.
 const OUTPUT_CONTRACT_EN = `
+LENGTH & SHAPE — you are a business-intelligence copilot, not a report writer. The owner
+already sees an executive dashboard (health score, revenue at risk, critical count, cash
+locked, priority list, coverage gauges, revenue-risk bars) rendered ABOVE your text.
+- Do NOT restate those dashboard numbers in prose. Reference them ("the 5 critical items above"), don't re-list them.
+- Keep the whole reply under ~120 words. Lead with the decision, not the background.
+- 3–5 bullet points maximum. No multi-paragraph narration, no "Executive Summary" heading (the dashboard is the summary).
+- Only expand into the DATA / RULE / CONCLUSION breakdown below when the owner explicitly asks "why" or "how".
+
 FORMAT — respond in GitHub-flavored Markdown:
 - Start with a short bold title line (e.g. **Reorder Recommendations**).
 - For every product recommendation, warning or risk statement, structure it as:
@@ -278,11 +288,15 @@ export function buildDeterministicReply(
           "Upload your product file on the Upload page.",
           "Unlocks full analysis, risk scoring and reorder guidance."
         );
-    return { content, insightCards: null, reorder: [], blocked: true };
+    return { content, insightCards: null, reorder: [], dashboard: null, blocked: true };
   }
 
   const intent = classify(userMessage);
   const dq = context.dataQuality;
+  // The visual briefing rendered above the prose — deterministic, attached to
+  // every data-backed reply (including the blocked ones, which still show the
+  // health score / inventory value the owner did provide).
+  const dashboard = buildCopilotDashboard(context, procurement);
 
   // Missing daily-sales data → every sales-derived answer would be guesswork.
   const salesDependent =
@@ -303,7 +317,7 @@ export function buildDeterministicReply(
           "Import a daily-sales column on the Upload page.",
           "Unlocks the purchase plan, risk scoring and cash-flow analysis."
         );
-    return { content, insightCards: null, reorder: [], blocked: true };
+    return { content, insightCards: null, reorder: [], dashboard, blocked: true };
   }
 
   // Cash-flow / profit answers depend on cost prices — without them every $ figure would be 0/guessed.
@@ -313,7 +327,7 @@ export function buildDeterministicReply(
         close("នាំចូលជួរ 'តម្លៃដើម' នៅទំព័រ Upload។", "បើកដំណើរការការវិភាគលំហូរសាច់ប្រាក់។")
       : "I can't analyse cash flow — no cost prices were imported. Inventory value, margins and locked capital all need cost prices, and Inventra does not estimate them." +
         close("Import a cost-price column on the Upload page.", "Unlocks the cash-flow analysis.");
-    return { content, insightCards: null, reorder: [], blocked: true };
+    return { content, insightCards: null, reorder: [], dashboard, blocked: true };
   }
 
   const plan = procurement?.plan ?? [];
@@ -540,19 +554,18 @@ export function buildDeterministicReply(
       break;
     }
     case "summary": {
+      // The dashboard above already carries health / revenue-at-risk / critical
+      // count / inventory value — don't repeat them. Just the 3 moves that matter.
+      const moves = context.recommendedActions.slice(0, 3);
       content =
-        (km ? `**សេចក្តីសង្ខេបអាជីវកម្ម — ${context.business}**\n\n` : `**Business Summary — ${context.business}**\n\n`) +
-        (km
-          ? `- ពិន្ទុសុខភាពស្តុក៖ **${context.healthScore}/100** (${context.healthLabel})\n- ចំណូលដែលមានហានិភ័យ៖ **${usd(
-              context.revenueAtRisk
-            )}**\n- ទំនិញសំខាន់ៗ៖ **${context.criticalProducts.length}**\n- តម្លៃស្តុកសរុប៖ **${usd(context.inventoryValue)}**`
-          : `- Inventory health: **${context.healthScore}/100** (${context.healthLabel})\n- Revenue at risk: **${usd(
-              context.revenueAtRisk
-            )}**\n- Critical products: **${context.criticalProducts.length}**\n- Inventory value on hand: **${usd(
-              context.inventoryValue
-            )}**\n- Top sellers: ${context.topSellers.map((p) => p.name).join(", ") || "n/a"}`) +
+        (km ? "**អ្វីដែលសំខាន់បំផុតឥឡូវនេះ**\n\n" : "**What matters most right now**\n\n") +
+        (moves.length
+          ? moves.map((a) => `- ${a.action} — ${a.expectedImpact}`).join("\n")
+          : km
+          ? "- ស្តុករបស់អ្នកមានតុល្យភាព — គ្មានអ្វីបន្ទាន់ទេ។"
+          : "- Inventory is balanced — nothing is urgent today.") +
         close(
-          context.recommendedActions[0]?.action ?? (km ? "រក្សាល្បឿនការបញ្ជាទិញបច្ចុប្បន្ន" : "Keep your current ordering cadence"),
+          moves[0]?.action ?? (km ? "រក្សាល្បឿនការបញ្ជាទិញបច្ចុប្បន្ន" : "Keep your current ordering cadence"),
           km ? `ការពារ ${usd(totalProtect)} នៃចំណូលក្នុងមួយខែ។` : `Protects ${usd(totalProtect)} of revenue over the next month.`
         );
       cards = {
@@ -689,5 +702,5 @@ export function buildDeterministicReply(
     }
   }
 
-  return { content, insightCards: cards, reorder: attachReorder ? reorder : [] };
+  return { content, insightCards: cards, reorder: attachReorder ? reorder : [], dashboard };
 }

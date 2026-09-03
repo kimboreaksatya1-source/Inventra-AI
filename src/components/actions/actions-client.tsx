@@ -16,7 +16,7 @@ import type {
   ResolvedAction,
 } from "@/lib/types";
 import { ActionStats } from "./action-stats";
-import { AiBriefing } from "./ai-briefing";
+import { ActionHighlights } from "./action-highlights";
 import { ActionCard, ResolvedRow } from "./action-card";
 import { CompletedList } from "./completed-list";
 import {
@@ -240,11 +240,7 @@ export function ActionsClient() {
 
       <ActionStats totals={data.totals} />
 
-      <AiBriefing
-        briefing={data.briefing}
-        source={data.briefingSource}
-        generatedAt={data.generatedAt}
-      />
+      <ActionHighlights actions={openActions} />
 
       <div className="space-y-4">
         <QuickTabs value={ui.view} onChange={(v) => setUi((s) => ({ ...s, view: v }))} counts={counts} />
