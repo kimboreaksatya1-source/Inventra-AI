@@ -58,6 +58,15 @@ export function Composer({
     setActiveIndex(0);
   }, [value]);
 
+  // ChatGPT-style auto-grow: expand the textarea with its content, capped at
+  // ~7 lines (matches the max-h-40 class), then it scrolls internally.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [value]);
+
   function selectCommand(cmd: CopilotCommand) {
     setDismissed(true);
     if (cmd.autoSubmit && !isStreaming && !disabled) {
@@ -110,7 +119,7 @@ export function Composer({
 
   return (
     <div className="border-t border-border bg-background px-4 py-3 sm:px-6">
-      <div className="relative mx-auto max-w-3xl">
+      <div className="relative mx-auto max-w-4xl">
         {paletteOpen && (
           <CommandPalette
             entries={entries}

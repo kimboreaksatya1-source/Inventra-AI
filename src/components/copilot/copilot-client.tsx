@@ -40,6 +40,16 @@ export function CopilotClient() {
     }
   }, []);
 
+  // The Copilot workspace owns the viewport: only the message list scrolls, the
+  // page itself never does. Restored on navigation away.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   useEffect(() => {
     if (activeId === null && sessions && sessions.length > 0) {
       setActiveId(sessions[0].id);
@@ -90,14 +100,14 @@ export function CopilotClient() {
   };
 
   return (
-    <div className="grid h-[calc(100vh-4rem)] grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_340px]">
+    <div className="grid h-[calc(100dvh-4rem)] grid-cols-1 overflow-hidden lg:grid-cols-[260px_minmax(0,1fr)_340px]">
       {/* Left — desktop */}
       <aside className="hidden min-h-0 border-r border-border lg:block">
         <ConversationList {...listProps} />
       </aside>
 
       {/* Center */}
-      <section className="flex min-w-0 flex-col">
+      <section className="flex min-h-0 min-w-0 flex-col">
         {/* Mobile top bar */}
         <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2 lg:hidden">
           <Sheet open={leftOpen} onOpenChange={setLeftOpen}>
@@ -145,7 +155,7 @@ export function CopilotClient() {
 
         {chat.error && (
           <div className="px-4">
-            <p className="mx-auto max-w-3xl pb-1 text-xs text-red-600 dark:text-red-400">
+            <p className="mx-auto max-w-4xl pb-1 text-xs text-red-600 dark:text-red-400">
               {chat.error}
             </p>
           </div>

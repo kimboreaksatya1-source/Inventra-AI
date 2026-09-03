@@ -18,16 +18,27 @@ export function ChatThread({
   isStreaming: boolean;
   onQuickAction: (prompt: string) => void;
 }) {
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  // Whether the user is parked at the bottom. While true we follow new output;
+  // once they scroll up to read history we leave them alone.
+  const pinned = useRef(true);
   const lastLen = messages[messages.length - 1]?.content.length ?? 0;
 
+  function handleScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  }
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [messages.length, lastLen]);
+    const el = scrollRef.current;
+    if (!el || !pinned.current) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: isStreaming ? "auto" : "smooth" });
+  }, [messages.length, lastLen, isStreaming]);
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center px-4 py-10">
+      <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-10">
         <div className="mx-auto max-w-lg text-center">
           <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-300">
             <Sparkles className="size-6" />
@@ -43,12 +54,15 @@ export function ChatThread({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
-      <div className="mx-auto max-w-3xl space-y-6">
+    <div
+      ref={scrollRef}
+      onScroll={handleScroll}
+      className="min-h-0 flex-1 overflow-y-auto scroll-smooth px-4 py-6 sm:px-6"
+    >
+      <div className="mx-auto max-w-4xl space-y-6">
         {messages.map((m) => (
           <MessageBubble key={m.id} message={m} language={language} />
         ))}
-        <div ref={bottomRef} />
       </div>
     </div>
   );
