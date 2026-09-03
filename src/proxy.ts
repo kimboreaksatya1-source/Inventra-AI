@@ -9,6 +9,6 @@ export default NextAuth(authConfig).auth;
 
 export const config = {
   matcher: [
-    "/((?!api/auth|login|_next/static|_next/image|favicon.ico|robots.txt|inventra-.*\\.png).*)",
+    "/((?!api/auth|login|privacy|terms|_next/static|_next/image|favicon.ico|robots.txt|inventra-.*\\.png).*)",
   ],
 };
