@@ -7,7 +7,7 @@ import {
   ArrowUp,
   ChevronsUpDown,
   Package,
-  Search,
+  SearchX,
   ShieldAlert,
   TrendingDown,
 } from "lucide-react";
@@ -19,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { KpiCard } from "@/components/shared/kpi-card";
@@ -33,6 +32,13 @@ import { formatCurrency } from "@/lib/format";
 import { KPI } from "@/lib/kpi-glossary";
 import { useAnalysis } from "@/lib/queries";
 import type { Priority, ProductAnalysis, RiskLevel } from "@/lib/types";
+import {
+  DEFAULT_RISK_FILTERS,
+  isFiltered,
+  matchesFilters,
+  RiskFilters,
+  type RiskFilterState,
+} from "./risk-filters";
 
 const PRIORITY_BY_RISK: Record<RiskLevel, Priority> = {
   Critical: "CRITICAL",
@@ -42,38 +48,23 @@ const PRIORITY_BY_RISK: Record<RiskLevel, Priority> = {
   None: "LOW",
 };
 
-const FILTERS: { id: RiskLevel | "all"; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "Critical", label: "Critical" },
-  { id: "High", label: "High" },
-  { id: "Medium", label: "Medium" },
-  { id: "Low", label: "Low" },
-];
-
 type SortKey = "name" | "stock" | "dailySales" | "daysRemaining" | "estimatedRevenueAtRisk";
 
 export function RiskTable() {
   const { data, isLoading, isError, error, refetch } = useAnalysis();
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<RiskLevel | "all">("all");
+  const [filters, setFilters] = useState<RiskFilterState>(DEFAULT_RISK_FILTERS);
   const [sortKey, setSortKey] = useState<SortKey>("estimatedRevenueAtRisk");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const products = data?.analysis?.products ?? [];
 
+  const categories = useMemo(
+    () => [...new Set(products.map((p) => p.category).filter(Boolean))].sort(),
+    [products]
+  );
+
   const rows = useMemo(() => {
-    let list = [...products];
-    const q = search.trim().toLowerCase();
-    if (q) {
-      list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
-          (p.brand ?? "").toLowerCase().includes(q) ||
-          (p.sku ?? "").toLowerCase().includes(q)
-      );
-    }
-    if (filter !== "all") list = list.filter((p) => p.riskLevel === filter);
+    const list = products.filter((p) => matchesFilters(p, filters));
     list.sort((a, b) => {
       const av = sortValue(a, sortKey);
       const bv = sortValue(b, sortKey);
@@ -82,7 +73,7 @@ export function RiskTable() {
       return 0;
     });
     return list;
-  }, [products, search, filter, sortKey, sortDir]);
+  }, [products, filters, sortKey, sortDir]);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -183,33 +174,13 @@ export function RiskTable() {
         </p>
       </details>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative sm:max-w-xs">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search products or categories"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setFilter(f.id)}
-              className={cn(
-                "rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                filter === f.id
-                  ? "bg-teal-600 text-white"
-                  : "bg-muted text-muted-foreground hover:bg-teal-50 hover:text-teal-700 dark:hover:bg-teal-950/40"
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <RiskFilters
+        value={filters}
+        onChange={setFilters}
+        categories={categories}
+        shown={rows.length}
+        total={products.length}
+      />
 
       <Card className="p-0">
         <Table>
@@ -280,11 +251,20 @@ export function RiskTable() {
           </TableBody>
         </Table>
         {rows.length === 0 && (
-          <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-            {filter === "all" && !search ? (
-              <NoRiskEmptyState />
+          <div className="p-4">
+            {isFiltered(filters) ? (
+              <EmptyState
+                icon={SearchX}
+                title="No matching products"
+                description="Nothing matches the current filters."
+                action={
+                  <Button variant="outline" onClick={() => setFilters(DEFAULT_RISK_FILTERS)}>
+                    Clear filters
+                  </Button>
+                }
+              />
             ) : (
-              "No products match this filter."
+              <NoRiskEmptyState />
             )}
           </div>
         )}
