@@ -1,0 +1,48 @@
+sku,name,stock,unitCost,sellingPrice,dailySales,leadTimeDays
+PH-001,Paracetamol 500mg (10 tabs),30,0.1,0.25,25,4
+PH-002,ORS Rehydration Sachet,22,0.08,0.2,18,3
+PH-003,Vitamin C 1000mg (10 tabs),28,0.15,0.4,20,7
+PH-004,Surgical Face Masks (box of 50),15,2.2,3.5,3.5,10
+PH-005,Amoxicillin 500mg (10 caps),18,0.2,0.55,12,6
+PH-006,Antiseptic Solution 500ml (Betadine-type),80,1.6,2.6,0.8,15
+PH-007,Cotton Wool Roll 100g,70,0.9,1.5,0.7,12
+PH-008,Multivitamin Syrup 200ml (Kids),55,2.0,3.2,0.6,20
+PH-009,Herbal Cough Lozenges (box),90,0.8,1.4,0.9,14
+PH-010,Hand Sanitizer 500ml,65,1.3,2.1,0.9,10
+PH-011,Imported Slimming Tea Box,40,3.5,6.0,0.05,30
+PH-012,"Adult Diapers (Large, pack of 10)",35,4.2,6.5,0.08,25
+PH-013,Specialty Joint Pain Cream (Imported),30,3.8,6.2,0.06,28
+PH-014,Cough Syrup 100ml (Adult),26,0.9,1.6,2.5,10
+PH-015,Cough Syrup 100ml (Children),24,0.95,1.7,2.2,10
+PH-016,Ibuprofen 400mg (10 tabs),32,0.18,0.45,4,6
+PH-017,Antacid Tablets (10 tabs),30,0.12,0.3,2.8,6
+PH-018,Loperamide (Diarrhea) 6 tabs,25,0.15,0.4,2,7
+PH-019,Antihistamine Tablets (10 tabs),28,0.2,0.5,2.5,7
+PH-020,Insect Repellent Lotion 60ml,22,0.85,1.5,1.8,10
+PH-021,Digital Thermometer,20,2.0,3.5,1.2,15
+PH-022,Blood Pressure Monitor,10,12.0,18.0,0.3,20
+PH-023,Glucose Test Strips (25pc),18,6.5,9.5,0.6,18
+PH-024,Elastic Bandage Roll,26,0.6,1.1,1.5,10
+PH-025,Adhesive Plasters (box of 100),34,0.7,1.3,2,10
+PH-026,Iodine Antiseptic 60ml,28,0.55,1.0,1.3,10
+PH-027,Zinc Oxide Cream 30g,24,0.6,1.1,1.1,10
+PH-028,"Baby Diapers (Medium, pack of 20)",30,3.8,5.6,1.6,14
+PH-029,Baby Wipes (80pc pack),35,1.1,1.8,2.2,10
+PH-030,Vitamin B Complex (10 tabs),26,0.18,0.45,2,8
+PH-031,Vitamin D3 Tablets (10 tabs),22,0.22,0.55,1.6,10
+PH-032,Fish Oil Omega-3 (30 caps),20,3.2,5.0,1,15
+PH-033,Calcium Tablets (30 tabs),24,2.5,4.0,1,15
+PH-034,Probiotic Sachets (10pc),18,2.8,4.5,0.9,15
+PH-035,Menstrual Pads (pack of 8),40,0.85,1.5,3,10
+PH-036,Condoms (3-pack),30,0.9,1.8,1.5,10
+PH-037,Pregnancy Test Kit,22,1.0,2.0,1,12
+PH-038,Eye Drops 10ml,24,0.6,1.2,1.4,10
+PH-039,Nasal Spray 20ml,20,1.1,2.0,1,12
+PH-040,Throat Spray 30ml,18,1.2,2.1,0.9,12
+PH-041,Muscle Pain Relief Gel 50g,26,1.3,2.3,1.5,10
+PH-042,Anti-Fungal Cream 20g,22,1.0,1.8,1.1,10
+PH-043,Rehydration Electrolyte Powder (5pc),28,0.6,1.1,2,8
+PH-044,Surgical Gloves (box of 50),24,2.5,4.0,1,12
+PH-045,N95 Respirator Mask (5pc),20,3.0,5.0,1.2,15
+PH-046,Herbal Cold Relief Capsules (10pc),26,0.7,1.3,1.8,8
+PH-047,Anti-Nausea Tablets (10 tabs),22,0.25,0.55,1.3,8

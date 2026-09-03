@@ -1,0 +1,51 @@
+sku,name,stock,unitCost,sellingPrice,dailySales,leadTimeDays
+MM-001,Coca-Cola 330ml Can,18,0.28,0.6,22,3
+MM-002,Red Bull 250ml,12,0.55,1.0,14,5
+MM-003,Vital Water 500ml,25,0.15,0.35,30,2
+MM-004,Angkor Beer Can 330ml,20,0.45,0.85,18,4
+MM-005,Instant Noodles Family Pack (30pc),180,5.5,8.0,1.2,10
+MM-006,Cooking Oil 1L Bottle,150,1.6,2.2,1.0,14
+MM-007,Bottled Water 1.5L (case of 12),90,3.6,5.0,0.8,7
+MM-008,Canned Fish (Mackerel in Tomato),200,0.7,1.1,1.5,12
+MM-009,Instant Coffee 3-in-1 Box (30 sachets),110,2.2,3.2,1.0,10
+MM-010,Imported Belgian Chocolate Box,45,4.8,7.5,0.1,20
+MM-011,Novelty Keychain Snack Pack,60,0.9,1.5,0.05,25
+MM-012,Energy Gel Sachet (Sports),50,1.2,2.0,0.1,18
+MM-013,Lay's Potato Chips 60g,65,0.55,0.9,6,7
+MM-014,Oreo Biscuits 137g,70,0.75,1.2,5,7
+MM-015,Ovaltine Chocolate Malt 300g,40,2.1,3.2,1.8,10
+MM-016,Milo Chocolate Drink 300ml,55,0.6,1.0,4,6
+MM-017,Sting Energy Drink 330ml,48,0.45,0.8,5,5
+MM-018,Angkor Energy Drink 150ml,50,0.35,0.6,6,5
+MM-019,Pocari Sweat 500ml,42,0.65,1.1,3.5,6
+MM-020,Fanta Orange 330ml Can,38,0.28,0.6,5,4
+MM-021,Sprite 330ml Can,36,0.28,0.6,5,4
+MM-022,Number 1 Energy Drink 150ml,44,0.3,0.5,6,4
+MM-023,Koh Kong Salted Egg 4pc,30,1.0,1.6,1.5,7
+MM-024,Prince Biscuits (Choco) 300g,35,1.1,1.7,2.5,8
+MM-025,Ritz Crackers 200g,32,1.3,2.0,2,8
+MM-026,Pringles Original 110g,28,1.6,2.5,2.2,10
+MM-027,Nissin Instant Noodles Cup,95,0.35,0.55,8,7
+MM-028,Yum Yum Instant Noodles Pack,100,0.28,0.45,9,7
+MM-029,Sugar White 1kg Bag,70,0.8,1.1,3,10
+MM-030,Salt Iodized 500g Bag,60,0.3,0.5,2,10
+MM-031,Fish Sauce 700ml Bottle,50,0.9,1.4,2.5,10
+MM-032,Soy Sauce 500ml Bottle,48,0.7,1.1,2,10
+MM-033,MSG Seasoning 100g,40,0.25,0.45,2,10
+MM-034,Toilet Paper Roll (4-pack),55,1.2,1.8,3.5,7
+MM-035,Dishwashing Liquid 750ml,42,1.1,1.7,2,9
+MM-036,Laundry Detergent Powder 1kg,38,1.5,2.3,2.2,9
+MM-037,Candles (pack of 6),30,0.6,1.0,0.8,15
+MM-038,AA Batteries (4-pack),45,0.9,1.5,1.5,12
+MM-039,Matches (box of 10),50,0.2,0.4,1,10
+MM-040,Fresh Eggs (tray of 30),25,3.2,4.2,2,3
+MM-041,White Bread Loaf,20,0.6,1.0,4,2
+MM-042,Fresh Milk 1L Carton,22,1.3,1.9,3.5,4
+MM-043,Yogurt Drink 180ml,34,0.35,0.6,4,5
+MM-044,Ice Cream Cup 100ml,30,0.55,0.9,3,5
+MM-045,Cigarettes Ara Local Pack,26,1.1,1.6,4,6
+MM-046,Betagen Yogurt Drink 300ml,28,0.6,1.0,2.8,5
+MM-047,Plastic Bags (pack of 100),65,0.5,0.9,1.2,14
+MM-048,Umbrella (Basic Folding),18,2.5,4.0,0.4,20
+MM-049,Phone Top-Up Card $5,40,4.8,5.0,3,1
+MM-050,Reusable Shopping Bag,24,0.8,1.3,0.6,15
