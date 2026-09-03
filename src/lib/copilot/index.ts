@@ -87,6 +87,21 @@ function buildOutputContract(language: CopilotLanguage): string {
 }
 
 export function buildSystemPrompt(language: CopilotLanguage): string {
+  // Highest-priority directive: the SELECTED language is the source of truth for
+  // the reply, regardless of what language the user typed in or what language the
+  // BUSINESS SUMMARY / evidence is written in.
+  const langLock =
+    language === "km"
+      ? `LANGUAGE — HIGHEST PRIORITY. This overrides every other instruction below.
+You must answer entirely in Khmer. The user may write in any language (English, Khmer, or mixed) — read it, understand the request, but ALWAYS respond in Khmer. Never switch to English because the question, the data, or the evidence is in English.
+Keep product names, SKU codes, numbers, percentages, dates, and the tokens KPI, PDF, CSV, AI, Inventra AI and currency values ($) unchanged.
+
+`
+      : `LANGUAGE — HIGHEST PRIORITY. This overrides every other instruction below.
+You must answer entirely in English. The user may write in any language — read it, understand the request, but ALWAYS respond in English.
+
+`;
+
   const base = `You are Inventra AI — an inventory advisor for an FMCG business: a distributor, mini-mart, or retail grocery store.
 You make BUSINESS DECISIONS, not data entry. You are given a BUSINESS SUMMARY built from the owner's real imported data.
 Every product line carries a VELOCITY class (fast / medium / slow mover), its DAYS OF COVER, a rule-based ACTION
@@ -112,7 +127,7 @@ Rules:
 - In the JSON block keep the keys in English but write all string values in Khmer.`
       : `\n\nLANGUAGE: Respond in clear, professional English.`;
 
-  return base + lang + "\n" + buildOutputContract(language);
+  return langLock + base + lang + "\n" + buildOutputContract(language);
 }
 
 export function buildMessages(
