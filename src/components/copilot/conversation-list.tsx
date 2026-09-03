@@ -13,6 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { UpgradeCard } from "@/components/pricing/upgrade-card";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -109,6 +110,10 @@ export function ConversationList({
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="border-t border-border p-3">
+        <UpgradeCard />
       </div>
     </div>
   );
