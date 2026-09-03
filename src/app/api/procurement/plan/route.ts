@@ -71,6 +71,7 @@ export async function POST() {
       forecast: buildForecastEvidence(snap.analysis, result, await loadSalesStats(userId)),
       summary,
       source,
+      business: snap.analysis.business,
     } satisfies ProcurementPlanResponse);
   } catch (err) {
     console.error("[/api/procurement/plan] error", err);

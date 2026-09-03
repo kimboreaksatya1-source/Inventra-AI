@@ -5,14 +5,17 @@ import { FileDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { exportBriefPdf } from "@/lib/pdf";
-import type { BusinessBrief } from "@/lib/types";
+import type { BusinessBrief, ProductAnalysis } from "@/lib/types";
 
 export function ExportPdfButton({
   brief,
   business,
+  products = [],
 }: {
   brief: BusinessBrief;
   business: string;
+  /** analysis.products — used to render English product names in the PDF. */
+  products?: Pick<ProductAnalysis, "name" | "canonicalName" | "sku">[];
 }) {
   const [busy, setBusy] = useState(false);
   return (
@@ -22,7 +25,7 @@ export function ExportPdfButton({
       onClick={async () => {
         setBusy(true);
         try {
-          exportBriefPdf(brief, business);
+          await exportBriefPdf(brief, business, products);
         } catch (e) {
           console.error(e);
           toast.error("Could not generate the PDF.");

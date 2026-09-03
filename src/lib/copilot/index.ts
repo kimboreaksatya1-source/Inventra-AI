@@ -22,22 +22,11 @@ export { parseStructuredTail, stripStreamingTail } from "./parse";
 
 /* ------------------------------- prompts -------------------------------- */
 
-const OUTPUT_CONTRACT = `
-FORMAT — respond in GitHub-flavored Markdown:
-- Start with a short bold title line (e.g. **Reorder Recommendations**).
-- For every product recommendation, warning or risk statement, structure it as:
-  **<product name (SKU)>**
-  _DATA_ — the actual values (stock, daily sales, days of cover, cost, revenue at risk …)
-  _RULE_ — the rule that flagged it (the threshold / formula, in words)
-  _CONCLUSION_ — what to do, with the number (e.g. "Order 150 units — (21 × 8) − 18 = 150")
-  _Confidence: High | Medium | Low_ — one line on why
-  Take DATA and the formula verbatim from the EVIDENCE section of the BUSINESS SUMMARY.
-- Do NOT give generic advice ("run a promotion", "add shelf space", "bundle products") unless you
-  name the product and cite the numbers that justify it. If the evidence can't answer, say what's missing.
-- ALWAYS finish the prose with exactly these two lines:
-  **Recommended Next Action:** <one concrete step>
-  **Expected Business Impact:** <the $ / operational outcome>
-- After the prose, output ONE fenced \`\`\`json code block and NOTHING after it:
+// The trailing machine-readable block. Identical for both languages — the app's
+// parseStructuredTail() reads it to render the insight cards + reorder cards, so
+// it must always be present. Keys stay English; the km LANGUAGE rule tells the
+// model to write the string VALUES in Khmer.
+const JSON_TAIL = `- After the prose, output ONE fenced \`\`\`json code block and NOTHING after it:
 \`\`\`json
 {
   "insightCards": {
@@ -52,6 +41,50 @@ FORMAT — respond in GitHub-flavored Markdown:
 }
 \`\`\`
 "reorder" may be an empty array when the question is not about reordering.`;
+
+// English: the analyst-style DATA / RULE / CONCLUSION breakdown.
+const OUTPUT_CONTRACT_EN = `
+FORMAT — respond in GitHub-flavored Markdown:
+- Start with a short bold title line (e.g. **Reorder Recommendations**).
+- For every product recommendation, warning or risk statement, structure it as:
+  **<product name (SKU)>**
+  _DATA_ — the actual values (stock, daily sales, days of cover, cost, revenue at risk …)
+  _RULE_ — the rule that flagged it (the threshold / formula, in words)
+  _CONCLUSION_ — what to do, with the number (e.g. "Order 150 units — (21 × 8) − 18 = 150")
+  _Confidence: High | Medium | Low_ — one line on why
+  Take DATA and the formula verbatim from the EVIDENCE section of the BUSINESS SUMMARY.
+- Do NOT give generic advice ("run a promotion", "add shelf space", "bundle products") unless you
+  name the product and cite the numbers that justify it. If the evidence can't answer, say what's missing.
+- ALWAYS finish the prose with exactly these two lines:
+  **Recommended Next Action:** <one concrete step>
+  **Expected Business Impact:** <the $ / operational outcome>
+${JSON_TAIL}`;
+
+// Khmer: a plain business-advisor briefing in four fixed sections, no formulas.
+const OUTPUT_CONTRACT_KM = `
+ទម្រង់ចម្លើយ — ជាភាសាខ្មែរ ក្នុងទម្រង់ Markdown ដោយប្រើចំណងជើងទាំង៤ខាងក្រោមនេះ ជាលំដាប់នេះ (កុំប្តូរ កុំបន្ថែម កុំកាត់)៖
+
+## សេចក្តីសង្ខេប
+២ ទៅ ៤ ប្រយោគ ពន្យល់ពីស្ថានភាពអាជីវកម្មរួម។
+
+## ចំណុចគួរយកចិត្តទុកដាក់
+រាយហានិភ័យ ឱកាស និងបញ្ហាសំខាន់ៗ ជា bullet points ដោយដាក់រឿងបន្ទាន់បំផុតនៅលើគេ។ រៀបរាប់ឈ្មោះទំនិញ (ជាមួយ SKU) និងតួលេខពិតពី BUSINESS SUMMARY។
+
+## សកម្មភាពគួរធ្វើ
+រាយសកម្មភាពដែលគួរធ្វើ តាមលំដាប់អាទិភាព ជា bullet points។ ត្រូវជាក់លាក់ អាចអនុវត្តបាន (បញ្ជាទិញប៉ុន្មាន បញ្ចុះតម្លៃ ដាក់លក់ជាកញ្ចប់ ។ល។)។
+
+## ផលប៉ះពាល់ដែលរំពឹងទុក
+ខ្លីៗ ២ ទៅ ៣ ប្រយោគ អំពីផលប៉ះពាល់លើអាជីវកម្ម បើអនុវត្តតាមការណែនាំ — ចំណូលដែលការពារបាន សាច់ប្រាក់ដែលដកមកវិញ ឬ ប្រាក់ចំណេញបន្ថែម។
+
+ច្បាប់សម្រាប់ផ្នែកអត្ថបទ៖
+- កុំបង្ហាញរូបមន្ត ជំហានគណនា សមីការ ឬ ការវែកញែកបែបអ្នកវិភាគ ក្នុងចម្លើយ។ សូមវែកញែកក្នុងចិត្ត រួចសរសេរតែសេចក្តីសន្និដ្ឋានជាភាសាធម្មតា និងផលប៉ះពាល់លើអាជីវកម្ម។ បើអ្នកប្រើប្រាស់សួរ "ហេតុអ្វី" ទើបពន្យល់ការគណនាលម្អិត។
+- ប្រើតែឈ្មោះទំនិញ តួលេខ និងការពិត ដែលមានក្នុង BUSINESS SUMMARY។ កុំប្រឌិត កុំប៉ាន់ស្មានតួលេខដែលគ្មាន។ បើទិន្នន័យមិនអាចឆ្លើយបាន ប្រាប់ថាខ្វះព័ត៌មានអ្វី។
+- សរសេរដូចទីប្រឹក្សាអាជីវកម្មដែលមានបទពិសោធ មិនមែនដូចប្រព័ន្ធកុំព្យូទ័រ ឬ អ្នកវិភាគទិន្នន័យ។
+${JSON_TAIL}`;
+
+function buildOutputContract(language: CopilotLanguage): string {
+  return language === "km" ? OUTPUT_CONTRACT_KM : OUTPUT_CONTRACT_EN;
+}
 
 export function buildSystemPrompt(language: CopilotLanguage): string {
   const base = `You are Inventra AI — an inventory advisor for an FMCG business: a distributor, mini-mart, or retail grocery store.
@@ -73,10 +106,13 @@ Rules:
 
   const lang =
     language === "km"
-      ? `\n\nLANGUAGE: Respond ENTIRELY in Khmer (ភាសាខ្មែរ). Keep product names exactly as written in the data. In the JSON block keep the keys in English but write all string values in Khmer.`
+      ? `\n\nLANGUAGE: Respond ENTIRELY in natural, everyday Khmer for a Cambodian shop owner — like a trusted business advisor, not a data analyst or a software system.
+- Keep product names exactly as written in the data. Keep SKU, AI, PDF, CSV, KPI, Inventra AI and the currency symbol ($) in English. Keep all numbers, quantities, percentages and dates unchanged.
+- OVERRIDE the "state its DATA, the RULE, then the CONCLUSION" rule above: for Khmer, do NOT show that breakdown, any formula, calculation steps or analyst-style reasoning in the answer. Reason from the evidence internally; present only the plain conclusion and its business impact, in the four-section format below.
+- In the JSON block keep the keys in English but write all string values in Khmer.`
       : `\n\nLANGUAGE: Respond in clear, professional English.`;
 
-  return base + lang + "\n" + OUTPUT_CONTRACT;
+  return base + lang + "\n" + buildOutputContract(language);
 }
 
 export function buildMessages(

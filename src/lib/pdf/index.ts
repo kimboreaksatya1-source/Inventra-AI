@@ -1,25 +1,57 @@
 // Inventra AI — client-side PDF export of the Business Brief.
+//
+// jsPDF + jspdf-autotable are dynamically imported so the ~350 KB of PDF code is
+// only fetched when the user actually clicks "Export PDF", and never enters the
+// server render / build graph. Runs 100% in the browser — no Vercel function.
+//
+// All user / AI text is passed through latinize() before it is drawn: the core
+// PDF fonts are Latin-1 only. See ./sanitize.ts for the full explanation and the
+// documented Khmer limitation.
 
+import type { jsPDF } from "jspdf";
 import { money } from "../format";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import {
+  latinize,
+  pdfBriefProductName,
+  pdfGeneratedOn,
+  pdfSlug,
+  repairSkuMentions,
+  type PdfProductRef,
+} from "./sanitize";
 import type { BusinessBrief } from "../types";
 
 const TEAL: [number, number, number] = [15, 118, 110]; // #0F766E
 const CHARCOAL: [number, number, number] = [17, 24, 39]; // #111827
 const MUTED: [number, number, number] = [100, 116, 139];
 
-export function exportBriefPdf(brief: BusinessBrief, business: string) {
+export async function exportBriefPdf(
+  brief: BusinessBrief,
+  business: string,
+  /** analysis.products — lets the PDF swap Khmer / AI-written names for the
+   *  recogniser's English canonical name (matched by SKU). */
+  products: PdfProductRef[] = []
+): Promise<void> {
+  const [{ jsPDF }, autoTableMod] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
+  const autoTable = autoTableMod.default;
+
+  const businessName = latinize(business) || "Your Business";
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 48;
   const contentWidth = pageWidth - margin * 2;
   let y = margin;
 
-  const dateStr = new Date(brief.generatedAt).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+  const generatedOn = pdfGeneratedOn(new Date(brief.generatedAt));
+
+  doc.setProperties({
+    title: `Inventra AI Business Brief — ${businessName}`,
+    subject: `Inventory health, revenue risk and recommended actions for ${businessName}`,
+    author: "Inventra AI",
+    creator: "Inventra AI",
+    keywords: "inventra, business brief, inventory, revenue at risk, FMCG",
   });
 
   // Letterhead
@@ -31,7 +63,7 @@ export function exportBriefPdf(brief: BusinessBrief, business: string) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...MUTED);
-  doc.text(`Prepared for ${business}  ·  ${dateStr}  ·  Inventra AI`, margin, y);
+  doc.text(`Prepared for ${businessName}  ·  ${generatedOn}  ·  Inventra AI`, margin, y);
   y += 12;
   doc.setDrawColor(...TEAL);
   doc.setLineWidth(1.5);
@@ -51,7 +83,7 @@ export function exportBriefPdf(brief: BusinessBrief, business: string) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10.5);
     doc.setTextColor(40, 40, 40);
-    const lines = doc.splitTextToSize(text, contentWidth);
+    const lines = doc.splitTextToSize(latinize(text), contentWidth);
     y = ensureSpace(doc, y, lines.length * 14 + 10, margin);
     doc.text(lines, margin, y);
     y += lines.length * 14 + 14;
@@ -59,7 +91,7 @@ export function exportBriefPdf(brief: BusinessBrief, business: string) {
 
   // 1 — Executive Summary
   sectionTitle(1, "Executive Summary");
-  paragraph(brief.executiveSummary);
+  paragraph(repairSkuMentions(brief.executiveSummary, products));
 
   // 2 — Critical Risks
   sectionTitle(2, "Critical Risks");
@@ -71,7 +103,7 @@ export function exportBriefPdf(brief: BusinessBrief, business: string) {
       margin: { left: margin, right: margin },
       head: [["Product", "Days Remaining", "Revenue at Risk", "Priority"]],
       body: brief.criticalRisks.map((r) => [
-        r.product,
+        pdfBriefProductName(r.product, products),
         r.daysRemaining > 0 ? String(r.daysRemaining) : "Out now",
         money(r.revenueAtRisk),
         r.priority,
@@ -94,10 +126,10 @@ export function exportBriefPdf(brief: BusinessBrief, business: string) {
       doc.setFontSize(10.5);
       doc.setTextColor(...CHARCOAL);
       y = ensureSpace(doc, y, 20, margin);
-      doc.text(o.title, margin, y);
+      doc.text(repairSkuMentions(o.title, products), margin, y);
       y += 14;
-      paragraph(o.observation);
-      paragraph(`Recommended action: ${o.recommendedAction}`);
+      paragraph(repairSkuMentions(o.observation, products));
+      paragraph(`Recommended action: ${repairSkuMentions(o.recommendedAction, products)}`);
       doc.setTextColor(...TEAL);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
@@ -119,9 +151,9 @@ export function exportBriefPdf(brief: BusinessBrief, business: string) {
     head: [["Priority", "Action", "Reason", "Expected Impact"]],
     body: brief.recommendedActions.map((a) => [
       a.priority,
-      a.action,
-      a.reason,
-      a.expectedImpact,
+      repairSkuMentions(a.action, products),
+      latinize(a.reason),
+      latinize(a.expectedImpact),
     ]),
     headStyles: { fillColor: TEAL, textColor: 255, fontStyle: "bold" },
     bodyStyles: { textColor: CHARCOAL },
@@ -140,7 +172,7 @@ export function exportBriefPdf(brief: BusinessBrief, business: string) {
   doc.text(`${brief.healthScore} / 100`, margin, y);
   doc.setFontSize(11);
   doc.setTextColor(...MUTED);
-  doc.text(`  ${brief.healthLabel}`, margin + 96, y);
+  doc.text(`  ${latinize(brief.healthLabel)}`, margin + 96, y);
   y += 20;
   paragraph(brief.healthExplanation);
 
@@ -152,16 +184,12 @@ export function exportBriefPdf(brief: BusinessBrief, business: string) {
     doc.setFontSize(8);
     doc.setTextColor(...MUTED);
     const h = doc.internal.pageSize.getHeight();
-    doc.text(
-      `Generated by Inventra AI — ${dateStr}`,
-      margin,
-      h - 24
-    );
+    doc.text(`Generated by Inventra AI  ·  ${generatedOn}`, margin, h - 24);
     doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, h - 24, { align: "right" });
   }
 
   const stamp = new Date(brief.generatedAt).toISOString().slice(0, 10);
-  doc.save(`inventra-business-brief-${stamp}.pdf`);
+  doc.save(`inventra-business-brief-${pdfSlug(businessName)}-${stamp}.pdf`);
 }
 
 function ensureSpace(doc: jsPDF, y: number, needed: number, margin: number): number {

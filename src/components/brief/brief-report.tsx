@@ -116,7 +116,11 @@ export function BriefReport() {
           <Button variant="ghost" size="icon" onClick={() => refetch()} aria-label="Regenerate">
             <RefreshCw className={isFetching ? "size-4 animate-spin" : "size-4"} />
           </Button>
-          <ExportPdfButton brief={brief} business={analysis.business} />
+          <ExportPdfButton
+            brief={brief}
+            business={analysis.business}
+            products={analysis.products}
+          />
         </div>
       </div>
 

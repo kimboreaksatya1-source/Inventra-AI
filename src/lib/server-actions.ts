@@ -29,6 +29,14 @@ export async function loadDemoData(): Promise<LoadDemoResult> {
   }
 
   try {
+    // The demo catalog carries no business name of its own — give first-run /
+    // judge accounts a realistic one BEFORE the import rebuilds the snapshot, so
+    // exported PDFs read "Prepared for Phnom Penh Mini-Mart" instead of the
+    // generic "Your Business" fallback. Never overwrites a name the user set.
+    await db.user.updateMany({
+      where: { id: user.id, businessName: null },
+      data: { businessName: "Phnom Penh Mini-Mart" },
+    });
     const result = await commitImport(user.id, parsed.data);
     revalidatePath("/");
     return { ok: true, imported: result.imported };

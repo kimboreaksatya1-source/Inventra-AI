@@ -74,7 +74,6 @@ export function ProcurementClient() {
   }
 
   const rows = data?.rows ?? [];
-  const business = "your business";
 
   const filtered = useMemo(() => {
     let list = [...rows];
@@ -353,9 +352,9 @@ export function ProcurementClient() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
+                    onClick={async () => {
                       try {
-                        exportPurchasePlanPdf(plan, business);
+                        await exportPurchasePlanPdf(plan, plan.business);
                       } catch {
                         toast.error("Could not generate the PDF.");
                       }

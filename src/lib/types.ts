@@ -411,6 +411,7 @@ export interface ProcurementPlanResponse {
   forecast?: Record<string, ForecastEvidence>; // keyed by product id
   summary: string;
   source: "ai" | "deterministic";
+  business: string; // the owner's business name, for the exported PDF letterhead
 }
 
 /* ---------- Cash Flow Intelligence ---------- */
