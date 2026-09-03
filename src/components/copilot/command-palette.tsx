@@ -3,7 +3,9 @@
 import { useEffect, useRef } from "react";
 import { CornerDownLeft, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { CopilotCommand } from "@/lib/copilot/commands";
+import { t } from "@/lib/i18n";
+import { cmdDescription, cmdTitle, type CopilotCommand } from "@/lib/copilot/commands";
+import type { CopilotLanguage } from "@/lib/types";
 
 export interface PaletteEntry {
   cmd: CopilotCommand;
@@ -15,12 +17,14 @@ export function CommandPalette({
   entries,
   activeIndex,
   query,
+  language,
   onHover,
   onSelect,
 }: {
   entries: PaletteEntry[];
   activeIndex: number;
   query: string;
+  language: CopilotLanguage;
   onHover: (i: number) => void;
   onSelect: (cmd: CopilotCommand) => void;
 }) {
@@ -46,17 +50,18 @@ export function CommandPalette({
         <div ref={listRef} className="max-h-[min(60vh,22rem)] overflow-y-auto p-1.5">
           {entries.length === 0 && (
             <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-              No commands match “{query}”
+              {t(language, "cmd.noMatch")} “{query}”
             </p>
           )}
 
           {suggested.length > 0 && (
-            <Section label="Suggested">
+            <Section label={t(language, "cmd.suggested")}>
               {suggested.map((e) => (
                 <Row
                   key={e.cmd.id}
                   entry={e}
                   q={q}
+                  language={language}
                   active={entries.indexOf(e) === activeIndex}
                   index={entries.indexOf(e)}
                   onHover={onHover}
@@ -67,12 +72,13 @@ export function CommandPalette({
           )}
 
           {rest.length > 0 && (
-            <Section label={suggested.length > 0 ? "All commands" : "Commands"}>
+            <Section label={suggested.length > 0 ? t(language, "cmd.all") : t(language, "cmd.commands")}>
               {rest.map((e) => (
                 <Row
                   key={e.cmd.id}
                   entry={e}
                   q={q}
+                  language={language}
                   active={entries.indexOf(e) === activeIndex}
                   index={entries.indexOf(e)}
                   onHover={onHover}
@@ -85,16 +91,16 @@ export function CommandPalette({
         <div className="flex items-center gap-3 border-t border-border bg-muted/40 px-3 py-1.5 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1">
             <Kbd>↑</Kbd>
-            <Kbd>↓</Kbd> navigate
+            <Kbd>↓</Kbd> {t(language, "cmd.navigate")}
           </span>
           <span className="flex items-center gap-1">
             <Kbd>
               <CornerDownLeft className="size-3" />
             </Kbd>
-            select
+            {t(language, "cmd.select")}
           </span>
           <span className="flex items-center gap-1">
-            <Kbd>esc</Kbd> dismiss
+            <Kbd>esc</Kbd> {t(language, "cmd.dismiss")}
           </span>
         </div>
       </div>
@@ -116,6 +122,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 function Row({
   entry,
   q,
+  language,
   active,
   index,
   onHover,
@@ -123,6 +130,7 @@ function Row({
 }: {
   entry: PaletteEntry;
   q: string;
+  language: CopilotLanguage;
   active: boolean;
   index: number;
   onHover: (i: number) => void;
@@ -156,14 +164,16 @@ function Row({
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
           <span className="font-mono text-[13px] font-medium">{highlight(cmd.id, q)}</span>
-          <span className="truncate text-sm font-medium">{cmd.title}</span>
+          <span className="truncate text-sm font-medium">{cmdTitle(cmd, language)}</span>
           {badge && (
             <span className="ml-auto shrink-0 rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-medium text-teal-700 dark:bg-teal-950/40 dark:text-teal-300">
               {badge}
             </span>
           )}
         </span>
-        <span className="block truncate text-xs text-muted-foreground">{cmd.description}</span>
+        <span className="block truncate text-xs text-muted-foreground">
+          {cmdDescription(cmd, language)}
+        </span>
       </span>
     </button>
   );

@@ -51,6 +51,14 @@ const EN: Dict = {
   "qa.health": "Inventory Health",
   "qa.summary": "Business Summary",
   "qa.growth": "Growth Opportunities",
+  "cmd.suggested": "Suggested",
+  "cmd.all": "All commands",
+  "cmd.commands": "Commands",
+  "cmd.noMatch": "No commands match",
+  "cmd.navigate": "navigate",
+  "cmd.select": "select",
+  "cmd.dismiss": "dismiss",
+  "cmd.hint": "Type / for commands",
 };
 
 const KM: Dict = {
@@ -98,6 +106,14 @@ const KM: Dict = {
   "qa.health": "សុខភាពស្តុក",
   "qa.summary": "សេចក្តីសង្ខេបអាជីវកម្ម",
   "qa.growth": "ឱកាសរីកចម្រើន",
+  "cmd.suggested": "បានណែនាំ",
+  "cmd.all": "ពាក្យបញ្ជាទាំងអស់",
+  "cmd.commands": "ពាក្យបញ្ជា",
+  "cmd.noMatch": "គ្មានពាក្យបញ្ជាត្រូវនឹង",
+  "cmd.navigate": "ផ្លាស់ទី",
+  "cmd.select": "ជ្រើសរើស",
+  "cmd.dismiss": "បិទ",
+  "cmd.hint": "វាយ / សម្រាប់ពាក្យបញ្ជា",
 };
 
 const DICTS: Record<CopilotLanguage, Dict> = { en: EN, km: KM };

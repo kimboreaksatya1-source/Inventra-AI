@@ -42,7 +42,7 @@ export function Composer({
     const matches = filterCommands(value);
     const matchIds = new Set(matches.map((c) => c.id));
 
-    const suggestedEntries: PaletteEntry[] = suggestedCommands(context)
+    const suggestedEntries: PaletteEntry[] = suggestedCommands(context, language)
       .filter((s) => matchIds.has(s.cmd.id))
       .map((s) => ({ cmd: s.cmd, badge: s.badge, suggested: true }));
     const suggestedIds = new Set(suggestedEntries.map((e) => e.cmd.id));
@@ -52,7 +52,7 @@ export function Composer({
       .map((c) => ({ cmd: c }));
 
     return [...suggestedEntries, ...restEntries];
-  }, [paletteOpen, value, context]);
+  }, [paletteOpen, value, context, language]);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -125,6 +125,7 @@ export function Composer({
             entries={entries}
             activeIndex={activeIndex}
             query={value}
+            language={language}
             onHover={setActiveIndex}
             onSelect={selectCommand}
           />
@@ -161,7 +162,7 @@ export function Composer({
         </div>
         <p className="mt-1.5 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
           <Slash className="size-3" />
-          Type <span className="font-mono">/</span> for commands · {t(language, "copilot.hintLine")}
+          {t(language, "cmd.hint")} · {t(language, "copilot.hintLine")}
         </p>
       </div>
     </div>
