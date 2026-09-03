@@ -68,7 +68,15 @@ async function main() {
   const tail = parseStructuredTail(fb.content);
 
   const session = await db.chatSession.create({
-    data: { userId: user.id, title: question, language: "en" },
+    data: {
+      userId: user.id,
+      title: question,
+      language: "en",
+      datasetId: res.batchId,
+      datasetName: res.datasetName,
+      datasetUploadedAt: new Date(res.datasetUploadedAt),
+      datasetProductCount: res.productCount,
+    },
   });
   await db.chatMessage.create({
     data: { sessionId: session.id, role: "user", content: question, language: "en" },

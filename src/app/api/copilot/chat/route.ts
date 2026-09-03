@@ -60,6 +60,26 @@ export async function POST(req: Request) {
     return Response.json({ error: "Conversation not found" }, { status: 404 });
   }
 
+  // Dataset isolation: a conversation bound to an older inventory dataset must
+  // never receive an answer computed from the current one. New messages are
+  // refused; the client offers "Start a new analysis".
+  if (session.datasetId) {
+    const currentDataset = await db.importBatch.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+    if (currentDataset && session.datasetId !== currentDataset.id) {
+      return Response.json(
+        {
+          error: "STALE_DATASET",
+          message:
+            "This conversation is based on an earlier inventory dataset. Start a new analysis to ask about your current data.",
+        },
+        { status: 409 }
+      );
+    }
+  }
+
   const history = session.messages.map((m) => ({
     role: m.role as "user" | "assistant",
     content: m.content,

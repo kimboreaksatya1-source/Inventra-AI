@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 import {
   useCreateSession,
-  useLatestImportAt,
+  useCurrentDatasetId,
   useSessions,
   useSetSessionLanguage,
 } from "@/lib/queries/copilot";
-import { sessionPredatesImport } from "@/lib/copilot/session-freshness";
 import { useCopilotChat } from "@/hooks/use-copilot-chat";
 import type { CopilotLanguage } from "@/lib/types";
 import { ConversationList } from "./conversation-list";
@@ -30,14 +29,13 @@ export function CopilotClient() {
   const [rightOpen, setRightOpen] = useState(false);
 
   const { data: sessions } = useSessions();
-  const { data: latestImportAt } = useLatestImportAt();
+  const { data: currentDatasetId } = useCurrentDatasetId();
   const createSession = useCreateSession();
   const setSessionLang = useSetSessionLanguage();
   const chat = useCopilotChat({ sessionId: activeId, language });
 
   const activeSession = sessions?.find((s) => s.id === activeId);
-  const activeIsStale =
-    !!activeSession && sessionPredatesImport(activeSession, latestImportAt);
+  const activeIsStale = activeSession?.stale ?? false;
 
   useEffect(() => {
     try {
@@ -85,7 +83,7 @@ export function CopilotClient() {
   }
 
   async function handleNew() {
-    const res = await createSession.mutateAsync(language);
+    const res = await createSession.mutateAsync({ language, datasetId: currentDatasetId ?? undefined });
     setActiveId(res.session.id);
     setLeftOpen(false);
   }
@@ -169,11 +167,16 @@ export function CopilotClient() {
           </div>
         )}
 
-        {activeIsStale && activeId && (
-          <StaleDataNotice sessionId={activeId} onStartFresh={handleNew} />
+        {activeIsStale && (
+          <StaleDataNotice
+            datasetName={activeSession?.datasetName ?? null}
+            onStartFresh={handleNew}
+            pending={createSession.isPending}
+          />
         )}
 
         <Composer
+          disabled={activeIsStale}
           language={language}
           isStreaming={chat.isStreaming}
           onSend={handleSend}

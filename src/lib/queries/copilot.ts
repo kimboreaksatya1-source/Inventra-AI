@@ -34,12 +34,12 @@ export function useSessions() {
   });
 }
 
-/** Timestamp of the user's most recent inventory import — same fetch as useSessions. */
-export function useLatestImportAt() {
+/** ImportBatch.id of the user's current dataset — same fetch as useSessions. */
+export function useCurrentDatasetId() {
   return useQuery({
     queryKey: ["copilot", "sessions"],
     queryFn: () => getJSON<ChatSessionsResponse>("/api/copilot/sessions"),
-    select: (d) => d.latestImportAt,
+    select: (d) => d.currentDatasetId,
   });
 }
 
@@ -58,11 +58,15 @@ export function useSessionMessages(sessionId: string | null) {
 export function useCreateSession() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (language: CopilotLanguage) => {
+    mutationFn: async (
+      input: CopilotLanguage | { language: CopilotLanguage; datasetId?: string }
+    ) => {
+      const body =
+        typeof input === "string" ? { language: input } : input;
       const res = await fetch("/api/copilot/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("Could not start a conversation");
       return (await res.json()) as { session: ChatSessionSummary };

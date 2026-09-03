@@ -19,6 +19,11 @@ export interface CommitResult {
   imported: number;
   batchId: string;
   business: string;
+  /** The dataset this import created — used to bind fresh Copilot conversations. */
+  datasetId: string;
+  datasetName: string;
+  datasetUploadedAt: string;
+  productCount: number;
 }
 
 export async function commitImport(
@@ -54,7 +59,15 @@ export async function commitImport(
   await invalidateSnapshot(userId);
   await rebuildSnapshot(userId);
 
-  return { imported: created.length, batchId: batch.id, business: user.businessName ?? "Your Business" };
+  return {
+    imported: created.length,
+    batchId: batch.id,
+    business: user.businessName ?? "Your Business",
+    datasetId: batch.id,
+    datasetName: batch.fileName,
+    datasetUploadedAt: batch.createdAt.toISOString(),
+    productCount: created.length,
+  };
 }
 
 export async function latestImport(userId: string) {
@@ -110,5 +123,13 @@ export async function commitCatalog(
   await invalidateSnapshot(userId);
   await rebuildSnapshot(userId);
 
-  return { imported: created.length, batchId: batch.id, business: user.businessName ?? "Your Business" };
+  return {
+    imported: created.length,
+    batchId: batch.id,
+    business: user.businessName ?? "Your Business",
+    datasetId: batch.id,
+    datasetName: batch.fileName,
+    datasetUploadedAt: batch.createdAt.toISOString(),
+    productCount: created.length,
+  };
 }

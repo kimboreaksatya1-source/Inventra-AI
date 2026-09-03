@@ -138,12 +138,23 @@ model ChatSession {
   userId    String
   title     String        @default("New conversation")
   language  String        @default("en") // en | km
+  // --- inventory dataset binding (all nullable → backward compatible) ---
+  // The ImportBatch this conversation's recommendations are grounded in. Once a
+  // newer dataset is imported the session is "stale": read-only, and the chat
+  // route refuses new messages so Dataset-A conversations never get Dataset-B
+  // answers. Legacy sessions (datasetId = null) are treated as current.
+  datasetId           String?
+  datasetName         String? // denormalised ImportBatch.fileName (survives pruning)
+  datasetUploadedAt   DateTime? // denormalised ImportBatch.createdAt
+  datasetProductCount Int? // product count at the time the session was created
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dataset   ImportBatch?  @relation(fields: [datasetId], references: [id], onDelete: SetNull)
   messages  ChatMessage[]
 
   @@index([userId, updatedAt])
+  @@index([userId, datasetId])
 }
 
 /// A single Copilot message (user or assistant), with structured payload
@@ -163,12 +174,13 @@ model ChatMessage {
 
 /// One business-data import batch (CSV / Excel upload)
 model ImportBatch {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   userId    String
   fileName  String
   rowCount  Int
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions  ChatSession[]
 
   @@index([userId, createdAt])
 }

@@ -617,13 +617,19 @@ export interface ChatSessionSummary {
   createdAt: string;
   updatedAt: string;
   messageCount: number;
+  /** The inventory dataset this conversation is grounded in (null = legacy). */
+  datasetId: string | null;
+  datasetName: string | null;
+  datasetUploadedAt: string | null;
+  datasetProductCount: number | null;
+  /** true = a newer dataset has been imported; this conversation is read-only. */
+  stale: boolean;
 }
 
-/** Sessions list + the timestamp of the user's most recent inventory import. */
 export interface ChatSessionsResponse {
   sessions: ChatSessionSummary[];
-  /** ISO string, or null if the user has never imported. */
-  latestImportAt: string | null;
+  /** ImportBatch.id of the user's current (most recent) dataset; null if none. */
+  currentDatasetId: string | null;
 }
 
 /** Trailing frame the chat stream emits after the prose. */

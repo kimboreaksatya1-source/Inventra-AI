@@ -66,7 +66,8 @@ export function useCopilotChat({ sessionId, language }: Options) {
         });
         if (!res.ok || !res.body) {
           const body = await res.json().catch(() => ({}));
-          throw new Error(body?.error || `Copilot unavailable (${res.status})`);
+          // 409 STALE_DATASET → prefer the human-readable message.
+          throw new Error(body?.message || body?.error || `Copilot unavailable (${res.status})`);
         }
 
         const reader = res.body.getReader();

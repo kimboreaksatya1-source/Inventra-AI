@@ -52,6 +52,10 @@ export interface ImportResult {
   imported: number;
   batchId: string;
   business: string;
+  datasetId: string;
+  datasetName: string;
+  datasetUploadedAt: string;
+  productCount: number;
 }
 
 export function useProcurement() {

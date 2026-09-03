@@ -9,7 +9,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useCreateSession, useSessions } from "@/lib/queries/copilot";
 import { Dropzone } from "./dropzone";
+import { NewInventoryModal } from "./new-inventory-modal";
 import { ImportStepper, type ImportStage } from "./import-stepper";
 import { ColumnMappingStep } from "./column-mapping-step";
 import { RecognitionReview } from "./recognition-review";
@@ -49,6 +51,12 @@ export function UploadClient() {
   const [mappingAudit, setMappingAudit] = useState<ImportAuditRow[]>([]);
   const [audit, setAudit] = useState<ImportAudit | null>(null);
   const [imported, setImported] = useState(0);
+  // Set to the new dataset id when an import lands and a non-empty Copilot
+  // conversation exists — drives the "New Inventory Detected" modal.
+  const [pendingDatasetId, setPendingDatasetId] = useState<string | null>(null);
+
+  const { data: sessions } = useSessions();
+  const createSession = useCreateSession();
 
   async function handleFile(file: File) {
     setError(null);
@@ -151,7 +159,7 @@ export function UploadClient() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error || "Import failed");
       }
-      const data = (await res.json()) as { imported: number };
+      const data = (await res.json()) as { imported: number; datasetId: string };
       setImported(data.imported);
       const ignoredSourceRows = review.products
         .filter((p) => p.status === "ignored")
@@ -173,6 +181,11 @@ export function UploadClient() {
       // RSC payloads so they reflect the new catalog immediately.
       router.refresh();
       toast.success(`${data.imported} products in your catalog`);
+      // A conversation exists that was grounded in the previous dataset — offer
+      // to start a fresh analysis before the old one is used with new data.
+      if (sessions?.some((s) => s.messageCount > 0)) {
+        setPendingDatasetId(data.datasetId);
+      }
     } catch (e) {
       setStep("review");
       setError(e instanceof Error ? e.message : "Import failed.");
@@ -199,6 +212,24 @@ export function UploadClient() {
 
   return (
     <div className="space-y-6">
+      <NewInventoryModal
+        open={pendingDatasetId !== null}
+        onOpenChange={(o) => {
+          if (!o) setPendingDatasetId(null);
+        }}
+        pending={createSession.isPending}
+        onKeep={() => setPendingDatasetId(null)}
+        onStartNew={async () => {
+          try {
+            await createSession.mutateAsync({ language: "en", datasetId: pendingDatasetId ?? undefined });
+            qc.invalidateQueries({ queryKey: ["copilot"] });
+            setPendingDatasetId(null);
+            router.push("/copilot");
+          } catch {
+            toast.error("Could not start a new conversation.");
+          }
+        }}
+      />
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Import your business data</h1>
         <p className="mt-1 text-sm text-muted-foreground">

@@ -1,47 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { AlertTriangle, X } from "lucide-react";
+import { Archive } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
- * Interim safeguard: shown above the composer when the open conversation was
- * started before the user's most recent inventory import. It warns (it does not
- * block) — the full dataset-lifecycle feature adds hard isolation.
+ * Shown above the composer when the open conversation is bound to an older
+ * inventory dataset. The conversation is read-only — the chat API refuses new
+ * messages (409 STALE_DATASET) so its answers can never mix with current data.
  */
 export function StaleDataNotice({
-  sessionId,
+  datasetName,
   onStartFresh,
+  pending,
 }: {
-  sessionId: string;
+  datasetName: string | null;
   onStartFresh: () => void;
+  pending?: boolean;
 }) {
-  const [dismissed, setDismissed] = useState<string | null>(null);
-  if (dismissed === sessionId) return null;
-
   return (
     <div className="px-4">
-      <div className="mx-auto mb-2 flex max-w-4xl items-start gap-2.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
-        <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-        <p className="flex-1">
-          This conversation started before your latest inventory import. New answers here reflect
-          your <strong>current</strong> data, not the data in the messages above.{" "}
-          <button
-            type="button"
-            onClick={onStartFresh}
-            className="font-semibold underline underline-offset-2 hover:no-underline"
-          >
-            Start a fresh analysis
-          </button>
-          .
+      <div className="mx-auto mb-2 flex max-w-4xl flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+        <Archive className="size-4 shrink-0" />
+        <p className="min-w-48 flex-1">
+          Read-only — this conversation is based on{" "}
+          <strong>{datasetName ?? "an earlier inventory"}</strong>. Your catalog has changed since.
         </p>
-        <button
-          type="button"
-          aria-label="Dismiss"
-          onClick={() => setDismissed(sessionId)}
-          className="shrink-0 rounded p-0.5 hover:bg-amber-100 dark:hover:bg-amber-900/40"
-        >
-          <X className="size-3.5" />
-        </button>
+        <Button size="sm" onClick={onStartFresh} disabled={pending} className="shrink-0">
+          Start a new analysis
+        </Button>
       </div>
     </div>
   );
