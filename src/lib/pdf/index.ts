@@ -70,13 +70,24 @@ export async function exportBriefPdf(
   doc.line(margin, y, pageWidth - margin, y);
   y += 26;
 
-  const sectionTitle = (n: number, title: string) => {
-    y = ensureSpace(doc, y, 40, margin);
+  /**
+   * @param reserve total height the section needs (title + its content). When the
+   *   page can't fit it, the whole section starts on a fresh page so the title
+   *   never ends up orphaned above a page break.
+   * @param gap space after the title baseline before the next element. Bump this
+   *   when the section opens with a large element (e.g. the 26pt health score).
+   */
+  const sectionTitle = (
+    n: number,
+    title: string,
+    opts?: { reserve?: number; gap?: number }
+  ) => {
+    y = ensureSpace(doc, y, opts?.reserve ?? 40, margin);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.setTextColor(...TEAL);
     doc.text(`${n}.  ${title.toUpperCase()}`, margin, y);
-    y += 16;
+    y += opts?.gap ?? 16;
   };
 
   const paragraph = (text: string) => {
@@ -163,18 +174,31 @@ export async function exportBriefPdf(
   });
   y = afterTable(doc, y);
 
-  // 5 — Inventory Health Score
-  sectionTitle(5, "Inventory Health Score");
+  // 5 — Inventory Health Score.
+  // Keep the title, the big score and the summary together: reserve the whole
+  // block up front so a page break never lands between them, and open with a
+  // wide gap so the 26pt score doesn't ride up into the 12pt title.
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10.5);
+  const healthLines = doc.splitTextToSize(latinize(brief.healthExplanation), contentWidth);
+  const SCORE_GAP = 40; // title baseline → score baseline (~18pt visible gap)
+  const healthBlock = SCORE_GAP + 20 + healthLines.length * 14 + 18;
+  sectionTitle(5, "Inventory Health Score", { reserve: healthBlock, gap: SCORE_GAP });
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(26);
   doc.setTextColor(...TEAL);
-  y = ensureSpace(doc, y, 34, margin);
   doc.text(`${brief.healthScore} / 100`, margin, y);
   doc.setFontSize(11);
   doc.setTextColor(...MUTED);
   doc.text(`  ${latinize(brief.healthLabel)}`, margin + 96, y);
   y += 20;
-  paragraph(brief.healthExplanation);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10.5);
+  doc.setTextColor(40, 40, 40);
+  doc.text(healthLines, margin, y);
+  y += healthLines.length * 14 + 14;
 
   // Footer on every page
   const pageCount = doc.getNumberOfPages();
