@@ -35,9 +35,14 @@ const STEPS = [
 const DEMO_MODE = true;
 const DEMO_HIDDEN = new Set<string>(["/simulator", "/procurement", "/cashflow"]);
 
-export function FlowNav() {
+/**
+ * The shared demo account cannot import data, so "Upload" is dropped from its
+ * nav entirely (the /upload route itself shows a read-only notice as a backstop).
+ */
+export function FlowNav({ isDemo = false }: { isDemo?: boolean }) {
   const pathname = usePathname();
-  const steps = DEMO_MODE ? STEPS.filter((s) => !DEMO_HIDDEN.has(s.href)) : STEPS;
+  let steps = DEMO_MODE ? STEPS.filter((s) => !DEMO_HIDDEN.has(s.href)) : STEPS;
+  if (isDemo) steps = steps.filter((s) => s.href !== "/upload");
   return (
     <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto scrollbar-thin [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {steps.map((step) => {

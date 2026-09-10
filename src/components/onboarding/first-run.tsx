@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LoadDemoButton } from "@/components/dashboard/load-demo-button";
+import { DemoModeBadge } from "@/components/app/demo-mode-badge";
 
 /**
  * First-login / empty-state onboarding for Inventra AI.
@@ -26,8 +27,33 @@ import { LoadDemoButton } from "@/components/dashboard/load-demo-button";
  * what Inventra does, who it is for, what to upload, and what they get back, and
  * to make "Upload CSV" the obvious primary action with demo data as the safe
  * secondary path.
+ *
+ * For the shared demo account there is nothing to upload or load — the sample
+ * catalog is fixed — so every import/load CTA is dropped and only the "what
+ * you'll get" explainer remains.
  */
-export function FirstRun() {
+export function FirstRun({ isDemo = false }: { isDemo?: boolean }) {
+  if (isDemo) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-8">
+        <section className="space-y-3">
+          <DemoModeBadge />
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Exploring Inventra AI with a sample inventory
+          </h1>
+          <p className="max-w-2xl text-sm text-muted-foreground">
+            You&apos;re signed in to the shared demo — a fictional Phnom Penh
+            mini-mart. If the dashboard looks empty, refresh in a moment while
+            the sample data finishes loading. Sign in with Google to analyze
+            your own business data.
+          </p>
+        </section>
+        <WhatYouGet />
+        <MvpNotice />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-14 sm:space-y-20">
       <Hero />

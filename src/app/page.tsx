@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PriorityBadge } from "@/components/shared/badges";
 import { FirstRun } from "@/components/onboarding/first-run";
+import { DemoModeBadge } from "@/components/app/demo-mode-badge";
 import { SurveyInsights } from "@/components/dashboard/survey-insights";
 import { latestImport } from "@/lib/import";
 import { getSnapshot } from "@/lib/snapshot";
@@ -16,19 +17,34 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const user = await requireAuth();
+  const isDemo = user.isDemo === true;
+
   let summary: Awaited<ReturnType<typeof getSummary>> | null = null;
   try {
     summary = await getSummary(user.id);
   } catch {
     summary = null;
   }
+
+  // The shared demo account should always land on the populated dashboard —
+  // self-heal the sample catalog if it is somehow missing (e.g. wiped in the DB).
+  if (isDemo && (summary?.totalProducts ?? 0) === 0) {
+    try {
+      const { ensureDemoAccount } = await import("@/lib/demo-account");
+      await ensureDemoAccount();
+      summary = await getSummary(user.id);
+    } catch {
+      /* fall through to the demo FirstRun notice below */
+    }
+  }
+
   const hasData = (summary?.totalProducts ?? 0) > 0;
   const firstName = user.name?.split(" ")[0];
 
   if (!hasData) {
     return (
       <AppShell>
-        <FirstRun />
+        <FirstRun isDemo={isDemo} />
       </AppShell>
     );
   }
@@ -179,12 +195,16 @@ export default async function HomePage() {
         </div>
 
         <div className="mt-4">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/upload">
-              <Upload className="size-4" />
-              Import new data
-            </Link>
-          </Button>
+          {isDemo ? (
+            <DemoModeBadge />
+          ) : (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/upload">
+                <Upload className="size-4" />
+                Import new data
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </AppShell>

@@ -14,6 +14,7 @@ export async function AppShell({
   bleed?: boolean;
 }) {
   const session = await auth();
+  const isDemo = session?.user?.isDemo === true;
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -31,7 +32,7 @@ export async function AppShell({
               Inventra<span className="text-teal-600"> AI</span>
             </span>
           </Link>
-          <FlowNav />
+          <FlowNav isDemo={isDemo} />
           <div className="flex shrink-0 items-center gap-1.5">
             {session?.user ? <UserMenu user={session.user} /> : null}
           </div>
