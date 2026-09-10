@@ -25,6 +25,8 @@ const MEM_TTL = 5 * 60_000;
 const SNAPSHOT_VERSION = "fmcg-8";
 
 export interface Snapshot {
+  /** Fingerprint of the product data this snapshot was computed from. */
+  dataHash: string;
   business: string;
   productCount: number;
   analysis: InventoryAnalysis;
@@ -54,6 +56,7 @@ function dataHash(products: { id: string; stock: number; dailySales: number; sel
 }
 
 function rowToSnapshot(row: {
+  dataHash: string;
   business: string;
   productCount: number;
   analysis: unknown;
@@ -67,6 +70,7 @@ function rowToSnapshot(row: {
   aiStale: boolean;
 }): Snapshot {
   return {
+    dataHash: row.dataHash,
     business: row.business,
     productCount: row.productCount,
     analysis: row.analysis as InventoryAnalysis,
@@ -84,7 +88,18 @@ function rowToSnapshot(row: {
 /** Fast read: memory → DB row → rebuild. Returns null only when the user has no data at all. */
 export async function getSnapshot(userId: string): Promise<Snapshot | null> {
   const cached = mem.get(userId);
-  if (cached && Date.now() - cached.at < MEM_TTL) return cached.snap;
+  if (cached && Date.now() - cached.at < MEM_TTL) {
+    // The mem cache is per-instance: invalidateSnapshot() / rebuildSnapshot() on
+    // another Vercel Lambda can't clear it, so a warm instance would otherwise
+    // serve a stale snapshot for up to MEM_TTL. Cheap-check the DB row's hash
+    // (one indexed single-row read) before trusting the cache.
+    const meta = await db.snapshot.findUnique({
+      where: { userId },
+      select: { dataHash: true },
+    });
+    if (meta?.dataHash === cached.snap.dataHash) return cached.snap;
+    mem.delete(userId);
+  }
 
   const [row, count] = await Promise.all([
     db.snapshot.findUnique({ where: { userId } }),
@@ -125,7 +140,9 @@ export async function rebuildSnapshot(
   const actionsBriefing = buildDeterministicBriefing(summary);
   const { context, promptBlock } = buildCopilotContextFrom(analysis, brief, business);
 
+  const hash = dataHash(products);
   const snap: Snapshot = {
+    dataHash: hash,
     business,
     productCount: products.length,
     analysis,
@@ -140,7 +157,7 @@ export async function rebuildSnapshot(
   };
 
   const common = {
-    dataHash: dataHash(products),
+    dataHash: hash,
     business,
     productCount: products.length,
     analysis: analysis as never,

@@ -103,9 +103,12 @@ export function useImportMutation() {
       }
       return res.json() as Promise<ImportResult>;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["analysis"] });
-      qc.invalidateQueries({ queryKey: ["brief"] });
+    onSuccess: async () => {
+      // A new import replaces the whole catalog, so every derived query is stale
+      // — analysis, brief, actions, procurement, cashflow, catalog and the
+      // Copilot context all read from the same rebuilt snapshot. Match the
+      // untargeted invalidation upload-client.tsx already does.
+      await qc.invalidateQueries();
     },
   });
 }
