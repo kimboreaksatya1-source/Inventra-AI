@@ -64,7 +64,7 @@ export const DEMO_CATALOG: ImportRow[] = [
     "costPrice": 0.19
   },
   {
-    "name": "MAMA Instant Noodles Pork",
+    "name": "Indomie Mi Goreng 85g",
     "category": "Instant Noodles",
     "stock": 470,
     "dailySales": 38,
@@ -72,7 +72,7 @@ export const DEMO_CATALOG: ImportRow[] = [
     "costPrice": 0.19
   },
   {
-    "name": "MAMA Instant Noodles Shrimp",
+    "name": "Hao Hao Sour Shrimp 75g",
     "category": "Instant Noodles",
     "stock": 60,
     "dailySales": 22,
@@ -80,7 +80,7 @@ export const DEMO_CATALOG: ImportRow[] = [
     "costPrice": 0.19
   },
   {
-    "name": "YumYum Instant Noodles Chicken",
+    "name": "Vifon Chicken Noodles 65g",
     "category": "Instant Noodles",
     "stock": 1450,
     "dailySales": 0.8,
@@ -128,7 +128,7 @@ export const DEMO_CATALOG: ImportRow[] = [
     "costPrice": 1.8
   },
   {
-    "name": "Oishi Prawn Crackers 60g",
+    "name": "Kirei Prawn Crackers 60g",
     "category": "Snacks",
     "stock": 540,
     "dailySales": 1.5,

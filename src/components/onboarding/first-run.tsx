@@ -204,7 +204,7 @@ const SAMPLE_ROWS = [
     "60",
   ],
   [
-    "MAMA Instant Noodles Pork",
+    "Indomie Mi Goreng 85g",
     "NDL-001",
     "Instant Noodles",
     "470",
