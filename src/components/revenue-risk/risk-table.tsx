@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   ArrowDown,
   ArrowUp,
@@ -26,6 +25,7 @@ import { PriorityBadge } from "@/components/shared/badges";
 import { RecommendationChip, VelocityChip } from "@/components/shared/fmcg-chips";
 import { TableSkeleton } from "@/components/shared/skeletons";
 import { EmptyState, NoRiskEmptyState } from "@/components/shared/empty-state";
+import { ImportCta } from "@/components/shared/import-cta";
 import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
@@ -115,11 +115,7 @@ export function RiskTable() {
         tone="teal"
         title="No product data yet"
         description="Import your catalog to see which products put revenue at risk."
-        action={
-          <Button asChild>
-            <Link href="/upload">Upload data</Link>
-          </Button>
-        }
+        action={<ImportCta label="Upload data" />}
       />
     );
   }

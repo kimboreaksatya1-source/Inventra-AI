@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { FlaskConical, GitCompare, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
+import { ImportCta } from "@/components/shared/import-cta";
 import { useAnalysis } from "@/lib/queries";
 import { useScenarios, useScenarioExplanation } from "@/lib/queries/simulator";
 import {
@@ -89,11 +89,7 @@ export function SimulatorClient() {
         tone="teal"
         title="No business data to simulate"
         description="Import your products first — the simulator runs every what-if against your real numbers."
-        action={
-          <Button asChild>
-            <Link href="/upload">Import data</Link>
-          </Button>
-        }
+        action={<ImportCta label="Import data" />}
       />
     );
   }

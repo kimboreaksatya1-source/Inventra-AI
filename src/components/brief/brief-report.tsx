@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { Activity, AlertCircle, FileText, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ImportCta } from "@/components/shared/import-cta";
 import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { formatCurrency } from "@/lib/format";
 import { PILOT_IMPACT } from "@/lib/pilot-impact";
@@ -59,11 +59,7 @@ export function BriefReport() {
         tone="teal"
         title="No brief yet"
         description="Import your business data and Inventra will prepare an executive brief for you."
-        action={
-          <Button asChild>
-            <Link href="/upload">Upload data</Link>
-          </Button>
-        }
+        action={<ImportCta label="Upload data" />}
       />
     );
   }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { Boxes, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -25,6 +24,7 @@ import { Card } from "@/components/ui/card";
 import { ConfidenceMeter } from "@/components/shared/badges";
 import { VelocityChip } from "@/components/shared/fmcg-chips";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ImportCta } from "@/components/shared/import-cta";
 import { cn } from "@/lib/utils";
 import { RECOGNITION_METHOD_LABEL } from "@/lib/recognition-labels";
 import type { CatalogPayload, RecognitionMethod } from "@/lib/types";
@@ -101,11 +101,7 @@ export function CatalogClient() {
         tone="teal"
         title="Your catalog is empty"
         description="Import a product file and Inventra builds the catalog automatically."
-        action={
-          <Button asChild>
-            <Link href="/upload">Import data</Link>
-          </Button>
-        }
+        action={<ImportCta label="Import data" />}
       />
     );
   }

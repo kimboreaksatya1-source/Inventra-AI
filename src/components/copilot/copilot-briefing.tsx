@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { Boxes, LineChart, ShieldAlert, Sparkles, Wallet } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ImportCta } from "@/components/shared/import-cta";
 import { t } from "@/lib/i18n";
 import { useCopilotContext } from "@/lib/queries/copilot";
 import { buildCopilotDashboard } from "@/lib/copilot/dashboard";
@@ -68,9 +67,7 @@ export function CopilotBriefing({
           </div>
           <h2 className="text-lg font-semibold">{t(language, "copilot.noData")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t(language, "copilot.noDataBody")}</p>
-          <Button asChild className="mt-4">
-            <Link href="/upload">{t(language, "copilot.importCta")}</Link>
-          </Button>
+          <ImportCta label={t(language, "copilot.importCta")} className="mt-4" />
         </div>
       </div>
     );

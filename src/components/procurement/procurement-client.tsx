@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   AlertCircle,
   ChevronDown,
@@ -32,6 +31,7 @@ import { KpiCardSkeleton, TableSkeleton } from "@/components/shared/skeletons";
 import { PriorityBadge } from "@/components/shared/badges";
 import { VelocityChip } from "@/components/shared/fmcg-chips";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ImportCta } from "@/components/shared/import-cta";
 import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { ExplanationPanel } from "./explanation-panel";
 import { cn } from "@/lib/utils";
@@ -122,11 +122,7 @@ export function ProcurementClient() {
         tone="teal"
         title="No product data yet"
         description="Import your catalog and Inventra will build a purchasing plan from your stock and sales."
-        action={
-          <Button asChild>
-            <Link href="/upload">Upload data</Link>
-          </Button>
-        }
+        action={<ImportCta label="Upload data" />}
       />
     );
   }

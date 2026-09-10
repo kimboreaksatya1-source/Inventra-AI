@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   AlertCircle,
   Coins,
@@ -24,6 +23,7 @@ import { KpiCard } from "@/components/shared/kpi-card";
 import { KpiCardSkeleton, TableSkeleton } from "@/components/shared/skeletons";
 import { RecommendationChip, VelocityChip } from "@/components/shared/fmcg-chips";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ImportCta } from "@/components/shared/import-cta";
 import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
@@ -64,11 +64,7 @@ export function CashflowClient() {
         tone="teal"
         title="No product data yet"
         description="Import your catalog and Inventra will show where your working capital is tied up."
-        action={
-          <Button asChild>
-            <Link href="/upload">Upload data</Link>
-          </Button>
-        }
+        action={<ImportCta label="Upload data" />}
       />
     );
   }

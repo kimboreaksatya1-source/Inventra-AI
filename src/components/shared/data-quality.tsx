@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { AlertTriangle, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ImportCta } from "@/components/shared/import-cta";
 import { dataAvailability, type GatedFeature } from "@/lib/data-quality";
 import type { DataQuality } from "@/lib/types";
 
@@ -24,11 +23,7 @@ export function DataRequiredState({
       tone="teal"
       title={title || "Data required"}
       description={description}
-      action={
-        <Button asChild>
-          <Link href="/upload">Import more data</Link>
-        </Button>
-      }
+      action={<ImportCta label="Import more data" />}
     />
   );
 }

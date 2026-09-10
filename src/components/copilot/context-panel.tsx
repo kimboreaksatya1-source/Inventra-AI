@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { AlertTriangle, Package, TrendingDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ImportCta } from "@/components/shared/import-cta";
 import { PriorityBadge } from "@/components/shared/badges";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
@@ -31,9 +30,7 @@ export function ContextPanel({ language }: { language: CopilotLanguage }) {
         <div className="mx-4 rounded-xl border border-dashed border-border p-4 text-center">
           <p className="text-sm font-medium">{t(language, "copilot.noData")}</p>
           <p className="mt-1 text-xs text-muted-foreground">{t(language, "copilot.noDataBody")}</p>
-          <Button asChild size="sm" className="mt-3">
-            <Link href="/upload">{t(language, "copilot.importCta")}</Link>
-          </Button>
+          <ImportCta label={t(language, "copilot.importCta")} size="sm" className="mt-3" />
         </div>
       )}
 

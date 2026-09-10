@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { ClipboardCheck, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { ImportCta } from "@/components/shared/import-cta";
 import { DataQualityBanner, DataRequiredState, dataAvailability } from "@/components/shared/data-quality";
 import { useActionCenter, useUpdateAction } from "@/lib/queries/actions";
 import type {
@@ -174,11 +174,7 @@ export function ActionsClient() {
         tone="teal"
         title="No actions yet"
         description="Import your business data and Inventra will build your prioritized action list."
-        action={
-          <Button asChild>
-            <Link href="/upload">Import data</Link>
-          </Button>
-        }
+        action={<ImportCta label="Import data" />}
       />
     );
   }
