@@ -22,14 +22,16 @@ export const authConfig = {
   },
   session: { strategy: "jwt" },
   callbacks: {
-    // Persist the user id onto the JWT at sign-in.
+    // Persist the user id (and demo flag) onto the JWT at sign-in.
     jwt({ token, user }) {
       if (user?.id) token.id = user.id;
+      if (user) token.isDemo = (user as { isDemo?: boolean }).isDemo === true;
       return token;
     },
-    // Expose the user id on the session object consumed by RSC / route handlers.
+    // Expose the user id / demo flag on the session consumed by RSC + routes.
     session({ session, token }) {
       if (token.id && session.user) session.user.id = token.id as string;
+      if (session.user) session.user.isDemo = token.isDemo === true;
       return session;
     },
     // Runs in middleware for every matched request.

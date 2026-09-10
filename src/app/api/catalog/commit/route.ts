@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { commitCatalog } from "@/lib/import";
-import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
+import {
+  getSessionUserContext,
+  unauthorized,
+  demoReadOnly,
+} from "@/lib/auth-helpers";
 import type { ReviewProduct } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -46,8 +50,9 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const userId = await getSessionUserId();
+  const { userId, isDemo } = await getSessionUserContext();
   if (!userId) return unauthorized();
+  if (isDemo) return demoReadOnly();
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request", issues: parsed.error.issues }, { status: 422 });

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { Card } from "@/components/ui/card";
 import { LoginButton } from "@/components/auth/login-button";
+import { DemoLoginButton } from "@/components/auth/demo-login-button";
 
 export const metadata: Metadata = {
   title: "Sign in — Inventra AI",
@@ -37,6 +38,17 @@ export default async function LoginPage() {
           <p className="text-center text-xs text-muted-foreground">
             We only use your Google account to identify you. Your business data stays private to
             your account.
+          </p>
+
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            or
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <DemoLoginButton />
+          <p className="text-center text-xs text-muted-foreground">
+            Explore Inventra AI using a sample business inventory. No account required.
           </p>
         </Card>
       </div>

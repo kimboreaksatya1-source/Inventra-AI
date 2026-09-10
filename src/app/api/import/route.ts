@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import { commitImport } from "@/lib/import";
 import { importPayloadSchema } from "@/lib/validation";
-import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
+import {
+  getSessionUserContext,
+  unauthorized,
+  demoReadOnly,
+} from "@/lib/auth-helpers";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const userId = await getSessionUserId();
+  const { userId, isDemo } = await getSessionUserContext();
   if (!userId) return unauthorized();
+  if (isDemo) return demoReadOnly();
   let body: unknown;
   try {
     body = await request.json();

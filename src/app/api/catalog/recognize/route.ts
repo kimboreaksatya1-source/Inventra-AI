@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { confidenceLabel, mergeDuplicates, recognizeProducts } from "@/lib/catalog/recognize";
 import { assignSkus } from "@/lib/catalog/sku";
-import { getSessionUserId, unauthorized } from "@/lib/auth-helpers";
+import {
+  getSessionUserContext,
+  unauthorized,
+  demoReadOnly,
+} from "@/lib/auth-helpers";
 import type { RecognitionEvidence, RecognizeResponse, ReviewProduct, ReviewStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +30,11 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: Request) {
-  if (!(await getSessionUserId())) return unauthorized();
+  const { userId, isDemo } = await getSessionUserContext();
+  if (!userId) return unauthorized();
+  // Recognition writes nothing, but it is only reachable from the import wizard
+  // and spends an AI call — block it for the shared demo account too.
+  if (isDemo) return demoReadOnly();
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid request", issues: parsed.error.issues }, { status: 422 });
