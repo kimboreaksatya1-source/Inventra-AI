@@ -17,6 +17,7 @@ import { refreshSnapshotAI, getSnapshot } from "@/lib/snapshot";
 import { buildProcurement } from "@/lib/procurement";
 import { buildDeterministicReply, parseStructuredTail } from "@/lib/copilot";
 import { DEMO_CATALOG, DEMO_FILE_NAME } from "@/lib/demo-catalog";
+import { DEMO_ACCOUNT_ID, DEMO_ACCOUNT_EMAIL } from "@/lib/demo-account";
 import type { Prisma } from "@prisma/client";
 
 const email = process.argv[2];
@@ -25,13 +26,26 @@ if (!email || !email.includes("@")) {
   process.exit(1);
 }
 
+// The shared demo account has a FIXED id so re-seeding never strands existing
+// demo sessions. Any other email seeds a normal (cuid) user for local testing.
+const fixedId = email === DEMO_ACCOUNT_EMAIL ? DEMO_ACCOUNT_ID : undefined;
+
 async function main() {
   console.log(`Seeding demo account for ${email} …`);
 
-  // 1 — reset the user + all their data (cascades)
+  // 1 — reset the user + all their data (cascades). Recreate with the FIXED id
+  //     for the shared demo account so existing demo JWTs stay valid.
   await db.user.deleteMany({ where: { email } });
+  if (fixedId) {
+    await db.user.deleteMany({ where: { id: fixedId } });
+  }
   const user = await db.user.create({
-    data: { email, name: "Demo Owner", businessName: "Phnom Penh Mini-Mart" },
+    data: {
+      ...(fixedId ? { id: fixedId } : {}),
+      email,
+      name: "Demo Owner",
+      businessName: "Phnom Penh Mini-Mart",
+    },
   });
 
   // 2 — import the demo catalog (this also builds the deterministic snapshot)

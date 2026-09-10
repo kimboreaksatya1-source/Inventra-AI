@@ -26,13 +26,15 @@ export default async function HomePage() {
     summary = null;
   }
 
-  // The shared demo account should always land on the populated dashboard —
-  // self-heal the sample catalog if it is somehow missing (e.g. wiped in the DB).
+  // The shared demo account must always land on the populated dashboard. If the
+  // session's user id resolves to no data (a JWT issued before a re-seed points
+  // at a since-deleted row), re-resolve to the canonical demo id and render from
+  // that — never drop a demo visitor on the empty state.
   if (isDemo && (summary?.totalProducts ?? 0) === 0) {
     try {
       const { ensureDemoAccount } = await import("@/lib/demo-account");
-      await ensureDemoAccount();
-      summary = await getSummary(user.id);
+      const demo = await ensureDemoAccount();
+      summary = await getSummary(demo.id);
     } catch {
       /* fall through to the demo FirstRun notice below */
     }

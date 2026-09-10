@@ -12,7 +12,11 @@ export const metadata: Metadata = {
 
 export default async function LoginPage() {
   const session = await auth();
-  if (session?.user) redirect("/");
+  // Real users bounce straight in. Demo visitors are allowed to reach this page
+  // so they can switch to Google or re-mint a fresh demo session (the demo
+  // banner's "Sign in with Google" link, and the recovery path for an old
+  // demo JWT).
+  if (session?.user && session.user.isDemo !== true) redirect("/");
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
