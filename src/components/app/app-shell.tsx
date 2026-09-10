@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FlowNav } from "./flow-nav";
 import { UserMenu } from "@/components/auth/user-menu";
+import { DemoWelcomeGate } from "@/components/demo/demo-welcome-gate";
 import { auth } from "@/auth";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,20 @@ export async function AppShell({
           </div>
         </div>
       </header>
+
+      {isDemo && (
+        <div className="border-b border-teal-200 bg-teal-50/70 px-4 py-1.5 text-center text-xs text-teal-800 dark:border-teal-900/50 dark:bg-teal-950/30 dark:text-teal-200 sm:px-6">
+          <span className="font-medium">Demo Mode</span>
+          <span className="mx-1.5 opacity-50">•</span>
+          Sample data — Phnom Penh Mini-Mart
+          <span className="mx-1.5 opacity-50">•</span>
+          <Link href="/login" className="font-medium underline underline-offset-2 hover:no-underline">
+            Sign in with Google
+          </Link>
+        </div>
+      )}
+
+      {isDemo && <DemoWelcomeGate isDemo />}
 
       <main
         className={cn(

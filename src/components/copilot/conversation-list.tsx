@@ -24,12 +24,14 @@ import type { CopilotLanguage } from "@/lib/types";
 export function ConversationList({
   language,
   activeId,
+  isDemo = false,
   onSelect,
   onNew,
   onDeleted,
 }: {
   language: CopilotLanguage;
   activeId: string | null;
+  isDemo?: boolean;
   onSelect: (id: string) => void;
   onNew: () => void;
   onDeleted: (id: string) => void;
@@ -37,6 +39,23 @@ export function ConversationList({
   const { data: sessions, isLoading } = useSessions();
   const { data: latestImportAt } = useLatestImportAt();
   const del = useDeleteSession();
+
+  if (isDemo) {
+    // Shared demo account: never expose other visitors' conversations.
+    return (
+      <div className="flex h-full flex-col">
+        <div className="p-3">
+          <Button variant="outline" className="w-full justify-start" onClick={onNew}>
+            <MessageSquarePlus className="size-4" />
+            {t(language, "copilot.newChat")}
+          </Button>
+        </div>
+        <p className="px-4 pt-1 text-xs leading-relaxed text-muted-foreground">
+          Demo conversations start fresh each visit.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full flex-col">

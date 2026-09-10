@@ -60,5 +60,19 @@ export async function ensureDemoAccount(): Promise<{ id: string }> {
     });
   }
 
+  // Housekeeping only — the UX guarantee is the Copilot hiding history, not this.
+  // Clears conversations left by earlier visitors without touching anything an
+  // active visitor is still using (updated within the last 2 hours).
+  try {
+    await db.chatSession.deleteMany({
+      where: {
+        userId: user.id,
+        updatedAt: { lt: new Date(Date.now() - 2 * 60 * 60 * 1000) },
+      },
+    });
+  } catch {
+    /* never block demo sign-in on cleanup */
+  }
+
   return user;
 }

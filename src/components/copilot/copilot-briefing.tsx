@@ -1,7 +1,8 @@
 "use client";
 
-import { Boxes, LineChart, ShieldAlert, Sparkles, Wallet } from "lucide-react";
+import { Boxes, LineChart, ListChecks, ShieldAlert, Sparkles, Wallet } from "lucide-react";
 import { ImportCta } from "@/components/shared/import-cta";
+import { useIsDemo } from "@/hooks/use-is-demo";
 import { t } from "@/lib/i18n";
 import { useCopilotContext } from "@/lib/queries/copilot";
 import { buildCopilotDashboard } from "@/lib/copilot/dashboard";
@@ -34,6 +35,18 @@ const CHIPS = [
   },
 ] as const;
 
+/** Plain-question starter prompts for the demo — label doubles as the prompt. */
+const DEMO_CHIPS = [
+  { label: "What should I reorder this week?", icon: Boxes,
+    prompt: "What should I reorder this week? Give me quantities and the revenue each order protects." },
+  { label: "Which products are overstocked?", icon: Wallet,
+    prompt: "Which products are overstocked or slow-moving, and how much cash is tied up in them?" },
+  { label: "What products are causing revenue risk?", icon: ShieldAlert,
+    prompt: "Which products are at risk of stocking out, and how much revenue is exposed?" },
+  { label: "What should I focus on first?", icon: ListChecks,
+    prompt: "What are the top 3 things I should focus on first today?" },
+] as const;
+
 /**
  * The Copilot's empty state — replaced with a live business briefing so the
  * Copilot opens as an operational surface, not a blank chat box. Pure
@@ -49,6 +62,8 @@ export function CopilotBriefing({
   onQuickAction: (prompt: string) => void;
 }) {
   const { data: context, isLoading } = useCopilotContext();
+  const isDemo = useIsDemo();
+  const chips = isDemo ? DEMO_CHIPS : CHIPS;
 
   if (isLoading) {
     return (
@@ -87,18 +102,19 @@ export function CopilotBriefing({
       {dashboard && <ExecutiveDashboard dashboard={dashboard} language={language} />}
 
       <div className="flex flex-wrap gap-2">
-        {CHIPS.map((c) => {
+        {chips.map((c) => {
           const Icon = c.icon;
+          const label = "label" in c ? c.label : t(language, c.key);
           return (
             <button
-              key={c.key}
+              key={label}
               type="button"
               disabled={disabled}
               onClick={() => onQuickAction(c.prompt)}
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700 disabled:opacity-50 dark:hover:border-teal-700 dark:hover:bg-teal-950/40 dark:hover:text-teal-300"
             >
               <Icon className="size-3.5 text-teal-600" />
-              {t(language, c.key)}
+              {label}
             </button>
           );
         })}

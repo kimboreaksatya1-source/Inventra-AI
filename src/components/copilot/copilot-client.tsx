@@ -12,6 +12,7 @@ import {
   useSetSessionLanguage,
 } from "@/lib/queries/copilot";
 import { sessionPredatesImport } from "@/lib/copilot/session-freshness";
+import { useIsDemo } from "@/hooks/use-is-demo";
 import { useCopilotChat } from "@/hooks/use-copilot-chat";
 import type { CopilotLanguage } from "@/lib/types";
 import { ConversationList } from "./conversation-list";
@@ -24,6 +25,7 @@ import { StaleDataNotice } from "./stale-data-notice";
 const LANG_KEY = "inventra.copilot.lang";
 
 export function CopilotClient() {
+  const isDemo = useIsDemo();
   const [language, setLanguageState] = useState<CopilotLanguage>("en");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [leftOpen, setLeftOpen] = useState(false);
@@ -59,10 +61,13 @@ export function CopilotClient() {
   }, []);
 
   useEffect(() => {
+    // Demo users always start on the briefing empty state — never resume a
+    // previous visitor's conversation on the shared demo account.
+    if (isDemo) return;
     if (activeId === null && sessions && sessions.length > 0) {
       setActiveId(sessions[0].id);
     }
-  }, [sessions, activeId]);
+  }, [sessions, activeId, isDemo]);
 
   function setLanguage(l: CopilotLanguage) {
     setLanguageState(l);
@@ -102,6 +107,7 @@ export function CopilotClient() {
   const listProps = {
     language,
     activeId,
+    isDemo,
     onSelect: handleSelect,
     onNew: handleNew,
     onDeleted: handleDeleted,
